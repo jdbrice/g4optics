@@ -1,0 +1,35 @@
+# vis_png.mac — headless PNG of geometry + trajectories
+/run/initialize
+
+# Offscreen ToolsSG driver, 1600x1200, defaults to PNG output
+/vis/open TSG_OFFSCREEN 1600x1200
+/vis/viewer/set/autoRefresh false
+/vis/verbose errors
+
+# Geometry
+/vis/drawVolume
+/vis/viewer/set/style surface
+/vis/viewer/set/hiddenMarker true
+
+# Viewpoint
+/vis/viewer/set/viewpointThetaPhi 60 30
+/vis/viewer/set/lightsThetaPhi 60 30
+/vis/viewer/zoomTo 1.3
+
+# Trajectories, colored by particle type
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set opticalphoton green
+/vis/modeling/trajectories/drawByParticleID-0/set e-             red
+/vis/modeling/trajectories/drawByParticleID-0/set gamma          yellow
+
+# Accumulate several events in one image
+/vis/scene/endOfEventAction accumulate
+
+# Fire a charged particle into the LXe tank to produce scintillation
+/gun/particle e-
+/gun/energy 1 MeV
+/run/beamOn 3
+
+/vis/viewer/rebuild
+/vis/viewer/flush

@@ -1,0 +1,14 @@
+services:
+  geant4:
+    image: my-geant4:11.3.2
+    platform: linux/arm64
+    volumes:
+      - ./:/work
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY}
+    # Uncomment for Linux X11:
+    # network_mode: host
+    # volumes also include: - /tmp/.X11-unix:/tmp/.X11-unix
