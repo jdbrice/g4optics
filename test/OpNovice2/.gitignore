@@ -1,0 +1,17 @@
+cd /work/g4optics/test/OpNovice2
+
+cat >> .git/info/exclude <<'EOF'
+
+# Local build/output
+build-gui/
+build-wsl/
+output/
+*.root
+*.csv
+*.dat
+*.prim
+*.heprep
+*.wrl
+.vscode/ipch/
+.DS_Store
+EOF
