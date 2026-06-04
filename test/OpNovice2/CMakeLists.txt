@@ -50,6 +50,8 @@ set(OpNovice2_SCRIPTS
     scint_by_particle.mac
     vis.mac
     wls.mac
+    ej200_electron_boundary.mac
+    ej200_electron_boundary_debug.mac
   )
 
 foreach(_script ${OpNovice2_SCRIPTS})

@@ -99,15 +99,15 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* GetTankMaterial() const { return fTankMaterial; }
 
   private:
-    G4double fExpHall_x = 10. * CLHEP::m;
-    G4double fExpHall_y = 10. * CLHEP::m;
-    G4double fExpHall_z = 10. * CLHEP::m;
+    G4double fExpHall_x = 50. * CLHEP::cm;
+    G4double fExpHall_y = 50. * CLHEP::cm;
+    G4double fExpHall_z = 50. * CLHEP::cm;
 
     G4VPhysicalVolume* fTank = nullptr;
 
-    G4double fTank_x = 1. * CLHEP::m;
-    G4double fTank_y = 1. * CLHEP::m;
-    G4double fTank_z = 1. * CLHEP::m;
+    G4double fTank_x = 5. * CLHEP::cm;
+    G4double fTank_y = 5. * CLHEP::cm;
+    G4double fTank_z = .25 * CLHEP::cm;
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;

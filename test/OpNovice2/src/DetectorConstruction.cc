@@ -62,7 +62,7 @@ DetectorConstruction::DetectorConstruction()
   fSurface->SetModel(unified);
   fSurface->SetMaterialPropertiesTable(fSurfaceMPT);
 
-  fTankMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_WATER");
+  fTankMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
   fWorldMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR");
 
   fDetectorMessenger = new DetectorMessenger(this);
