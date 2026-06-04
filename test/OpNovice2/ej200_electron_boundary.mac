@@ -52,6 +52,7 @@
 # ----------------------------
 
 /opnovice2/worldProperty RINDEX 2*eV 1.0003 3.3*eV 1.0003
+/opnovice2/worldProperty ABSLENGTH 2*eV 10*cm 3.3*eV 10*cm
 
 # ----------------------------
 # Surface / boundary behavior
@@ -109,5 +110,5 @@
 /gun/position -6 0 0 cm
 /gun/direction 1 0 0
 
-/run/printProgress 100
-/run/beamOn 1
+/run/printProgress 20
+/run/beamOn 1000

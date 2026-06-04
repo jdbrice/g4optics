@@ -22,7 +22,7 @@
 # ...
 
 # Scintillation efficiency (photons / 1 MeV e-): 10000
-/opnovice2/boxConstProperty SCINTILLATIONYIELD 300
+/opnovice2/boxConstProperty SCINTILLATIONYIELD 10000
 /opnovice2/boxConstProperty SCINTILLATIONYIELD1 1.0
 /opnovice2/boxConstProperty RESOLUTIONSCALE 1.0
 
@@ -89,7 +89,6 @@
 # ----------------------------
 
 /run/initialize
-/opnovice2/stepping/killOnSecondSurface true
 
 # ROOT output
 /analysis/setFileName ej200_electron_boundary
@@ -115,5 +114,5 @@
 /gun/position -6 0 0 cm
 /gun/direction 1 0 0
 
-/run/printProgress 1
-/run/beamOn 1
+/run/printProgress 20
+/run/beamOn 1000
