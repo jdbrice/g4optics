@@ -54,6 +54,7 @@ set(OpNovice2_SCRIPTS
     ej200_electron_boundary_debug.mac
     ej200_electron_boundary_visual.mac
     ej200_sipm_test.mac
+    ej200_sipm_visual.mac
   )
 
 foreach(_script ${OpNovice2_SCRIPTS})

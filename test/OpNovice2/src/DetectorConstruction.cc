@@ -47,6 +47,9 @@
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorConstruction::DetectorConstruction()
@@ -131,6 +134,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto sipm_box = new G4Box("SiPM_Box", fSiPM_x, fSiPM_y, fSiPM_z);
 
   fSiPM_LV = new G4LogicalVolume(sipm_box, fSiPMMaterial, "SiPM");
+
+  // Visual attributes of SiPM
+  auto sipmVis = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0, 0.9));
+  sipmVis->SetForceSolid(true);
+  fSiPM_LV->SetVisAttributes(sipmVis);
 
   // SiPM attached to +X, +Y corner of the tile.
   // x = tile + SiPM half-depth
