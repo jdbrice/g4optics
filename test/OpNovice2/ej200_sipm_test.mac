@@ -1,8 +1,10 @@
-/control/verbose 2
+/control/verbose 0
 /tracking/verbose 0
-/process/optical/verbose 1
-/run/verbose 1
+/process/optical/verbose 0
+/run/verbose 0
 /control/cout/ignoreThreadsExcept 0
+
+/run/numberOfThreads 1
 
 # ----------------------------
 # Materials
@@ -93,17 +95,14 @@
 /run/initialize
 
 # ROOT output
-/analysis/setFileName ej200_electron_boundary
+/analysis/setFileName ej200_sipm_test
 
 # histograms
-/analysis/h1/set 2 100 2.0 3.5  # scintillation spectrum [eV]
-/analysis/h1/set 3 400 0 100    # scintillation time [ns]
-/analysis/h1/set 10 40 -1 39    # boundary status
-/analysis/h1/set 20 100 0 90    # Fresnel refraction angle
-/analysis/h1/set 21 100 0 90    # Fresnel reflection angle
-/analysis/h1/set 22 100 0 90    # total internal reflection angle
-/analysis/h1/set 24 100 0 90    # absorption angle
-/analysis/h1/set 25 100 0 90    # transmitted angle
+/analysis/h1/set 2 100 2.0 3.5
+/analysis/h1/set 3 400 0 100
+/analysis/h1/set 27 100 2.0 3.5  # SiPM detected photon energy [eV]
+/analysis/h1/set 28 400 0 100    # SiPM detected photon arrival time [ns]
+
 
 # ----------------------------
 # Electron gun
@@ -111,9 +110,9 @@
 /gun/particle e-
 /gun/energy 1 MeV
 
-# Need to change this according to the tile
-/gun/position -6 0 0 cm
+# If SiPM is at +X,+Y corner, shoot closer to that side for first debug.
+/gun/position -6 4 0 cm
 /gun/direction 1 0 0
 
-/run/printProgress 20
-/run/beamOn 1000
+/run/printProgress 10
+/run/beamOn 100

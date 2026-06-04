@@ -55,6 +55,8 @@ DetectorConstruction::DetectorConstruction()
   fTankMPT = new G4MaterialPropertiesTable();
   fWorldMPT = new G4MaterialPropertiesTable();
   fSurfaceMPT = new G4MaterialPropertiesTable();
+  // The properties table of SiPM
+  fSiPMMPT = new G4MaterialPropertiesTable();
 
   fSurface = new G4OpticalSurface("Surface");
   fSurface->SetType(dielectric_dielectric);
@@ -64,8 +66,24 @@ DetectorConstruction::DetectorConstruction()
 
   fTankMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
   fWorldMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR");
+  // The material of SiPM
+  fSiPMMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_Si");
 
   fDetectorMessenger = new DetectorMessenger(this);
+
+  // ----- SiPM -----
+  const G4int nEntries = 2;
+  G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
+
+  // Toy SiPM/silicon optical properties.
+  // This is enough for first-pass photon entry + detection.
+  G4double siRIndex[nEntries] = {4.0, 4.0};
+
+  // Strong absorption once photons enter SiPM.
+  G4double siAbsLength[nEntries] = {1.0 * um, 1.0 * um};
+
+  fSiPMMPT->AddProperty("RINDEX", photonEnergy, siRIndex, nEntries);
+  fSiPMMPT->AddProperty("ABSLENGTH", photonEnergy, siAbsLength, nEntries);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,6 +93,8 @@ DetectorConstruction::~DetectorConstruction()
   delete fTankMPT;
   delete fWorldMPT;
   delete fSurfaceMPT;
+  // Frees the memory of SiPM
+  delete fSiPMMPT;
   delete fSurface;
   delete fDetectorMessenger;
 }
@@ -87,6 +107,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   fTankMaterial->GetIonisation()->SetBirksConstant(0.126 * mm / MeV);
 
   fWorldMaterial->SetMaterialPropertiesTable(fWorldMPT);
+
+  // SiPM Properties Table
+  fSiPMMaterial->SetMaterialPropertiesTable(fSiPMMPT);
 
   // ------------- Volumes --------------
   // The experimental Hall
@@ -103,6 +126,29 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   fTank_LV = new G4LogicalVolume(tank_box, fTankMaterial, "Tank");
 
   fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
+
+  // The SiPM
+  auto sipm_box = new G4Box("SiPM_Box", fSiPM_x, fSiPM_y, fSiPM_z);
+
+  fSiPM_LV = new G4LogicalVolume(sipm_box, fSiPMMaterial, "SiPM");
+
+  // SiPM attached to +X, +Y corner of the tile.
+  // x = tile + SiPM half-depth
+  // y = top edge minus SiPM half-width
+  // z = centered in tile thickness
+  G4ThreeVector sipmPos(fTank_x + fSiPM_x,
+                        fTank_y - fSiPM_y,
+                        0.0);
+
+  fSiPM = new G4PVPlacement(nullptr,
+                            sipmPos,
+                            fSiPM_LV,
+                            "SiPM",
+                            fWorld_LV,
+                            false,
+                            0,
+                            true);        // overlap check
+
 
   // ------------- Surface --------------
 

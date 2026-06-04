@@ -125,6 +125,9 @@ class Run : public G4Run
 
     void EndOfRun();
 
+    // SiPM Detection
+    void AddSiPMDetection() { fSiPMDetectionCount += 1; }
+
   private:
     // primary particle
     G4ParticleDefinition* fParticle = nullptr;
@@ -159,6 +162,9 @@ class Run : public G4Run
     std::vector<G4int> fBoundaryProcs;
 
     G4int fTotalSurface = 0;
+
+    // SiPM counting
+    G4int fSiPMDetectionCount = 0;
 };
 
 #endif /* Run_h */

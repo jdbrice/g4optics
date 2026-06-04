@@ -79,6 +79,22 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   auto trackInfo = (TrackInformation*)(track->GetUserInformation());
 
   if (particleDef == opticalphoton) {
+    // SiPM detection
+    auto prePV = startPoint->GetPhysicalVolume();
+
+    if (prePV && prePV->GetName() == "SiPM") {
+      run->AddSiPMDetection();
+
+      G4double en = track->GetKineticEnergy();
+      analysisMan->FillH1(27, en / eV);  // detected photon energy
+
+      G4double time = track->GetGlobalTime();
+      analysisMan->FillH1(28, time / ns);  // detected photon arrival time
+
+      track->SetTrackStatus(fStopAndKill);
+      return;
+    }
+    
     const G4VProcess* pds = endPoint->GetProcessDefinedStep();
     G4String procname = pds->GetProcessName();
     if (procname == "OpAbsorption") {

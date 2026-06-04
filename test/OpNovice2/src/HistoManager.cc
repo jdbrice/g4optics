@@ -116,6 +116,17 @@ void HistoManager::Book()
   // 26
   analysisMan->CreateH1("Spike reflection", "Spike reflected photons", n, xmn, xmx);
 
+  // ----- SiPM histograms -----
+  // 27
+  analysisMan->CreateH1("SiPM detected spectrum",
+                        "Energy spectrum of photons detected by SiPM",
+                        n, xmn, xmx);
+
+  // 28
+  analysisMan->CreateH1("SiPM detected time",
+                        "Arrival time of photons detected by SiPM",
+                        n, xmn, xmx);
+
   for (G4int i = 0; i < analysisMan->GetNofH1s(); ++i) {
     analysisMan->SetH1Activation(i, false);
   }

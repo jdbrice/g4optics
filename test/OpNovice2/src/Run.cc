@@ -92,6 +92,9 @@ void Run::Merge(const G4Run* run)
     fBoundaryProcs[i] += localRun->fBoundaryProcs[i];
   }
 
+  // SiPM count
+  fSiPMDetectionCount += localRun->fSiPMDetectionCount;
+
   G4Run::Merge(run);
 }
 
@@ -273,6 +276,12 @@ void Run::EndOfRun()
   G4cout << "Average number of OpRayleigh per event:   " << fRayleighCount / TotNbofEvents
          << G4endl;
   G4cout << "Average number of OpAbsorption per event: " << fOpAbsorption / TotNbofEvents << G4endl;
+
+  // SiPM summary
+  G4cout << "Average number of photons detected by SiPM per event: "
+       << fSiPMDetectionCount / TotNbofEvents << G4endl;
+
+
   G4cout << "\nSurface events (on +X surface, maximum one per photon) this run:" << G4endl;
   G4cout << "# of primary particles:      " << std::setw(8) << TotNbofEvents << G4endl;
   G4cout << "OpAbsorption before surface: " << std::setw(8) << fOpAbsorptionPrior << G4endl;
@@ -447,6 +456,12 @@ void Run::EndOfRun()
   if (fBoundaryProcs[CoatedDielectricFrustratedTransmission] > 0) {
     G4cout << "  CoatedDielectricFrustratedTransmission: " << std::setw(8)
            << fBoundaryProcs[CoatedDielectricFrustratedTransmission] << G4endl;
+  }
+
+  // SiPM count vs. scint count
+  if (fScintCount > 0) {
+    G4cout << "SiPM collection fraction relative to created scintillation photons: "
+          << G4double(fSiPMDetectionCount) / G4double(fScintCount) << G4endl;
   }
 
   G4int sum = std::accumulate(fBoundaryProcs.begin(), fBoundaryProcs.end(), 0);

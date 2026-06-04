@@ -122,6 +122,21 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4MaterialPropertiesTable* fTankMPT = nullptr;
     G4MaterialPropertiesTable* fWorldMPT = nullptr;
     G4MaterialPropertiesTable* fSurfaceMPT = nullptr;
+
+    /// Adding SiPM
+    // Physical Volume & Logical Volume
+    G4VPhysicalVolume* fSiPM = nullptr;
+    G4LogicalVolume* fSiPM_LV = nullptr;
+
+    // Material & Properties Table
+    G4Material* fSiPMMaterial = nullptr;
+    G4MaterialPropertiesTable* fSiPMMPT = nullptr;
+
+    // Half-lengths
+    G4double fSiPM_x = 0.5 * CLHEP::mm;
+    G4double fSiPM_y = 1.5 * CLHEP::mm;
+    G4double fSiPM_z = 1.5 * CLHEP::mm;
+    
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -20,23 +20,22 @@
 # ...
 
 # Scintillation efficiency (photons / 1 MeV e-): 10000
-/opnovice2/boxConstProperty SCINTILLATIONYIELD 10/MeV
+/opnovice2/boxConstProperty SCINTILLATIONYIELD 10
 /opnovice2/boxConstProperty SCINTILLATIONYIELD1 1.0
 /opnovice2/boxConstProperty RESOLUTIONSCALE 1.0
 
 # Wavelength of Maximum Emission (nm): 425
 # The data points are taken from EJ-200 emission sheet.
-/opnovice2/boxProperty SCINTILLATIONCOMPONENT1 2.4982*eV 0.069 2.5419*eV 0.109 2.5623*eV 0.134 2.5838*eV 0.174 2.6039*eV 0.214 2.6273*eV 0.274 2.6495*eV 0.335 2.6823*eV 0.415 2.7196*eV 0.468 2.7700*eV 0.582 2.8458*eV 0.851 2.9033*eV 0.991 2.9173*eV 1.000 2.9313*eV 0.985 2.9383*eV 0.960 2.9516*eV 0.881 3.0092*eV 0.352 3.1001*eV 0.017
-
+/opnovice2/boxProperty SCINTILLATIONCOMPONENT1 0.0000024982 0.069 0.0000025419 0.109 0.0000025623 0.134 0.0000025838 0.174 0.0000026039 0.214 0.0000026273 0.274 0.0000026495 0.335 0.0000026823 0.415 0.0000027196 0.468 0.0000027700 0.582 0.0000028458 0.851 0.0000029033 0.991 0.0000029173 1.000 0.0000029313 0.985 0.0000029383 0.960 0.0000029516 0.881 0.0000030092 0.352 0.0000031001 0.017
 # Light Attenuation Length (cm): 380
 # The energy range is set to accomodate 380nm~600nm (see EJ-200 emission spectrum)
-/opnovice2/boxProperty ABSLENGTH 2.0*eV 380*cm 3.3*eV 380*cm
+/opnovice2/boxProperty ABSLENGTH 0.0000020 3800 0.0000033 3800
 
 # Rise Time (ns): 0.9
-/opnovice2/boxConstProperty SCINTILLATIONRISETIME1 0.9*ns
+/opnovice2/boxConstProperty SCINTILLATIONRISETIME1 0.9
 
 # Decay Time (ns): 2.1
-/opnovice2/boxConstProperty SCINTILLATIONTIMECONSTANT1 2.1*ns
+/opnovice2/boxConstProperty SCINTILLATIONTIMECONSTANT1 2.1
 
 # Pulse Width, FWHM (ns): 2.5
 # ...
@@ -45,14 +44,14 @@
 # ...
 
 # Refractive Index: 1.58
-/opnovice2/boxProperty RINDEX 2.0*eV 1.58 3.3*eV 1.58
+/opnovice2/boxProperty RINDEX 0.0000020 1.58 0.0000033 1.58
 
 # ----------------------------
 # World Properties
 # ----------------------------
 
-/opnovice2/worldProperty RINDEX 2*eV 1.0003 3.3*eV 1.0003
-/opnovice2/worldProperty ABSLENGTH 2*eV 10*cm 3.3*eV 10*cm
+/opnovice2/worldProperty RINDEX 0.0000020 1.0003 0.0000033 1.0003
+/opnovice2/worldProperty ABSLENGTH 0.0000020 100 0.0000033 100
 
 # ----------------------------
 # Surface / boundary behavior
