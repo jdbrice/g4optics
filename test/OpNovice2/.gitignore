@@ -10,6 +10,6 @@ output/
 *.prim
 *.heprep
 *.wrl
+*.pdf
 .vscode/ipch/
 .DS_Store
-EOF
