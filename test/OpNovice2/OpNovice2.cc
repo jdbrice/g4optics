@@ -49,7 +49,21 @@ int main(int argc, char** argv)
 {
   // detect interactive mode (if no arguments) and define UI session
   G4UIExecutive* ui = nullptr;
-  if (argc == 1) ui = new G4UIExecutive(argc, argv);
+
+  G4bool interactiveWithMacro = false;
+  G4String interactiveMacro = "";
+
+  if (argc == 1) {
+    ui = new G4UIExecutive(argc, argv);
+  }
+  else if (argc == 3 && G4String(argv[1]) == "-i") {
+    interactiveWithMacro = true;
+    interactiveMacro = argv[2];
+
+    // Only pass program name to G4UIExecutive so it does not try to interpret "-i".
+    G4int uiArgc = 1;
+    ui = new G4UIExecutive(uiArgc, argv);
+  }
 
   // application-specific SteppingVerbose
   auto steppingVerbose = new SteppingVerbose;
@@ -76,8 +90,14 @@ int main(int argc, char** argv)
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
   if (ui) {
-    // interactive mode
-    UImanager->ApplyCommand("/control/execute vis.mac");
+    if (interactiveWithMacro) {
+      G4String command = "/control/execute ";
+      UImanager->ApplyCommand(command + interactiveMacro);
+    }
+    else {
+      UImanager->ApplyCommand("/control/execute vis.mac");
+    }
+
     ui->SessionStart();
     delete ui;
   }

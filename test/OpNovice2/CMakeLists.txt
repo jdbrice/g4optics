@@ -52,6 +52,7 @@ set(OpNovice2_SCRIPTS
     wls.mac
     ej200_electron_boundary.mac
     ej200_electron_boundary_debug.mac
+    ej200_electron_boundary_visual.mac
   )
 
 foreach(_script ${OpNovice2_SCRIPTS})
