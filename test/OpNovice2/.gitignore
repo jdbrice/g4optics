@@ -4,6 +4,9 @@ build/
 build-gui/
 build-wsl/
 output/
+scan_macros/
+scan_outputs/
+scan_logs/
 *.root
 *.csv
 *.dat
@@ -11,5 +14,6 @@ output/
 *.heprep
 *.wrl
 *.pdf
+*.png
 .vscode/ipch/
 .DS_Store
