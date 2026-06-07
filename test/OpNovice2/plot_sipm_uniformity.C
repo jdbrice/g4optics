@@ -40,14 +40,14 @@ void plot_sipm_uniformity()
 
   const int nEvents = 100;
 
-  std::vector<double> xs = {-4, 0, 4};
-  std::vector<double> ys = {-4, 0, 4};
+  std::vector<double> xs = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+  std::vector<double> ys = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
   TH2D* hMap = new TH2D(
     "hMap",
-    "SiPM collection uniformity;electron x position [cm];electron y position [cm];#LT detected photons / event #GT",
-    xs.size(), -6, 6,
-    ys.size(), -6, 6
+    "SiPM collection uniformity;electron x position [cm];electron y position [cm];#LT N_{SiPM} #GT / event",
+    xs.size(), -4.5, 4.5,
+    ys.size(), -4.5, 4.5
   );
 
   for (size_t ix = 0; ix < xs.size(); ++ix) {

@@ -8,8 +8,8 @@ Z0="0.4"
 mkdir -p scan_macros scan_outputs scan_logs
 
 # Grid settings. The unit is in cm.
-XS=(-4 0 4)
-YS=(-4 0 4)
+XS=(-4 -3 -2 -1 0 1 2 3 4)
+YS=(-4 -3 -2 -1 0 1 2 3 4)
 
 label_num() {
   local v="$1"
