@@ -45,19 +45,20 @@ void plot_sipm_uniformity()
 
   const int nEvents = 100;
 
+  // std::vector<double> xs = {-4, 0, 4};
+  // std::vector<double> ys = {-4, 0, 4};
   std::vector<double> xs = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
   std::vector<double> ys = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
-  // Current side-mounted SiPM center position in cm.
-  // From DetectorConstruction:
-  // x = fTank_x + fSiPM_x = 5.0 cm + 0.05 cm = 5.05 cm
-  // y = fTank_y - fSiPM_y = 5.0 cm - 0.15 cm = 4.85 cm
-  const double sipmX = 5.05;
-  const double sipmY = 4.85;
+  // The SiPM location, in the center.
+  // If top right w/ right side, x = 5.05, y = 4.85
+  const double sipmX = 0.0;
+  const double sipmY = 0.0;
 
   // Store (distance to SiPM, average detected photons/event).
   std::vector<std::pair<double, double>> distPoints;
 
+  // For 3x3: -6.0, 6.0 --- For 9x9: -4.5, 4.5
   TH2D* hMap = new TH2D(
     "hMap",
     "SiPM collection uniformity;electron x position [cm];electron y position [cm];#LT N_{SiPM} #GT / event",

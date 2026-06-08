@@ -37,6 +37,7 @@
 #include "G4OpticalSurface.hh"
 #include "G4RunManager.hh"
 #include "G4VUserDetectorConstruction.hh"
+#include "G4ThreeVector.hh"
 #include "globals.hh"
 
 #include <CLHEP/Units/SystemOfUnits.h>
@@ -98,6 +99,11 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     void SetTankMaterial(const G4String&);
     G4Material* GetTankMaterial() const { return fTankMaterial; }
 
+    // setting SiPM
+    void SetSiPMFace(const G4String& face);
+    void SetSiPMLocalPosition(const G4ThreeVector& pos);
+    void SetSiPMSize(const G4ThreeVector& size);
+
   private:
     G4double fExpHall_x = 50. * CLHEP::cm;
     G4double fExpHall_y = 50. * CLHEP::cm;
@@ -132,11 +138,30 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* fSiPMMaterial = nullptr;
     G4MaterialPropertiesTable* fSiPMMPT = nullptr;
 
-    // Half-lengths
-    G4double fSiPM_x = 0.5 * CLHEP::mm;
-    G4double fSiPM_y = 1.5 * CLHEP::mm;
-    G4double fSiPM_z = 1.5 * CLHEP::mm;
-    
+    // General SiPM placement.
+    // fSiPMFace controls which tile face the SiPM is attached to.
+    // Accepted values: +X, -X, +Y, -Y, +Z, -Z.
+    G4String fSiPMFace = "+X";
+
+    // Local position on the selected face.
+    // For +/-X: local x = y, local y = z.
+    // For +/-Y: local x = x, local y = z.
+    // For +/-Z: local x = x, local y = y.
+    // The third component is currently unused.
+    G4ThreeVector fSiPMLocalPosition =
+      G4ThreeVector(4.85 * CLHEP::cm, 0.0, 0.0);
+
+    // SiPM physical dimensions:
+    // activeU and activeV are the active face dimensions;
+    // thickness is normal to the selected face.
+    G4double fSiPMActiveU = 3.0 * CLHEP::mm;
+    G4double fSiPMActiveV = 3.0 * CLHEP::mm;
+    G4double fSiPMThickness = 1.0 * CLHEP::mm;
+
+    void ComputeSiPMPlacement(G4double& hx,
+                              G4double& hy,
+                              G4double& hz,
+                              G4ThreeVector& pos) const;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

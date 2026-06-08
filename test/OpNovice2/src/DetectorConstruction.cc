@@ -131,7 +131,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
 
   // The SiPM
-  auto sipm_box = new G4Box("SiPM_Box", fSiPM_x, fSiPM_y, fSiPM_z);
+  G4double sipmHx = 0.0;
+  G4double sipmHy = 0.0;
+  G4double sipmHz = 0.0;
+  G4ThreeVector sipmPos;
+
+  ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+
+  auto sipm_box = new G4Box("SiPM_Box", sipmHx, sipmHy, sipmHz);
 
   fSiPM_LV = new G4LogicalVolume(sipm_box, fSiPMMaterial, "SiPM");
 
@@ -139,14 +146,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto sipmVis = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0, 0.9));
   sipmVis->SetForceSolid(true);
   fSiPM_LV->SetVisAttributes(sipmVis);
-
-  // SiPM attached to +X, +Y corner of the tile.
-  // x = tile + SiPM half-depth
-  // y = top edge minus SiPM half-width
-  // z = centered in tile thickness
-  G4ThreeVector sipmPos(fTank_x + fSiPM_x,
-                        fTank_y - fSiPM_y,
-                        0.0);
 
   fSiPM = new G4PVPlacement(nullptr,
                             sipmPos,
@@ -273,4 +272,95 @@ void DetectorConstruction::SetTankMaterial(const G4String& mat)
     G4RunManager::GetRunManager()->PhysicsHasBeenModified();
     G4cout << "Tank material set to " << fTankMaterial->GetName() << G4endl;
   }
+}
+
+
+void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
+                                                G4double& hy,
+                                                G4double& hz,
+                                                G4ThreeVector& pos) const
+{
+  const G4double hu = 0.5 * fSiPMActiveU;
+  const G4double hv = 0.5 * fSiPMActiveV;
+  const G4double ht = 0.5 * fSiPMThickness;
+
+  const G4double u = fSiPMLocalPosition.x();
+  const G4double v = fSiPMLocalPosition.y();
+
+  if (fSiPMFace == "+X" || fSiPMFace == "right") {
+    hx = ht;
+    hy = hu;
+    hz = hv;
+    pos = G4ThreeVector(fTank_x + ht, u, v);
+  }
+  else if (fSiPMFace == "-X" || fSiPMFace == "left") {
+    hx = ht;
+    hy = hu;
+    hz = hv;
+    pos = G4ThreeVector(-fTank_x - ht, u, v);
+  }
+  else if (fSiPMFace == "+Y" || fSiPMFace == "back") {
+    hx = hu;
+    hy = ht;
+    hz = hv;
+    pos = G4ThreeVector(u, fTank_y + ht, v);
+  }
+  else if (fSiPMFace == "-Y" || fSiPMFace == "front") {
+    hx = hu;
+    hy = ht;
+    hz = hv;
+    pos = G4ThreeVector(u, -fTank_y - ht, v);
+  }
+  else if (fSiPMFace == "+Z" || fSiPMFace == "top") {
+    hx = hu;
+    hy = hv;
+    hz = ht;
+    pos = G4ThreeVector(u, v, fTank_z + ht);
+  }
+  else if (fSiPMFace == "-Z" || fSiPMFace == "bottom") {
+    hx = hu;
+    hy = hv;
+    hz = ht;
+    pos = G4ThreeVector(u, v, -fTank_z - ht);
+  }
+  else {
+    G4ExceptionDescription msg;
+    msg << "Unknown SiPM face: " << fSiPMFace
+        << ". Use +X, -X, +Y, -Y, +Z, -Z.";
+    G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                "OpNovice2_SiPM_001",
+                FatalException,
+                msg);
+  }
+}
+
+void DetectorConstruction::SetSiPMFace(const G4String& face)
+{
+  fSiPMFace = face;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "SiPM face set to " << fSiPMFace << G4endl;
+}
+
+void DetectorConstruction::SetSiPMLocalPosition(const G4ThreeVector& pos)
+{
+  fSiPMLocalPosition = pos;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "SiPM local position set to "
+         << fSiPMLocalPosition / cm << " cm" << G4endl;
+}
+
+void DetectorConstruction::SetSiPMSize(const G4ThreeVector& size)
+{
+  fSiPMActiveU = size.x();
+  fSiPMActiveV = size.y();
+  fSiPMThickness = size.z();
+
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "SiPM size set to activeU="
+         << fSiPMActiveU / mm << " mm, activeV="
+         << fSiPMActiveV / mm << " mm, thickness="
+         << fSiPMThickness / mm << " mm" << G4endl;
 }

@@ -44,6 +44,7 @@ class G4UIcmdWithAnInteger;
 class G4UIcmdWithADouble;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithoutParameter;
+class G4UIcmdWith3VectorAndUnit;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -77,6 +78,11 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fWorldMatPropVectorCmd = nullptr;
     G4UIcmdWithAString* fWorldMatPropConstCmd = nullptr;
     G4UIcmdWithAString* fWorldMaterialCmd = nullptr;
+
+    // SiPM geometry
+    G4UIcmdWithAString* fSiPMFaceCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fSiPMLocalPositionCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fSiPMSizeCmd = nullptr;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

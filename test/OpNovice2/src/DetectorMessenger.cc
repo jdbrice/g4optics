@@ -43,6 +43,7 @@
 #include "G4UIcommand.hh"
 #include "G4UIdirectory.hh"
 #include "G4UIparameter.hh"
+#include "G4UIcmdWith3VectorAndUnit.hh"
 
 #include <iostream>
 #include <sstream>
@@ -126,6 +127,31 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fWorldMaterialCmd->SetGuidance("Set material of world.");
   fWorldMaterialCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fWorldMaterialCmd->SetToBeBroadcasted(false);
+
+  fSiPMFaceCmd = new G4UIcmdWithAString("/opnovice2/sipm/face", this);
+  fSiPMFaceCmd->SetGuidance("Set SiPM attached face: +X, -X, +Y, -Y, +Z, -Z.");
+  fSiPMFaceCmd->AvailableForStates(G4State_PreInit);
+  fSiPMFaceCmd->SetToBeBroadcasted(false);
+
+  fSiPMLocalPositionCmd =
+    new G4UIcmdWith3VectorAndUnit("/opnovice2/sipm/localPosition", this);
+  fSiPMLocalPositionCmd->SetGuidance("Set SiPM local center position on selected face.");
+  fSiPMLocalPositionCmd->SetGuidance("For +/-X: local x=y, local y=z.");
+  fSiPMLocalPositionCmd->SetGuidance("For +/-Y: local x=x, local y=z.");
+  fSiPMLocalPositionCmd->SetGuidance("For +/-Z: local x=x, local y=y.");
+  fSiPMLocalPositionCmd->SetParameterName("u", "v", "unused", false);
+  fSiPMLocalPositionCmd->SetUnitCategory("Length");
+  fSiPMLocalPositionCmd->SetDefaultUnit("cm");
+  fSiPMLocalPositionCmd->AvailableForStates(G4State_PreInit);
+  fSiPMLocalPositionCmd->SetToBeBroadcasted(false);
+
+  fSiPMSizeCmd = new G4UIcmdWith3VectorAndUnit("/opnovice2/sipm/size", this);
+  fSiPMSizeCmd->SetGuidance("Set SiPM size: activeU activeV thickness.");
+  fSiPMSizeCmd->SetParameterName("activeU", "activeV", "thickness", false);
+  fSiPMSizeCmd->SetUnitCategory("Length");
+  fSiPMSizeCmd->SetDefaultUnit("mm");
+  fSiPMSizeCmd->AvailableForStates(G4State_PreInit);
+  fSiPMSizeCmd->SetToBeBroadcasted(false);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -146,6 +172,9 @@ DetectorMessenger::~DetectorMessenger()
   delete fWorldMatPropVectorCmd;
   delete fWorldMatPropConstCmd;
   delete fWorldMaterialCmd;
+  delete fSiPMFaceCmd;
+  delete fSiPMLocalPositionCmd;
+  delete fSiPMSizeCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -439,6 +468,19 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   }
   else if (command == fTankMaterialCmd) {
     fDetector->SetTankMaterial(newValue);
+  }
+
+  // --- SiPM commands ---
+  else if (command == fSiPMFaceCmd) {
+    fDetector->SetSiPMFace(newValue);
+  }
+  else if (command == fSiPMLocalPositionCmd) {
+    fDetector->SetSiPMLocalPosition(
+      fSiPMLocalPositionCmd->GetNew3VectorValue(newValue));
+  }
+  else if (command == fSiPMSizeCmd) {
+    fDetector->SetSiPMSize(
+      fSiPMSizeCmd->GetNew3VectorValue(newValue));
   }
 }
 
