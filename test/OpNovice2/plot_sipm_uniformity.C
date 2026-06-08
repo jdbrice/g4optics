@@ -4,10 +4,15 @@
 #include <TCanvas.h>
 #include <TStyle.h>
 #include <TString.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TF1.h>
 
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
+#include <utility>
 
 TString LabelNum(double v)
 {
@@ -43,6 +48,16 @@ void plot_sipm_uniformity()
   std::vector<double> xs = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
   std::vector<double> ys = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
+  // Current side-mounted SiPM center position in cm.
+  // From DetectorConstruction:
+  // x = fTank_x + fSiPM_x = 5.0 cm + 0.05 cm = 5.05 cm
+  // y = fTank_y - fSiPM_y = 5.0 cm - 0.15 cm = 4.85 cm
+  const double sipmX = 5.05;
+  const double sipmY = 4.85;
+
+  // Store (distance to SiPM, average detected photons/event).
+  std::vector<std::pair<double, double>> distPoints;
+
   TH2D* hMap = new TH2D(
     "hMap",
     "SiPM collection uniformity;electron x position [cm];electron y position [cm];#LT N_{SiPM} #GT / event",
@@ -72,6 +87,12 @@ void plot_sipm_uniformity()
       }
 
       double avgDetected = hDet->GetEntries() / double(nEvents);
+
+      // 2D distance from electron incident position to SiPM center.
+      // First-pass approximation: ignore z because the tile is thin.
+      double dist = std::sqrt((x - sipmX) * (x - sipmX) +
+                              (y - sipmY) * (y - sipmY));
+      distPoints.emplace_back(dist, avgDetected);
 
       int bx = hMap->GetXaxis()->FindBin(x);
       int by = hMap->GetYaxis()->FindBin(y);
@@ -111,4 +132,121 @@ void plot_sipm_uniformity()
 
   c->SaveAs("sipm_uniformity_map.pdf");
   c->SaveAs("sipm_uniformity_map.png");
+
+  // ----------------------------
+  // Plot response vs distance to SiPM
+  // ----------------------------
+
+  // Sort by distance so the graph is ordered from near to far.
+  std::sort(distPoints.begin(), distPoints.end(),
+            [](const auto& a, const auto& b) {
+              return a.first < b.first;
+            });
+
+  TGraph* gDist = new TGraph(distPoints.size());
+
+  for (size_t i = 0; i < distPoints.size(); ++i) {
+    gDist->SetPoint(i, distPoints[i].first, distPoints[i].second);
+  }
+
+  TCanvas* cDist = new TCanvas("cDist", "SiPM response vs distance", 900, 700);
+
+  cDist->SetLeftMargin(0.13);
+  cDist->SetRightMargin(0.05);
+  cDist->SetBottomMargin(0.13);
+  cDist->SetTopMargin(0.10);
+
+  gDist->SetTitle("SiPM response vs distance to SiPM;distance to SiPM [cm];#LT N_{SiPM} #GT / event");
+  gDist->SetMarkerStyle(20);
+  gDist->SetMarkerSize(0.9);
+
+  // Use markers only first. Connecting all points can look messy because
+  // multiple (x,y) positions can have similar distances.
+  gDist->Draw("AP");
+
+  cDist->SaveAs("sipm_response_vs_distance.pdf");
+  cDist->SaveAs("sipm_response_vs_distance.png");
+
+  // ----------------------------
+  // Distance-bin averaged response
+  // ----------------------------
+
+  const double binWidth = 1.0;   // cm
+  const double rMin = 0.0;
+  const double rMax = 14.0;      // enough for current 10 cm x 10 cm tile
+  const int nRBins = int((rMax - rMin) / binWidth);
+
+  std::vector<int> counts(nRBins, 0);
+  std::vector<double> sumY(nRBins, 0.0);
+  std::vector<double> sumY2(nRBins, 0.0);
+
+  for (const auto& p : distPoints) {
+    double r = p.first;
+    double y = p.second;
+
+    int ibin = int((r - rMin) / binWidth);
+    if (ibin < 0 || ibin >= nRBins) continue;
+
+    counts[ibin] += 1;
+    sumY[ibin] += y;
+    sumY2[ibin] += y * y;
+  }
+
+  std::vector<double> rCenters;
+  std::vector<double> yMeans;
+  std::vector<double> rErrors;
+  std::vector<double> yErrors;
+
+  for (int i = 0; i < nRBins; ++i) {
+    if (counts[i] == 0) continue;
+
+    double mean = sumY[i] / counts[i];
+    double mean2 = sumY2[i] / counts[i];
+
+    double rms = 0.0;
+    if (counts[i] > 1) {
+      rms = std::sqrt(std::max(0.0, mean2 - mean * mean));
+    }
+
+    double rCenter = rMin + (i + 0.5) * binWidth;
+
+    rCenters.push_back(rCenter);
+    yMeans.push_back(mean);
+    rErrors.push_back(0.5 * binWidth);
+
+    // This error bar is the spread of points in the distance bin,
+    // not pure statistical uncertainty.
+    yErrors.push_back(rms);
+  }
+
+  TGraphErrors* gAvg = new TGraphErrors(rCenters.size());
+
+  for (size_t i = 0; i < rCenters.size(); ++i) {
+    gAvg->SetPoint(i, rCenters[i], yMeans[i]);
+    gAvg->SetPointError(i, rErrors[i], yErrors[i]);
+  }
+
+  TCanvas* cAvg = new TCanvas("cAvg", "Distance-binned SiPM response", 900, 700);
+
+  cAvg->SetLeftMargin(0.13);
+  cAvg->SetRightMargin(0.05);
+  cAvg->SetBottomMargin(0.13);
+  cAvg->SetTopMargin(0.10);
+
+  gAvg->SetTitle("Distance-binned SiPM response;distance to SiPM [cm];#LT N_{SiPM} #GT / event");
+  gAvg->SetMarkerStyle(20);
+  gAvg->SetMarkerSize(1.0);
+  gAvg->Draw("AP");
+
+  // Empirical exponential fit.
+  // This is only a trend guide, not a full optical transport model.
+  TF1* fExp = new TF1("fExp", "[0]*exp(-x/[1]) + [2]", 0.0, 14.0);
+  fExp->SetParNames("A", "lambda_eff", "C");
+  fExp->SetParameters(700.0, 8.0, 300.0);
+
+  gAvg->Fit(fExp, "R");
+  fExp->Draw("same");
+
+  cAvg->SaveAs("sipm_response_vs_distance_binned.pdf");
+  cAvg->SaveAs("sipm_response_vs_distance_binned.png");
 }
