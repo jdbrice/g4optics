@@ -92,6 +92,12 @@
 # ----------------------------
 # Initialize
 # ----------------------------
+
+# SiPM location
+/opnovice2/sipm/face -Z
+/opnovice2/sipm/localPosition 0 0 0 cm
+/opnovice2/sipm/size 3 3 1 mm
+
 /run/initialize
 
 # ROOT output

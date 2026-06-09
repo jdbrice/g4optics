@@ -14,10 +14,10 @@
 #include <algorithm>
 #include <utility>
 
-TString LabelNum(double v)
+TString LabelInt(int v)
 {
-  if (v < 0) return Form("m%.0f", std::abs(v));
-  return Form("p%.0f", v);
+  if (v < 0) return Form("m%d", std::abs(v));
+  return Form("p%d", v);
 }
 
 TH1* GetDetectedHist(TFile& f)
@@ -39,7 +39,7 @@ TH1* GetDetectedHist(TFile& f)
   return nullptr;
 }
 
-void plot_sipm_uniformity()
+void plot_sipm_uniformity_near_field()
 {
   gStyle->SetOptStat(0);
 
@@ -47,8 +47,8 @@ void plot_sipm_uniformity()
 
   // std::vector<double> xs = {-4, 0, 4};
   // std::vector<double> ys = {-4, 0, 4};
-  std::vector<double> xs = {-0.6, -0.3, 0.0, 0.3, 0.6};
-  std::vector<double> ys = {-0.6, -0.3, 0.0, 0.3, 0.6};
+  std::vector<int> xs = {-6, -3, 0, 3, 6};
+  std::vector<int> ys = {-6, -3, 0, 3, 6};
 
   // The SiPM location, in the center.
   // If top right w/ right side, x = 5.05, y = 4.85
@@ -61,9 +61,9 @@ void plot_sipm_uniformity()
   // For 3x3: -6.0, 6.0 --- For 9x9: -4.5, 4.5
   TH2D* hMap = new TH2D(
     "hMap",
-    "SiPM collection uniformity;electron x position [cm];electron y position [cm];#LT N_{SiPM} #GT / event",
-    xs.size(), -4.5, 4.5,
-    ys.size(), -4.5, 4.5
+    "SiPM near-field scan;electron x position [mm];electron y position [mm];#LT N_{SiPM} #GT / event",
+    xs.size(), -7.5, 7.5,
+    ys.size(), -7.5, 7.5
   );
 
   for (size_t ix = 0; ix < xs.size(); ++ix) {
@@ -71,9 +71,9 @@ void plot_sipm_uniformity()
       double x = xs[ix];
       double y = ys[iy];
 
-      TString fname = Form("scan_outputs/sipm_scan_x%s_y%s.root",
-                           LabelNum(x).Data(),
-                           LabelNum(y).Data());
+      TString fname = Form("scan_outputs/sipm_scan_x%smm_y%smm.root",
+                           LabelInt(x).Data(),
+                           LabelInt(y).Data());
 
       TFile f(fname, "READ");
       if (f.IsZombie()) {
@@ -114,8 +114,8 @@ void plot_sipm_uniformity()
 
   hMap->SetTitle("SiPM collection uniformity");
 
-  hMap->GetXaxis()->SetTitle("electron x position [cm]");
-  hMap->GetYaxis()->SetTitle("electron y position [cm]");
+  hMap->GetXaxis()->SetTitle("electron x position [mm]");
+  hMap->GetYaxis()->SetTitle("electron y position [mm]");
 
   // Shorter and cleaner Z title.
   // This is the color-bar title.
@@ -157,7 +157,7 @@ void plot_sipm_uniformity()
   cDist->SetBottomMargin(0.13);
   cDist->SetTopMargin(0.10);
 
-  gDist->SetTitle("SiPM response vs distance to SiPM;distance to SiPM [cm];#LT N_{SiPM} #GT / event");
+  gDist->SetTitle("SiPM response vs distance to SiPM;distance to SiPM [mm];#LT N_{SiPM} #GT / event");
   gDist->SetMarkerStyle(20);
   gDist->SetMarkerSize(0.9);
 
@@ -234,7 +234,7 @@ void plot_sipm_uniformity()
   cAvg->SetBottomMargin(0.13);
   cAvg->SetTopMargin(0.10);
 
-  gAvg->SetTitle("Distance-binned SiPM response;distance to SiPM [cm];#LT N_{SiPM} #GT / event");
+  gAvg->SetTitle("Distance-binned SiPM response;distance to SiPM [mm];#LT N_{SiPM} #GT / event");
   gAvg->SetMarkerStyle(20);
   gAvg->SetMarkerSize(1.0);
   gAvg->Draw("AP");
