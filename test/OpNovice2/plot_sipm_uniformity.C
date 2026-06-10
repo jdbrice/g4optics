@@ -47,12 +47,12 @@ void plot_sipm_uniformity()
 
   // std::vector<double> xs = {-4, 0, 4};
   // std::vector<double> ys = {-4, 0, 4};
-  std::vector<double> xs = {-0.6, -0.3, 0.0, 0.3, 0.6};
-  std::vector<double> ys = {-0.6, -0.3, 0.0, 0.3, 0.6};
+  std::vector<double> xs = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
+  std::vector<double> ys = {-4, -3, -2, -1, 0, 1, 2, 3, 4};
 
   // The SiPM location, in the center.
   // If top right w/ right side, x = 5.05, y = 4.85
-  const double sipmX = 0.0;
+  const double sipmX = 5.05;
   const double sipmY = 0.0;
 
   // Store (distance to SiPM, average detected photons/event).

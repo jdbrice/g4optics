@@ -77,9 +77,9 @@
 # Initialize
 # ----------------------------
 
-/opnovice2/sipm/face -Z
+/opnovice2/sipm/face +X
 /opnovice2/sipm/localPosition 0 0 0 cm
-/opnovice2/sipm/size 3 3 1 mm
+/opnovice2/sipm/size 2 2 0.5 mm
 
 /run/initialize
 
@@ -132,8 +132,8 @@
 /gun/energy 1 MeV
 
 # SiPM is near +X, +Y corner, so shoot close to +Y side for clearer SiPM-hit visualization.
-/gun/position -6 4 0 cm
-/gun/direction 1 0 0
+/gun/position 0 0 4 cm
+/gun/direction 0 0 -1
 
 /run/printProgress 1
 /run/beamOn 1
