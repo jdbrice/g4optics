@@ -44,6 +44,8 @@
 #include "G4NistManager.hh"
 #include "G4OpticalSurface.hh"
 #include "G4PVPlacement.hh"
+#include "G4Sphere.hh"
+#include "G4SubtractionSolid.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 
@@ -124,9 +126,27 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     new G4PVPlacement(nullptr, G4ThreeVector(), fWorld_LV, "World", nullptr, false, 0);
 
   // The tank
-  auto tank_box = new G4Box("Tank", fTank_x, fTank_y, fTank_z);
+  auto tank_box = new G4Box("Tank_Box", fTank_x, fTank_y, fTank_z);
+  // Subtract a sphere centered on the bottom face, leaving at least 1/4 thickness above.
+  const G4double tankThickness = 2. * fTank_z;
+  const G4double minimumTopThickness = 0.25 * tankThickness;
+  const G4double bottomCavityRadius = tankThickness - minimumTopThickness;
 
-  fTank_LV = new G4LogicalVolume(tank_box, fTankMaterial, "Tank");
+  auto bottomCavitySphere = new G4Sphere("Tank_BottomCavitySphere",
+                                         0.,
+                                         bottomCavityRadius,
+                                         0.,
+                                         360. * deg,
+                                         0.,
+                                         180. * deg);
+
+  auto tank_solid = new G4SubtractionSolid("Tank",
+                                           tank_box,
+                                           bottomCavitySphere,
+                                           nullptr,
+                                           G4ThreeVector(0., 0., -fTank_z));
+
+  fTank_LV = new G4LogicalVolume(tank_solid, fTankMaterial, "Tank");
 
   fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
 
