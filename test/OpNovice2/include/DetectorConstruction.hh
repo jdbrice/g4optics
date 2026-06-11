@@ -98,9 +98,11 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* GetWorldMaterial() const { return fWorldMaterial; }
     void SetTankMaterial(const G4String&);
     G4Material* GetTankMaterial() const { return fTankMaterial; }
+    void SetBottomCavityEnabled(G4bool enabled);
 
     // setting SiPM
     void SetSiPMFace(const G4String& face);
+    void SetSiPMCavityMode(const G4String& mode);
     void SetSiPMLocalPosition(const G4ThreeVector& pos);
     void SetSiPMSize(const G4ThreeVector& size);
 
@@ -114,6 +116,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4double fTank_x = 5. * CLHEP::cm;
     G4double fTank_y = 5. * CLHEP::cm;
     G4double fTank_z = .25 * CLHEP::cm;
+    G4bool fBottomCavityEnabled = true;
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;
@@ -140,8 +143,9 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     // General SiPM placement.
     // fSiPMFace controls which tile face the SiPM is attached to.
-    // Accepted values: +X, -X, +Y, -Y, +Z, -Z.
+    // Accepted values: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.
     G4String fSiPMFace = "+X";
+    G4String fSiPMCavityMode = "surface";
 
     // Local position on the selected face.
     // For +/-X: local x = y, local y = z.
@@ -162,6 +166,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                               G4double& hy,
                               G4double& hz,
                               G4ThreeVector& pos) const;
+    G4double GetBottomCavityRadius() const;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

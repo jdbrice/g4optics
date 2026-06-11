@@ -40,6 +40,7 @@ class DetectorConstruction;
 class G4UIdirectory;
 class G4UIcommand;
 class G4UIcmdWithAString;
+class G4UIcmdWithABool;
 class G4UIcmdWithAnInteger;
 class G4UIcmdWithADouble;
 class G4UIcmdWithADoubleAndUnit;
@@ -73,6 +74,7 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fTankMatPropVectorCmd = nullptr;
     G4UIcmdWithAString* fTankMatPropConstCmd = nullptr;
     G4UIcmdWithAString* fTankMaterialCmd = nullptr;
+    G4UIcmdWithABool* fTankBottomCavityCmd = nullptr;
 
     // the world
     G4UIcmdWithAString* fWorldMatPropVectorCmd = nullptr;
@@ -81,6 +83,7 @@ class DetectorMessenger : public G4UImessenger
 
     // SiPM geometry
     G4UIcmdWithAString* fSiPMFaceCmd = nullptr;
+    G4UIcmdWithAString* fSiPMCavityModeCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMLocalPositionCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMSizeCmd = nullptr;
 };

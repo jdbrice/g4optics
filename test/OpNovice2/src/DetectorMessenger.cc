@@ -37,6 +37,7 @@
 #include "G4OpticalSurface.hh"
 #include "G4UIcmdWithADouble.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
+#include "G4UIcmdWithABool.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithAnInteger.hh"
 #include "G4UIcmdWithoutParameter.hh"
@@ -111,6 +112,11 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fTankMaterialCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fTankMaterialCmd->SetToBeBroadcasted(false);
 
+  fTankBottomCavityCmd = new G4UIcmdWithABool("/opnovice2/tank/bottomCavity", this);
+  fTankBottomCavityCmd->SetGuidance("Enable the bottom hemispherical tank cavity.");
+  fTankBottomCavityCmd->AvailableForStates(G4State_PreInit);
+  fTankBottomCavityCmd->SetToBeBroadcasted(false);
+
   fWorldMatPropVectorCmd = new G4UIcmdWithAString("/opnovice2/worldProperty", this);
   fWorldMatPropVectorCmd->SetGuidance("Set material property vector ");
   fWorldMatPropVectorCmd->SetGuidance("for the world.");
@@ -129,9 +135,14 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fWorldMaterialCmd->SetToBeBroadcasted(false);
 
   fSiPMFaceCmd = new G4UIcmdWithAString("/opnovice2/sipm/face", this);
-  fSiPMFaceCmd->SetGuidance("Set SiPM attached face: +X, -X, +Y, -Y, +Z, -Z.");
+  fSiPMFaceCmd->SetGuidance("Set SiPM attached face: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.");
   fSiPMFaceCmd->AvailableForStates(G4State_PreInit);
   fSiPMFaceCmd->SetToBeBroadcasted(false);
+
+  fSiPMCavityModeCmd = new G4UIcmdWithAString("/opnovice2/sipm/cavityMode", this);
+  fSiPMCavityModeCmd->SetGuidance("Set bottomCavity SiPM mode: surface or opening.");
+  fSiPMCavityModeCmd->AvailableForStates(G4State_PreInit);
+  fSiPMCavityModeCmd->SetToBeBroadcasted(false);
 
   fSiPMLocalPositionCmd =
     new G4UIcmdWith3VectorAndUnit("/opnovice2/sipm/localPosition", this);
@@ -139,6 +150,7 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fSiPMLocalPositionCmd->SetGuidance("For +/-X: local x=y, local y=z.");
   fSiPMLocalPositionCmd->SetGuidance("For +/-Y: local x=x, local y=z.");
   fSiPMLocalPositionCmd->SetGuidance("For +/-Z: local x=x, local y=y.");
+  fSiPMLocalPositionCmd->SetGuidance("For bottomCavity: local x=x, local y=y.");
   fSiPMLocalPositionCmd->SetParameterName("u", "v", "unused", false);
   fSiPMLocalPositionCmd->SetUnitCategory("Length");
   fSiPMLocalPositionCmd->SetDefaultUnit("cm");
@@ -169,10 +181,12 @@ DetectorMessenger::~DetectorMessenger()
   delete fTankMatPropVectorCmd;
   delete fTankMatPropConstCmd;
   delete fTankMaterialCmd;
+  delete fTankBottomCavityCmd;
   delete fWorldMatPropVectorCmd;
   delete fWorldMatPropConstCmd;
   delete fWorldMaterialCmd;
   delete fSiPMFaceCmd;
+  delete fSiPMCavityModeCmd;
   delete fSiPMLocalPositionCmd;
   delete fSiPMSizeCmd;
 }
@@ -469,10 +483,16 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   else if (command == fTankMaterialCmd) {
     fDetector->SetTankMaterial(newValue);
   }
+  else if (command == fTankBottomCavityCmd) {
+    fDetector->SetBottomCavityEnabled(fTankBottomCavityCmd->GetNewBoolValue(newValue));
+  }
 
   // --- SiPM commands ---
   else if (command == fSiPMFaceCmd) {
     fDetector->SetSiPMFace(newValue);
+  }
+  else if (command == fSiPMCavityModeCmd) {
+    fDetector->SetSiPMCavityMode(newValue);
   }
   else if (command == fSiPMLocalPositionCmd) {
     fDetector->SetSiPMLocalPosition(
