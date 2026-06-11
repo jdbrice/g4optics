@@ -116,7 +116,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4double fTank_x = 5. * CLHEP::cm;
     G4double fTank_y = 5. * CLHEP::cm;
     G4double fTank_z = .25 * CLHEP::cm;
-    G4bool fBottomCavityEnabled = true;
+    G4bool fBottomCavityEnabled = false;
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;

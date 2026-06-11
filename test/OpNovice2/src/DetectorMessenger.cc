@@ -114,6 +114,7 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
 
   fTankBottomCavityCmd = new G4UIcmdWithABool("/opnovice2/tank/bottomCavity", this);
   fTankBottomCavityCmd->SetGuidance("Enable the bottom hemispherical tank cavity.");
+  fTankBottomCavityCmd->SetDefaultValue(false);
   fTankBottomCavityCmd->AvailableForStates(G4State_PreInit);
   fTankBottomCavityCmd->SetToBeBroadcasted(false);
 
