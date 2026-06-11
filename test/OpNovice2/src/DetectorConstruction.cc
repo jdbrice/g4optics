@@ -44,11 +44,17 @@
 #include "G4NistManager.hh"
 #include "G4OpticalSurface.hh"
 #include "G4PVPlacement.hh"
+#include "G4Sphere.hh"
+#include "G4SubtractionSolid.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
+#include "G4VSolid.hh"
 
 #include "G4Colour.hh"
 #include "G4VisAttributes.hh"
+
+#include <algorithm>
+#include <cmath>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -124,9 +130,26 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     new G4PVPlacement(nullptr, G4ThreeVector(), fWorld_LV, "World", nullptr, false, 0);
 
   // The tank
-  auto tank_box = new G4Box("Tank", fTank_x, fTank_y, fTank_z);
+  auto tank_box = new G4Box("Tank_Box", fTank_x, fTank_y, fTank_z);
+  G4VSolid* tank_solid = tank_box;
 
-  fTank_LV = new G4LogicalVolume(tank_box, fTankMaterial, "Tank");
+  if (fBottomCavityEnabled) {
+    auto bottomCavitySphere = new G4Sphere("Tank_BottomCavitySphere",
+                                           0.,
+                                           GetBottomCavityRadius(),
+                                           0.,
+                                           360. * deg,
+                                           0.,
+                                           180. * deg);
+
+    tank_solid = new G4SubtractionSolid("Tank",
+                                        tank_box,
+                                        bottomCavitySphere,
+                                        nullptr,
+                                        G4ThreeVector(0., 0., -fTank_z));
+  }
+
+  fTank_LV = new G4LogicalVolume(tank_solid, fTankMaterial, "Tank");
 
   fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
 
@@ -274,6 +297,22 @@ void DetectorConstruction::SetTankMaterial(const G4String& mat)
   }
 }
 
+void DetectorConstruction::SetBottomCavityEnabled(G4bool enabled)
+{
+  fBottomCavityEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Tank bottom cavity set to "
+         << (fBottomCavityEnabled ? "true" : "false") << G4endl;
+}
+
+G4double DetectorConstruction::GetBottomCavityRadius() const
+{
+  const G4double tankThickness = 2. * fTank_z;
+  const G4double minimumTopThickness = 0.25 * tankThickness;
+  return tankThickness - minimumTopThickness;
+}
+
 
 void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
                                                 G4double& hy,
@@ -323,10 +362,78 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
     hz = ht;
     pos = G4ThreeVector(u, v, -fTank_z - ht);
   }
+  else if (fSiPMFace == "bottomCavity") {
+    hx = hu;
+    hy = hv;
+    hz = ht;
+
+    if (!fBottomCavityEnabled) {
+      G4ExceptionDescription msg;
+      msg << "SiPM face bottomCavity requires /opnovice2/tank/bottomCavity true.";
+      G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                  "OpNovice2_SiPM_002",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double cavityRadius = GetBottomCavityRadius();
+    const G4double cornerRadii[] = {
+      std::sqrt((u - hu) * (u - hu) + (v - hv) * (v - hv)),
+      std::sqrt((u - hu) * (u - hu) + (v + hv) * (v + hv)),
+      std::sqrt((u + hu) * (u + hu) + (v - hv) * (v - hv)),
+      std::sqrt((u + hu) * (u + hu) + (v + hv) * (v + hv))
+    };
+    G4double rMax = cornerRadii[0];
+    for (G4int i = 1; i < 4; ++i) {
+      rMax = std::max(rMax, cornerRadii[i]);
+    }
+    const G4double safety = 1.e-6 * mm;
+
+    if (rMax >= cavityRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "SiPM footprint does not fit inside the bottom cavity opening. "
+          << "farthest corner radius=" << rMax / mm
+          << " mm, cavity radius=" << cavityRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                  "OpNovice2_SiPM_003",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double cavityTopAtFootprint =
+      -fTank_z + std::sqrt(cavityRadius * cavityRadius - rMax * rMax);
+
+    if (fSiPMCavityMode == "surface") {
+      pos = G4ThreeVector(u, v, cavityTopAtFootprint - ht - safety);
+    }
+    else if (fSiPMCavityMode == "opening") {
+      const G4double topFace = -fTank_z + fSiPMThickness;
+      if (topFace >= cavityTopAtFootprint - safety) {
+        G4ExceptionDescription msg;
+        msg << "SiPM opening placement would overlap EJ-200. "
+            << "top face z=" << topFace / mm
+            << " mm, cavity clearance z=" << cavityTopAtFootprint / mm << " mm.";
+        G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                    "OpNovice2_SiPM_004",
+                    FatalException,
+                    msg);
+      }
+      pos = G4ThreeVector(u, v, -fTank_z + ht);
+    }
+    else {
+      G4ExceptionDescription msg;
+      msg << "Unknown SiPM cavity mode: " << fSiPMCavityMode
+          << ". Use surface or opening.";
+      G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                  "OpNovice2_SiPM_005",
+                  FatalException,
+                  msg);
+    }
+  }
   else {
     G4ExceptionDescription msg;
     msg << "Unknown SiPM face: " << fSiPMFace
-        << ". Use +X, -X, +Y, -Y, +Z, -Z.";
+        << ". Use +X, -X, +Y, -Y, +Z, -Z, bottomCavity.";
     G4Exception("DetectorConstruction::ComputeSiPMPlacement",
                 "OpNovice2_SiPM_001",
                 FatalException,
@@ -340,6 +447,23 @@ void DetectorConstruction::SetSiPMFace(const G4String& face)
   G4RunManager::GetRunManager()->GeometryHasBeenModified();
 
   G4cout << "SiPM face set to " << fSiPMFace << G4endl;
+}
+
+void DetectorConstruction::SetSiPMCavityMode(const G4String& mode)
+{
+  if (mode != "surface" && mode != "opening") {
+    G4ExceptionDescription msg;
+    msg << "Invalid SiPM cavity mode: " << mode << ". Use surface or opening.";
+    G4Exception("DetectorConstruction::SetSiPMCavityMode",
+                "OpNovice2_SiPM_006",
+                FatalException,
+                msg);
+  }
+
+  fSiPMCavityMode = mode;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "SiPM cavity mode set to " << fSiPMCavityMode << G4endl;
 }
 
 void DetectorConstruction::SetSiPMLocalPosition(const G4ThreeVector& pos)

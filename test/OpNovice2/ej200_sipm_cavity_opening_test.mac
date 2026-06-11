@@ -1,0 +1,125 @@
+/control/verbose 0
+/tracking/verbose 0
+/process/optical/verbose 0
+/run/verbose 0
+/control/cout/ignoreThreadsExcept 0
+
+/run/numberOfThreads 1
+
+# ----------------------------
+# Materials
+# ----------------------------
+
+/opnovice2/boxMaterial G4_PLASTIC_SC_VINYLTOLUENE
+/opnovice2/worldMaterial G4_AIR
+
+
+# ----------------------------
+# EJ-200 (Box) Property
+# IMPORTANT:
+# For /opnovice2 custom commands, use Geant4 internal units:
+#   energy = MeV
+#   length = mm
+#   time   = ns
+# ----------------------------
+
+# Light output (% Anthracene): 64
+# ...
+
+# Scintillation efficiency (photons / 1 MeV e-): 10000
+/opnovice2/boxConstProperty SCINTILLATIONYIELD 10000
+/opnovice2/boxConstProperty SCINTILLATIONYIELD1 1.0
+/opnovice2/boxConstProperty RESOLUTIONSCALE 1.0
+
+# Wavelength of Maximum Emission (nm): 425
+# The data points are taken from EJ-200 emission sheet.
+/opnovice2/boxProperty SCINTILLATIONCOMPONENT1 0.0000024982 0.069 0.0000025419 0.109 0.0000025623 0.134 0.0000025838 0.174 0.0000026039 0.214 0.0000026273 0.274 0.0000026495 0.335 0.0000026823 0.415 0.0000027196 0.468 0.0000027700 0.582 0.0000028458 0.851 0.0000029033 0.991 0.0000029173 1.000 0.0000029313 0.985 0.0000029383 0.960 0.0000029516 0.881 0.0000030092 0.352 0.0000031001 0.017
+
+# Light Attenuation Length (cm): 380
+# The energy range is set to accomodate 380nm~600nm (see EJ-200 emission spectrum)
+/opnovice2/boxProperty ABSLENGTH 0.0000020 3800 0.0000033 3800
+
+# Rise Time (ns): 0.9
+/opnovice2/boxConstProperty SCINTILLATIONRISETIME1 0.9
+
+# Decay Time (ns): 2.1
+/opnovice2/boxConstProperty SCINTILLATIONTIMECONSTANT1 2.1
+
+# Pulse Width, FWHM (ns): 2.5
+# ...
+
+# Density (g / cm3): 1.023
+# ...
+
+# Refractive Index: 1.58
+/opnovice2/boxProperty RINDEX 0.0000020 1.58 0.0000033 1.58
+
+# ----------------------------
+# World Properties
+# ----------------------------
+
+/opnovice2/worldProperty RINDEX 0.0000020 1.0003 0.0000033 1.0003
+/opnovice2/worldProperty ABSLENGTH 0.0000020 100 0.0000033 100
+
+# ----------------------------
+# Surface / boundary behavior
+# First version: scintillator-air dielectric interface
+# ----------------------------
+
+/opnovice2/surfaceModel unified
+/opnovice2/surfaceType dielectric_dielectric
+/opnovice2/surfaceFinish polished
+/opnovice2/surfaceSigmaAlpha 0.0
+
+# ----------------------------
+# Optical processes
+# ----------------------------
+
+/process/optical/processActivation Cerenkov false
+/process/optical/processActivation Scintillation true       # The EJ-200 emits photons
+/process/optical/processActivation OpAbsorption true        # The EJ-200 has absorption length
+/process/optical/processActivation OpBoundary true          # We need to do boundary processes
+/process/optical/processActivation OpRayleigh false
+/process/optical/processActivation OpMieHG false
+/process/optical/processActivation OpWLS false
+
+/process/optical/scintillation/setByParticleType false
+/process/optical/scintillation/setTrackInfo false
+/process/optical/scintillation/setFiniteRiseTime true           # The EJ-200 has a rise time
+/process/optical/scintillation/setStackPhotons true
+/process/optical/scintillation/setTrackSecondariesFirst true
+
+# ----------------------------
+# Initialize
+# ----------------------------
+
+# SiPM bottom face is coplanar with the original tank bottom face.
+/opnovice2/tank/bottomCavity true
+/opnovice2/sipm/face bottomCavity
+/opnovice2/sipm/cavityMode opening
+/opnovice2/sipm/localPosition 0 0 0 cm
+/opnovice2/sipm/size 2 2 0.5 mm
+
+/run/initialize
+
+# ROOT output
+/analysis/setFileName ej200_sipm_cavity_opening_test
+
+# histograms
+/analysis/h1/set 2 100 2.0 3.5
+/analysis/h1/set 3 400 0 100
+/analysis/h1/set 27 100 2.0 3.5  # SiPM detected photon energy [eV]
+/analysis/h1/set 28 400 0 100    # SiPM detected photon arrival time [ns]
+
+
+# ----------------------------
+# Electron gun
+# ----------------------------
+/gun/particle e-
+/gun/energy 1 MeV
+
+/gun/position 0 0 4 cm
+/gun/direction 0 0 -1
+
+/run/printProgress 10
+/run/beamOn 100
