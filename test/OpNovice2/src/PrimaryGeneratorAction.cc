@@ -43,6 +43,9 @@
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
 
+#include <algorithm>
+#include <cmath>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
@@ -76,6 +79,19 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
+  if (fElectronEnergyMode == "sr90Beta") {
+    auto particle = fParticleGun->GetParticleDefinition();
+    if (!particle || particle->GetParticleName() != "e-") {
+      G4ExceptionDescription msg;
+      msg << "Electron energy mode sr90Beta requires /gun/particle e-.";
+      G4Exception("PrimaryGeneratorAction::GeneratePrimaries",
+                  "OpNovice2_Gun_001",
+                  FatalException,
+                  msg);
+    }
+    fParticleGun->SetParticleEnergy(SampleSr90BetaEnergy());
+  }
+
   if (fRandomDirection) {
     G4double theta = CLHEP::halfpi * G4UniformRand();
     G4double phi = CLHEP::twopi * G4UniformRand();
@@ -133,4 +149,78 @@ void PrimaryGeneratorAction::SetOptPhotonPolar(G4double angle)
 void PrimaryGeneratorAction::SetRandomDirection(G4bool val)
 {
   fRandomDirection = val;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void PrimaryGeneratorAction::SetElectronEnergyMode(const G4String& mode)
+{
+  if (mode == "fixed") {
+    fElectronEnergyMode = mode;
+  }
+  else if (mode == "sr90" || mode == "sr90Beta") {
+    fElectronEnergyMode = "sr90Beta";
+  }
+  else {
+    G4ExceptionDescription msg;
+    msg << "Invalid electron energy mode: " << mode
+        << ". Use fixed or sr90Beta.";
+    G4Exception("PrimaryGeneratorAction::SetElectronEnergyMode",
+                "OpNovice2_Gun_002",
+                FatalException,
+                msg);
+  }
+
+  G4cout << "Electron energy mode set to " << fElectronEnergyMode << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double PrimaryGeneratorAction::SampleSr90BetaEnergy() const
+{
+  // Empirical approximation of the supplied Sr-90 beta spectrum plot.
+  // Energies are in MeV and weights are relative emission density.
+  static const G4double energyMeV[] = {
+    0.00, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50,
+    0.65, 0.80, 1.00, 1.20, 1.40, 1.60, 1.80, 2.00,
+    2.20, 2.28
+  };
+  static const G4double weight[] = {
+    0.00, 0.20, 0.80, 1.00, 0.88, 0.50, 0.32, 0.22,
+    0.20, 0.22, 0.18, 0.13, 0.08, 0.045, 0.025, 0.012,
+    0.004, 0.00
+  };
+  static const G4int n = sizeof(energyMeV) / sizeof(energyMeV[0]);
+
+  G4double totalArea = 0.0;
+  for (G4int i = 0; i < n - 1; ++i) {
+    totalArea += 0.5 * (weight[i] + weight[i + 1]) * (energyMeV[i + 1] - energyMeV[i]);
+  }
+
+  G4double target = G4UniformRand() * totalArea;
+  for (G4int i = 0; i < n - 1; ++i) {
+    const G4double dx = energyMeV[i + 1] - energyMeV[i];
+    const G4double w0 = weight[i];
+    const G4double w1 = weight[i + 1];
+    const G4double segmentArea = 0.5 * (w0 + w1) * dx;
+    if (target > segmentArea) {
+      target -= segmentArea;
+      continue;
+    }
+
+    const G4double slope = (w1 - w0) / dx;
+    G4double offset = 0.0;
+    if (std::abs(slope) < 1.e-12) {
+      offset = (w0 > 0.) ? target / w0 : G4UniformRand() * dx;
+    }
+    else {
+      const G4double discriminant = std::max(0.0, w0 * w0 + 2. * slope * target);
+      offset = (-w0 + std::sqrt(discriminant)) / slope;
+      if (offset < 0. || offset > dx) {
+        offset = G4UniformRand() * dx;
+      }
+    }
+
+    return (energyMeV[i] + offset) * MeV;
+  }
+
+  return energyMeV[n - 1] * MeV;
 }

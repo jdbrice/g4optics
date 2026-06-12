@@ -117,6 +117,7 @@
 # ----------------------------
 /gun/particle e-
 /gun/energy 1 MeV
+/opnovice2/gun/electronEnergyMode sr90Beta
 
 /gun/position 0 0 4 cm
 /gun/direction 0 0 -1

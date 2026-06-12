@@ -98,6 +98,8 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* GetWorldMaterial() const { return fWorldMaterial; }
     void SetTankMaterial(const G4String&);
     G4Material* GetTankMaterial() const { return fTankMaterial; }
+    void SetTankSize(const G4ThreeVector& fullSize);
+    void SetTankSizePreset(const G4String& preset);
     void SetBottomCavityEnabled(G4bool enabled);
 
     // setting SiPM

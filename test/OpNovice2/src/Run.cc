@@ -49,12 +49,13 @@ Run::Run() : G4Run()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void Run::SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
-                     G4double polarization)
+                     G4double polarization, const G4String& electronEnergyMode)
 {
   fParticle = particle;
   fEkin = energy;
   fPolarized = polarized;
   fPolarization = polarization;
+  fElectronEnergyMode = electronEnergyMode;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -67,6 +68,7 @@ void Run::Merge(const G4Run* run)
   fEkin = localRun->fEkin;
   fPolarized = localRun->fPolarized;
   fPolarization = localRun->fPolarization;
+  fElectronEnergyMode = localRun->fElectronEnergyMode;
 
   fCerenkovEnergy += localRun->fCerenkovEnergy;
   fScintEnergy += localRun->fScintEnergy;
@@ -217,8 +219,15 @@ void Run::EndOfRun()
 
   G4cout << "\n    Run Summary\n";
   G4cout << "---------------------------------\n";
-  G4cout << "Primary particle was: " << fParticle->GetParticleName() << " with energy "
-         << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  G4cout << "Primary particle was: " << fParticle->GetParticleName();
+  if (fElectronEnergyMode == "fixed") {
+    G4cout << " with energy " << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  }
+  else {
+    G4cout << " with " << fElectronEnergyMode
+           << " energy sampling; nominal /gun/energy is "
+           << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  }
   G4cout << "Number of events: " << numberOfEvent << G4endl;
 
   G4cout << "Material of world: " << det->GetWorldMaterial()->GetName() << G4endl;

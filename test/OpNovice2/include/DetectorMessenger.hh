@@ -74,6 +74,8 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fTankMatPropVectorCmd = nullptr;
     G4UIcmdWithAString* fTankMatPropConstCmd = nullptr;
     G4UIcmdWithAString* fTankMaterialCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fTankSizeCmd = nullptr;
+    G4UIcmdWithAString* fTankSizePresetCmd = nullptr;
     G4UIcmdWithABool* fTankBottomCavityCmd = nullptr;
 
     // the world

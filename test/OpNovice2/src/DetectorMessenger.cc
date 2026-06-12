@@ -112,6 +112,20 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fTankMaterialCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fTankMaterialCmd->SetToBeBroadcasted(false);
 
+  fTankSizeCmd = new G4UIcmdWith3VectorAndUnit("/opnovice2/tank/size", this);
+  fTankSizeCmd->SetGuidance("Set full EJ-200 tank size: x y thickness.");
+  fTankSizeCmd->SetParameterName("x", "y", "thickness", false);
+  fTankSizeCmd->SetUnitCategory("Length");
+  fTankSizeCmd->SetDefaultUnit("cm");
+  fTankSizeCmd->AvailableForStates(G4State_PreInit);
+  fTankSizeCmd->SetToBeBroadcasted(false);
+
+  fTankSizePresetCmd = new G4UIcmdWithAString("/opnovice2/tank/sizePreset", this);
+  fTankSizePresetCmd->SetGuidance("Set EJ-200 tank size preset.");
+  fTankSizePresetCmd->SetGuidance("Options: 5x5x0p4, 5x5x0p8, 5x5x1p6, 10x10x0p4, 10x10x0p8, 10x10x1p6.");
+  fTankSizePresetCmd->AvailableForStates(G4State_PreInit);
+  fTankSizePresetCmd->SetToBeBroadcasted(false);
+
   fTankBottomCavityCmd = new G4UIcmdWithABool("/opnovice2/tank/bottomCavity", this);
   fTankBottomCavityCmd->SetGuidance("Enable the bottom hemispherical tank cavity.");
   fTankBottomCavityCmd->SetDefaultValue(false);
@@ -182,6 +196,8 @@ DetectorMessenger::~DetectorMessenger()
   delete fTankMatPropVectorCmd;
   delete fTankMatPropConstCmd;
   delete fTankMaterialCmd;
+  delete fTankSizeCmd;
+  delete fTankSizePresetCmd;
   delete fTankBottomCavityCmd;
   delete fWorldMatPropVectorCmd;
   delete fWorldMatPropConstCmd;
@@ -483,6 +499,12 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   }
   else if (command == fTankMaterialCmd) {
     fDetector->SetTankMaterial(newValue);
+  }
+  else if (command == fTankSizeCmd) {
+    fDetector->SetTankSize(fTankSizeCmd->GetNew3VectorValue(newValue));
+  }
+  else if (command == fTankSizePresetCmd) {
+    fDetector->SetTankSizePreset(newValue);
   }
   else if (command == fTankBottomCavityCmd) {
     fDetector->SetBottomCavityEnabled(fTankBottomCavityCmd->GetNewBoolValue(newValue));
