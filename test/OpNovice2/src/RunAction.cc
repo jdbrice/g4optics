@@ -69,7 +69,7 @@ void RunAction::BeginOfRunAction(const G4Run*)
     G4double energy = fPrimary->GetParticleGun()->GetParticleEnergy();
     G4bool polarized = fPrimary->GetPolarized();
     G4double polarization = fPrimary->GetPolarization();
-    fRun->SetPrimary(particle, energy, polarized, polarization);
+    fRun->SetPrimary(particle, energy, polarized, polarization, fPrimary->GetElectronEnergyMode());
   }
 
   // histograms

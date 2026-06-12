@@ -45,7 +45,7 @@ class Run : public G4Run
     ~Run() override = default;
 
     void SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
-                    G4double polarization);
+                    G4double polarization, const G4String& electronEnergyMode);
 
     //  particle energy
     void AddCerenkovEnergy(G4double en) { fCerenkovEnergy += en; }
@@ -134,6 +134,7 @@ class Run : public G4Run
     G4double fEkin = -1.;
     G4bool fPolarized = false;
     G4double fPolarization = 0.;
+    G4String fElectronEnergyMode = "fixed";
 
     G4double fCerenkovEnergy = 0.;
     G4double fScintEnergy = 0.;

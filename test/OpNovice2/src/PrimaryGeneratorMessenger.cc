@@ -36,6 +36,7 @@
 
 #include "G4SystemOfUnits.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIdirectory.hh"
 
@@ -59,6 +60,11 @@ PrimaryGeneratorMessenger::PrimaryGeneratorMessenger(PrimaryGeneratorAction* Gun
   fRandomDirectionCmd->SetGuidance("Set direction of each primary particle randomly.");
   fRandomDirectionCmd->SetDefaultValue(true);
   fRandomDirectionCmd->AvailableForStates(G4State_Idle, G4State_PreInit);
+
+  fElectronEnergyModeCmd = new G4UIcmdWithAString("/opnovice2/gun/electronEnergyMode", this);
+  fElectronEnergyModeCmd->SetGuidance("Set electron kinetic energy mode: fixed or sr90Beta.");
+  fElectronEnergyModeCmd->SetGuidance("fixed uses /gun/energy; sr90Beta samples one beta energy per event.");
+  fElectronEnergyModeCmd->AvailableForStates(G4State_Idle, G4State_PreInit);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -68,6 +74,7 @@ PrimaryGeneratorMessenger::~PrimaryGeneratorMessenger()
   delete fPolarCmd;
   delete fGunDir;
   delete fRandomDirectionCmd;
+  delete fElectronEnergyModeCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -85,6 +92,9 @@ void PrimaryGeneratorMessenger::SetNewValue(G4UIcommand* command, G4String newVa
   }
   else if (command == fRandomDirectionCmd) {
     fPrimaryAction->SetRandomDirection(true);
+  }
+  else if (command == fElectronEnergyModeCmd) {
+    fPrimaryAction->SetElectronEnergyMode(newValue);
   }
 }
 

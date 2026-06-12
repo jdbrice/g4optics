@@ -55,15 +55,20 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
     void SetOptPhotonPolar();
     void SetOptPhotonPolar(G4double);
     void SetRandomDirection(G4bool val = true);
+    void SetElectronEnergyMode(const G4String& mode);
     G4bool GetPolarized() { return fPolarized; };
     G4double GetPolarization() { return fPolarization; }
+    const G4String& GetElectronEnergyMode() const { return fElectronEnergyMode; }
 
   private:
+    G4double SampleSr90BetaEnergy() const;
+
     G4ParticleGun* fParticleGun = nullptr;
     PrimaryGeneratorMessenger* fGunMessenger = nullptr;
     G4bool fRandomDirection = false;
     G4bool fPolarized = false;
     G4double fPolarization = 0.;
+    G4String fElectronEnergyMode = "fixed";
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

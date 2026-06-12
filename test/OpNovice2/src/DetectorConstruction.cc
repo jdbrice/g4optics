@@ -297,6 +297,61 @@ void DetectorConstruction::SetTankMaterial(const G4String& mat)
   }
 }
 
+void DetectorConstruction::SetTankSize(const G4ThreeVector& fullSize)
+{
+  if (fullSize.x() <= 0. || fullSize.y() <= 0. || fullSize.z() <= 0.) {
+    G4ExceptionDescription msg;
+    msg << "Invalid tank full size: " << fullSize / cm
+        << " cm. All dimensions must be positive.";
+    G4Exception("DetectorConstruction::SetTankSize",
+                "OpNovice2_Tank_001",
+                FatalException,
+                msg);
+  }
+
+  fTank_x = 0.5 * fullSize.x();
+  fTank_y = 0.5 * fullSize.y();
+  fTank_z = 0.5 * fullSize.z();
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Tank full size set to "
+         << 2. * fTank_x / cm << " x "
+         << 2. * fTank_y / cm << " x "
+         << 2. * fTank_z / cm << " cm" << G4endl;
+}
+
+void DetectorConstruction::SetTankSizePreset(const G4String& preset)
+{
+  if (preset == "5x5x0p4") {
+    SetTankSize(G4ThreeVector(5. * cm, 5. * cm, 0.4 * cm));
+  }
+  else if (preset == "5x5x0p8") {
+    SetTankSize(G4ThreeVector(5. * cm, 5. * cm, 0.8 * cm));
+  }
+  else if (preset == "5x5x1p6") {
+    SetTankSize(G4ThreeVector(5. * cm, 5. * cm, 1.6 * cm));
+  }
+  else if (preset == "10x10x0p4") {
+    SetTankSize(G4ThreeVector(10. * cm, 10. * cm, 0.4 * cm));
+  }
+  else if (preset == "10x10x0p8") {
+    SetTankSize(G4ThreeVector(10. * cm, 10. * cm, 0.8 * cm));
+  }
+  else if (preset == "10x10x1p6") {
+    SetTankSize(G4ThreeVector(10. * cm, 10. * cm, 1.6 * cm));
+  }
+  else {
+    G4ExceptionDescription msg;
+    msg << "Unknown tank size preset: " << preset
+        << ". Use 5x5x0p4, 5x5x0p8, 5x5x1p6, "
+        << "10x10x0p4, 10x10x0p8, or 10x10x1p6.";
+    G4Exception("DetectorConstruction::SetTankSizePreset",
+                "OpNovice2_Tank_002",
+                FatalException,
+                msg);
+  }
+}
+
 void DetectorConstruction::SetBottomCavityEnabled(G4bool enabled)
 {
   fBottomCavityEnabled = enabled;

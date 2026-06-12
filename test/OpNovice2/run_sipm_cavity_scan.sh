@@ -12,6 +12,9 @@ GRID="near5"
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
+TANK_SIZE_OVERRIDE=""
+TANK_SIZE_PRESET_OVERRIDE=""
+ELECTRON_ENERGY_MODE_OVERRIDE=""
 
 BEAM_DIRECTION="0 0 -1"
 SCAN_RUNS_DIR="scan_runs"
@@ -33,6 +36,10 @@ Placement options:
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
   --sipm-cavity-mode MODE             surface or opening
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
+  --tank-size "x y z unit"            override full tank size, e.g. "10 10 0.8 cm"
+  --tank-size-preset PRESET           5x5x0p4, 5x5x0p8, 5x5x1p6,
+                                      10x10x0p4, 10x10x0p8, or 10x10x1p6
+  --electron-energy-mode MODE         fixed or sr90Beta
 
 Environment:
   N_EVENTS=100   events per scan point
@@ -85,6 +92,42 @@ while [[ $# -gt 0 ]]; do
       ;;
     --sipm-local-position=*)
       SIPM_LOCAL_POSITION_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --tank-size)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --tank-size" >&2
+        exit 1
+      fi
+      TANK_SIZE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --tank-size=*)
+      TANK_SIZE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --tank-size-preset)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --tank-size-preset" >&2
+        exit 1
+      fi
+      TANK_SIZE_PRESET_OVERRIDE="$2"
+      shift 2
+      ;;
+    --tank-size-preset=*)
+      TANK_SIZE_PRESET_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --electron-energy-mode)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --electron-energy-mode" >&2
+        exit 1
+      fi
+      ELECTRON_ENERGY_MODE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --electron-energy-mode=*)
+      ELECTRON_ENERGY_MODE_OVERRIDE="${1#*=}"
       shift
       ;;
     --)
@@ -173,6 +216,42 @@ if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then
     echo "Invalid --sipm-local-position: ${SIPM_LOCAL_POSITION_OVERRIDE}. Use quoted form like \"0 0 0 cm\"." >&2
     exit 1
   fi
+fi
+
+if [[ -n "${TANK_SIZE_OVERRIDE}" && -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
+  echo "Use either --tank-size or --tank-size-preset, not both." >&2
+  exit 1
+fi
+
+if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then
+  read -r tank_size_x tank_size_y tank_size_z tank_size_unit tank_size_extra <<< "${TANK_SIZE_OVERRIDE}"
+  if [[ -z "${tank_size_x:-}" || -z "${tank_size_y:-}" || -z "${tank_size_z:-}" || -z "${tank_size_unit:-}" || -n "${tank_size_extra:-}" ]]; then
+    echo "Invalid --tank-size: ${TANK_SIZE_OVERRIDE}. Use quoted form like \"10 10 0.8 cm\"." >&2
+    exit 1
+  fi
+fi
+
+if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
+  case "${TANK_SIZE_PRESET_OVERRIDE}" in
+    5x5x0p4|5x5x0p8|5x5x1p6|10x10x0p4|10x10x0p8|10x10x1p6)
+      ;;
+    *)
+      echo "Invalid --tank-size-preset: ${TANK_SIZE_PRESET_OVERRIDE}." >&2
+      echo "Use 5x5x0p4, 5x5x0p8, 5x5x1p6, 10x10x0p4, 10x10x0p8, or 10x10x1p6." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
+  case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
+    fixed|sr90Beta|sr90)
+      ;;
+    *)
+      echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed or sr90Beta." >&2
+      exit 1
+      ;;
+  esac
 fi
 
 if [[ ! -f "${TEMPLATE_MACRO}" ]]; then
@@ -303,12 +382,26 @@ template_gun_direction="$(macro_value_after "/gun/direction")"
 template_beam_on="$(macro_value_after "/run/beamOn")"
 primary_particle="$(macro_value_after "/gun/particle")"
 primary_energy="$(macro_value_after "/gun/energy")"
+electron_energy_mode="$(macro_value_after "/opnovice2/gun/electronEnergyMode")"
 sipm_face="$(macro_value_after "/opnovice2/sipm/face")"
 sipm_cavity_mode="$(macro_value_after "/opnovice2/sipm/cavityMode")"
 sipm_local="$(macro_value_after "/opnovice2/sipm/localPosition")"
+template_tank_size="$(macro_value_after "/opnovice2/tank/size")"
+template_tank_size_preset="$(macro_value_after "/opnovice2/tank/sizePreset")"
+template_electron_energy_mode="${electron_energy_mode}"
 template_sipm_face="${sipm_face}"
 template_sipm_cavity_mode="${sipm_cavity_mode}"
 template_sipm_local="${sipm_local}"
+if [[ -z "${electron_energy_mode}" ]]; then
+  electron_energy_mode="fixed"
+fi
+if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
+  if [[ "${ELECTRON_ENERGY_MODE_OVERRIDE}" == "sr90" ]]; then
+    electron_energy_mode="sr90Beta"
+  else
+    electron_energy_mode="${ELECTRON_ENERGY_MODE_OVERRIDE}"
+  fi
+fi
 if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then
   sipm_face="${SIPM_FACE_OVERRIDE}"
 fi
@@ -317,6 +410,16 @@ if [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]]; then
 fi
 if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then
   sipm_local="${SIPM_LOCAL_POSITION_OVERRIDE}"
+fi
+tank_size="${template_tank_size}"
+tank_size_preset="${template_tank_size_preset}"
+if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then
+  tank_size="${TANK_SIZE_OVERRIDE}"
+  tank_size_preset=""
+fi
+if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
+  tank_size=""
+  tank_size_preset="${TANK_SIZE_PRESET_OVERRIDE}"
 fi
 template_bottom_cavity="$(macro_value_after "/opnovice2/tank/bottomCavity")"
 if [[ "${MODE}" == "full" ]]; then
@@ -389,7 +492,10 @@ write_run_config() {
     printf '  "overrides": {\n'
     printf '    "sipm_face": %s,\n' "$(if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_cavity_mode": %s,\n' "$(if [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
-    printf '    "sipm_local_position": %s\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "sipm_local_position": %s,\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "electron_energy_mode": %s\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
     printf '    "commit": "%s",\n' "$(json_string "${git_commit}")"
@@ -401,6 +507,7 @@ write_run_config() {
     printf '    "scintillation_yield_per_mev": %s,\n' "${scint_yield}"
     printf '    "primary_particle": "%s",\n' "$(json_string "${primary_particle}")"
     printf '    "primary_energy": "%s",\n' "$(json_string "${primary_energy}")"
+    printf '    "electron_energy_mode": "%s",\n' "$(json_string "${electron_energy_mode}")"
     printf '    "beam_direction": "%s",\n' "$(json_string "${BEAM_DIRECTION}")"
     printf '    "beam_z": "%s %s"\n' "$(format_num "${Z0}")" "$(json_string "${GRID_UNIT}")"
     printf '  },\n'
@@ -422,7 +529,21 @@ write_run_config() {
     fi
     printf '  },\n'
     printf '  "tank": {\n'
-    printf '    "bottom_cavity": "%s"\n' "$(json_string "${bottom_cavity}")"
+    printf '    "bottom_cavity": "%s",\n' "$(json_string "${bottom_cavity}")"
+    printf '    "size": '
+    if [[ -n "${tank_size}" ]]; then
+      printf '"%s"' "$(json_string "${tank_size}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "size_preset": '
+    if [[ -n "${tank_size_preset}" ]]; then
+      printf '"%s"' "$(json_string "${tank_size_preset}")"
+    else
+      printf 'null'
+    fi
+    printf '\n'
     printf '  },\n'
     printf '  "grid": {\n'
     printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
@@ -461,6 +582,13 @@ echo "Template: ${TEMPLATE_MACRO}"
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
 echo "Events per point: ${N_EVENTS}"
+echo "Electron energy mode: ${electron_energy_mode}"
+if [[ -n "${tank_size}" ]]; then
+  echo "Tank size: ${tank_size}"
+fi
+if [[ -n "${tank_size_preset}" ]]; then
+  echo "Tank size preset: ${tank_size_preset}"
+fi
 echo "Metadata: ${RUN_CONFIG}, ${POINTS_CSV}"
 echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS_CSV}"
 
@@ -479,19 +607,53 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   if [[ -n "${template_sipm_cavity_mode}" && -n "${sipm_cavity_mode}" ]]; then
     sed_args+=(-e "s|/opnovice2/sipm/cavityMode ${template_sipm_cavity_mode}|/opnovice2/sipm/cavityMode ${sipm_cavity_mode}|")
   fi
+  if [[ -n "${template_electron_energy_mode}" ]]; then
+    sed_args+=(-e "s|/opnovice2/gun/electronEnergyMode ${template_electron_energy_mode}|/opnovice2/gun/electronEnergyMode ${electron_energy_mode}|")
+  fi
+  if [[ -n "${template_tank_size}" && -n "${tank_size}" ]]; then
+    sed_args+=(-e "s|/opnovice2/tank/size ${template_tank_size}|/opnovice2/tank/size ${tank_size}|")
+  fi
+  if [[ -n "${template_tank_size_preset}" && -n "${tank_size_preset}" ]]; then
+    sed_args+=(-e "s|/opnovice2/tank/sizePreset ${template_tank_size_preset}|/opnovice2/tank/sizePreset ${tank_size_preset}|")
+  fi
 
   if [[ "${MODE}" == "full" && -n "${template_bottom_cavity}" ]]; then
     sed_args+=(-e "s|/opnovice2/tank/bottomCavity ${template_bottom_cavity}|/opnovice2/tank/bottomCavity false|")
   fi
 
+  bottom_cavity_inject=""
   if [[ "${MODE}" == "full" && -z "${template_bottom_cavity}" ]]; then
-    sed "${sed_args[@]}" "${TEMPLATE_MACRO}" | awk \
-      -v inject="/opnovice2/tank/bottomCavity false" \
-      '!inserted && $1 == "/opnovice2/sipm/face" { print inject; inserted = 1 } { print }' \
-      > "${macro}"
-  else
-    sed "${sed_args[@]}" "${TEMPLATE_MACRO}" > "${macro}"
+    bottom_cavity_inject="/opnovice2/tank/bottomCavity false"
   fi
+  tank_size_inject=""
+  if [[ -n "${TANK_SIZE_OVERRIDE}" && -z "${template_tank_size}" ]]; then
+    tank_size_inject="/opnovice2/tank/size ${tank_size}"
+  elif [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" && -z "${template_tank_size_preset}" ]]; then
+    tank_size_inject="/opnovice2/tank/sizePreset ${tank_size_preset}"
+  fi
+  electron_energy_inject=""
+  if [[ -z "${template_electron_energy_mode}" && "${electron_energy_mode}" != "fixed" ]]; then
+    electron_energy_inject="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
+  fi
+
+  sed "${sed_args[@]}" "${TEMPLATE_MACRO}" | awk \
+    -v bottom_cavity_inject="${bottom_cavity_inject}" \
+    -v tank_size_inject="${tank_size_inject}" \
+    -v electron_energy_inject="${electron_energy_inject}" '
+      !tank_size_inserted && tank_size_inject != "" && $1 == "/run/initialize" {
+        print tank_size_inject
+        tank_size_inserted = 1
+      }
+      !bottom_cavity_inserted && bottom_cavity_inject != "" && $1 == "/opnovice2/sipm/face" {
+        print bottom_cavity_inject
+        bottom_cavity_inserted = 1
+      }
+      { print }
+      !electron_energy_inserted && electron_energy_inject != "" && $1 == "/gun/energy" {
+        print electron_energy_inject
+        electron_energy_inserted = 1
+      }
+    ' > "${macro}"
 
   if [[ "${DRY_RUN}" == "1" ]]; then
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"
