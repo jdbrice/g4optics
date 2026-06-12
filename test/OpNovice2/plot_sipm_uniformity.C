@@ -37,6 +37,13 @@ struct ScanPoint {
   std::string log;
 };
 
+struct TankSize {
+  double fullX = 10.0;
+  double fullY = 10.0;
+  double fullZ = 0.5;
+  std::string unit = "cm";
+};
+
 std::vector<std::string> SplitCsvLine(const std::string& line)
 {
   std::vector<std::string> fields;
@@ -66,8 +73,8 @@ std::string JsonStringValue(const std::string& json, const std::string& key)
   const auto colonPos = json.find(':', keyPos + pattern.size());
   if (colonPos == std::string::npos) return "";
 
-  const auto quotePos = json.find('"', colonPos + 1);
-  if (quotePos == std::string::npos) return "";
+  const auto quotePos = json.find_first_not_of(" \t\r\n", colonPos + 1);
+  if (quotePos == std::string::npos || json[quotePos] != '"') return "";
 
   std::string value;
   bool escaped = false;
@@ -85,6 +92,46 @@ std::string JsonStringValue(const std::string& json, const std::string& key)
     }
     else {
       value.push_back(c);
+    }
+  }
+  return "";
+}
+
+std::string JsonObjectValue(const std::string& json, const std::string& key)
+{
+  const std::string pattern = "\"" + key + "\"";
+  const auto keyPos = json.find(pattern);
+  if (keyPos == std::string::npos) return "";
+
+  const auto colonPos = json.find(':', keyPos + pattern.size());
+  if (colonPos == std::string::npos) return "";
+
+  const auto objectStart = json.find('{', colonPos + 1);
+  if (objectStart == std::string::npos) return "";
+
+  int depth = 0;
+  bool inString = false;
+  bool escaped = false;
+  for (size_t i = objectStart; i < json.size(); ++i) {
+    const char c = json[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (inString && c == '\\') {
+      escaped = true;
+      continue;
+    }
+    if (c == '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+
+    if (c == '{') ++depth;
+    if (c == '}') {
+      --depth;
+      if (depth == 0) return json.substr(objectStart, i - objectStart + 1);
     }
   }
   return "";
@@ -216,9 +263,66 @@ double ConvertUnit(double value, const std::string& fromUnit, const std::string&
   return FromCm(UnitToCm(value, fromUnit), toUnit);
 }
 
+TankSize TankSizeFromPreset(const std::string& preset)
+{
+  TankSize tank;
+  if (preset == "5x5x0p4") {
+    tank.fullX = 5.0;
+    tank.fullY = 5.0;
+    tank.fullZ = 0.4;
+  }
+  else if (preset == "5x5x0p8") {
+    tank.fullX = 5.0;
+    tank.fullY = 5.0;
+    tank.fullZ = 0.8;
+  }
+  else if (preset == "5x5x1p6") {
+    tank.fullX = 5.0;
+    tank.fullY = 5.0;
+    tank.fullZ = 1.6;
+  }
+  else if (preset == "10x10x0p4") {
+    tank.fullX = 10.0;
+    tank.fullY = 10.0;
+    tank.fullZ = 0.4;
+  }
+  else if (preset == "10x10x0p8") {
+    tank.fullX = 10.0;
+    tank.fullY = 10.0;
+    tank.fullZ = 0.8;
+  }
+  else if (preset == "10x10x1p6") {
+    tank.fullX = 10.0;
+    tank.fullY = 10.0;
+    tank.fullZ = 1.6;
+  }
+  return tank;
+}
+
+TankSize TankSizeFromConfig(const std::string& config)
+{
+  const std::string tankConfig = JsonObjectValue(config, "tank");
+  const std::string tankSize = JsonStringValue(tankConfig, "size");
+  const std::string tankPreset = JsonStringValue(tankConfig, "size_preset");
+
+  if (!tankSize.empty()) {
+    TankSize tank;
+    if (ParseVectorWithUnit(tankSize, tank.fullX, tank.fullY, tank.fullZ, tank.unit)) {
+      return tank;
+    }
+  }
+
+  if (!tankPreset.empty()) {
+    return TankSizeFromPreset(tankPreset);
+  }
+
+  return TankSize();
+}
+
 std::pair<double, double> EstimateSiPMProjection(const std::string& face,
                                                  const std::string& localPosition,
                                                  const std::string& size,
+                                                 const TankSize& tankSize,
                                                  const std::string& targetUnit)
 {
   double lx = 0.0;
@@ -236,8 +340,8 @@ std::pair<double, double> EstimateSiPMProjection(const std::string& face,
   const double localX = ConvertUnit(lx, localUnit, targetUnit);
   const double localY = ConvertUnit(ly, localUnit, targetUnit);
   const double halfThickness = 0.5 * ConvertUnit(thickness, sizeUnit, targetUnit);
-  const double tankHalfX = FromCm(5.0, targetUnit);
-  const double tankHalfY = FromCm(5.0, targetUnit);
+  const double tankHalfX = 0.5 * ConvertUnit(tankSize.fullX, tankSize.unit, targetUnit);
+  const double tankHalfY = 0.5 * ConvertUnit(tankSize.fullY, tankSize.unit, targetUnit);
 
   if (face == "+X") return {tankHalfX + halfThickness, localX};
   if (face == "-X") return {-tankHalfX - halfThickness, localX};
@@ -315,12 +419,14 @@ void plot_sipm_uniformity(const char* runDirArg = "scan_latest")
   }
 
   const std::string config = ReadTextFile(configPath);
+  const std::string sipmConfig = JsonObjectValue(config, "sipm");
   const std::string scanName = JsonStringValue(config, "scan_name");
   const std::string mode = JsonStringValue(config, "mode");
   const std::string gridName = JsonStringValue(config, "grid_name");
-  const std::string sipmFace = JsonStringValue(config, "face");
-  const std::string sipmLocal = JsonStringValue(config, "local_position");
-  const std::string sipmSize = JsonStringValue(config, "size");
+  const std::string sipmFace = JsonStringValue(sipmConfig, "face");
+  const std::string sipmLocal = JsonStringValue(sipmConfig, "local_position");
+  const std::string sipmSize = JsonStringValue(sipmConfig, "size");
+  const TankSize tankSize = TankSizeFromConfig(config);
   const double nEvents = JsonNumberValue(config, "events_per_point", 100.0);
   const bool dryRun = JsonBoolValue(config, "dry_run", false);
 
@@ -330,7 +436,7 @@ void plot_sipm_uniformity(const char* runDirArg = "scan_latest")
   const auto xEdges = MakeBinEdges(xs);
   const auto yEdges = MakeBinEdges(ys);
 
-  const auto sipmXY = EstimateSiPMProjection(sipmFace, sipmLocal, sipmSize, unit);
+  const auto sipmXY = EstimateSiPMProjection(sipmFace, sipmLocal, sipmSize, tankSize, unit);
 
   std::vector<std::pair<double, double>> distPoints;
 
