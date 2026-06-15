@@ -101,7 +101,7 @@
 /run/initialize
 
 # ROOT output
-/analysis/setFileName ej200_sipm_test
+/analysis/setFileName ej200_sipm_gps_test
 
 # histograms
 /analysis/h1/set 2 100 2.0 3.5

@@ -9,12 +9,21 @@ DRY_RUN="${DRY_RUN:-0}"
 
 MODE="surface"
 GRID="near5"
+SOURCE_MODE="${SOURCE_MODE:-auto}"
+TEMPLATE_MACRO_OVERRIDE=""
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
 TANK_SIZE_OVERRIDE=""
 TANK_SIZE_PRESET_OVERRIDE=""
 ELECTRON_ENERGY_MODE_OVERRIDE=""
+CUSTOM_X_MIN=""
+CUSTOM_X_MAX=""
+CUSTOM_Y_MIN=""
+CUSTOM_Y_MAX=""
+CUSTOM_STEP=""
+CUSTOM_GRID_UNIT=""
+CUSTOM_BEAM_Z=""
 
 BEAM_DIRECTION="0 0 -1"
 SCAN_RUNS_DIR="scan_runs"
@@ -31,8 +40,11 @@ Usage:
   ./run_sipm_cavity_scan.sh opening near5
   ./run_sipm_cavity_scan.sh surface wide9
   ./run_sipm_cavity_scan.sh opening wide9
+  ./run_sipm_cavity_scan.sh full custom --x-min -50 --x-max 50 --y-min -50 --y-max 50 --step 5 --grid-unit mm --beam-z 4
 
 Placement options:
+  --source-mode MODE                  auto, gun, or gps
+  --template-macro FILE               override the selected template macro
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
   --sipm-cavity-mode MODE             surface or opening
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
@@ -41,9 +53,19 @@ Placement options:
                                       10x10x0p4, 10x10x0p8, or 10x10x1p6
   --electron-energy-mode MODE         fixed or sr90Beta
 
+Custom grid options:
+  --x-min VALUE                       minimum x coordinate
+  --x-max VALUE                       maximum x coordinate
+  --y-min VALUE                       minimum y coordinate
+  --y-max VALUE                       maximum y coordinate
+  --step VALUE                        grid spacing; must evenly divide both ranges
+  --grid-unit UNIT                    mm or cm
+  --beam-z VALUE                      beam z coordinate in --grid-unit units
+
 Environment:
-  N_EVENTS=100   events per scan point
-  DRY_RUN=1      generate macros/config only
+  N_EVENTS=100                        events per scan point
+  DRY_RUN=1                           generate macros/config only
+  SOURCE_MODE=auto                    source command mode: auto, gun, or gps
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
@@ -68,6 +90,30 @@ while [[ $# -gt 0 ]]; do
       ;;
     --sipm-face=*)
       SIPM_FACE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --source-mode)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --source-mode" >&2
+        exit 1
+      fi
+      SOURCE_MODE="$2"
+      shift 2
+      ;;
+    --source-mode=*)
+      SOURCE_MODE="${1#*=}"
+      shift
+      ;;
+    --template-macro)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --template-macro" >&2
+        exit 1
+      fi
+      TEMPLATE_MACRO_OVERRIDE="$2"
+      shift 2
+      ;;
+    --template-macro=*)
+      TEMPLATE_MACRO_OVERRIDE="${1#*=}"
       shift
       ;;
     --sipm-cavity-mode)
@@ -130,6 +176,90 @@ while [[ $# -gt 0 ]]; do
       ELECTRON_ENERGY_MODE_OVERRIDE="${1#*=}"
       shift
       ;;
+    --x-min)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --x-min" >&2
+        exit 1
+      fi
+      CUSTOM_X_MIN="$2"
+      shift 2
+      ;;
+    --x-min=*)
+      CUSTOM_X_MIN="${1#*=}"
+      shift
+      ;;
+    --x-max)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --x-max" >&2
+        exit 1
+      fi
+      CUSTOM_X_MAX="$2"
+      shift 2
+      ;;
+    --x-max=*)
+      CUSTOM_X_MAX="${1#*=}"
+      shift
+      ;;
+    --y-min)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --y-min" >&2
+        exit 1
+      fi
+      CUSTOM_Y_MIN="$2"
+      shift 2
+      ;;
+    --y-min=*)
+      CUSTOM_Y_MIN="${1#*=}"
+      shift
+      ;;
+    --y-max)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --y-max" >&2
+        exit 1
+      fi
+      CUSTOM_Y_MAX="$2"
+      shift 2
+      ;;
+    --y-max=*)
+      CUSTOM_Y_MAX="${1#*=}"
+      shift
+      ;;
+    --step)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --step" >&2
+        exit 1
+      fi
+      CUSTOM_STEP="$2"
+      shift 2
+      ;;
+    --step=*)
+      CUSTOM_STEP="${1#*=}"
+      shift
+      ;;
+    --grid-unit)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grid-unit" >&2
+        exit 1
+      fi
+      CUSTOM_GRID_UNIT="$2"
+      shift 2
+      ;;
+    --grid-unit=*)
+      CUSTOM_GRID_UNIT="${1#*=}"
+      shift
+      ;;
+    --beam-z)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --beam-z" >&2
+        exit 1
+      fi
+      CUSTOM_BEAM_Z="$2"
+      shift 2
+      ;;
+    --beam-z=*)
+      CUSTOM_BEAM_Z="${1#*=}"
+      shift
+      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -161,6 +291,16 @@ if [[ "${#POSITIONAL[@]}" -ge 2 ]]; then
   GRID="${POSITIONAL[1]}"
 fi
 
+if [[ "${GRID}" != "custom" ]]; then
+  if [[ -n "${CUSTOM_X_MIN}" || -n "${CUSTOM_X_MAX}" || -n "${CUSTOM_Y_MIN}" ||
+        -n "${CUSTOM_Y_MAX}" || -n "${CUSTOM_STEP}" || -n "${CUSTOM_GRID_UNIT}" ||
+        -n "${CUSTOM_BEAM_Z}" ]]; then
+    echo "Custom grid options require GRID=custom." >&2
+    echo "Example: ./run_sipm_cavity_scan.sh full custom --x-min -50 --x-max 50 --y-min -50 --y-max 50 --step 5 --grid-unit mm --beam-z 4" >&2
+    exit 1
+  fi
+fi
+
 case "${MODE}" in
   full)
     TEMPLATE_MACRO="ej200_sipm_test.mac"
@@ -187,6 +327,30 @@ case "${MODE}" in
     exit 1
     ;;
 esac
+
+case "${SOURCE_MODE}" in
+  auto|gun|gps)
+    ;;
+  *)
+    echo "Invalid --source-mode: ${SOURCE_MODE}. Use auto, gun, or gps." >&2
+    exit 1
+    ;;
+esac
+
+if [[ -n "${TEMPLATE_MACRO_OVERRIDE}" ]]; then
+  TEMPLATE_MACRO="${TEMPLATE_MACRO_OVERRIDE}"
+elif [[ "${SOURCE_MODE}" == "gps" ]]; then
+  case "${MODE}" in
+    full)
+      TEMPLATE_MACRO="ej200_sipm_gps_test.mac"
+      ;;
+    *)
+      echo "No default GPS template for mode ${MODE}." >&2
+      echo "Use --template-macro with a GPS template, or use full mode." >&2
+      exit 1
+      ;;
+  esac
+fi
 
 if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then
   case "${SIPM_FACE_OVERRIDE}" in
@@ -270,6 +434,12 @@ macro_value_after() {
   awk -v cmd="${command}" '$1 == cmd { $1=""; sub(/^ /, ""); print; exit }' "${TEMPLATE_MACRO}"
 }
 
+macro_has_command() {
+  local command="$1"
+  awk -v cmd="${command}" '$1 == cmd { found = 1; exit } END { exit(found ? 0 : 1) }' \
+    "${TEMPLATE_MACRO}"
+}
+
 macro_box_const() {
   local property="$1"
   awk -v prop="${property}" \
@@ -323,6 +493,87 @@ json_string() {
   printf '%s' "${s}"
 }
 
+require_number() {
+  local option="$1"
+  local value="$2"
+  if [[ -z "${value}" || ! "${value}" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid ${option}: ${value}. Expected a number." >&2
+    exit 1
+  fi
+}
+
+axis_values() {
+  local axis="$1"
+  local min_value="$2"
+  local max_value="$3"
+  local step_value="$4"
+  awk -v axis="${axis}" -v min="${min_value}" -v max="${max_value}" -v step="${step_value}" '
+    BEGIN {
+      if (step <= 0) {
+        printf "Invalid --step: %s. It must be greater than 0.\n", step > "/dev/stderr"
+        exit 1
+      }
+      if (max < min) {
+        printf "Invalid %s range: max %s is smaller than min %s.\n", axis, max, min > "/dev/stderr"
+        exit 1
+      }
+      span = max - min
+      n_float = span / step
+      n = int(n_float + 0.5)
+      diff = n_float - n
+      if (diff < 0) {
+        diff = -diff
+      }
+      if (diff > 1e-8) {
+        printf "Invalid %s range: (%s - %s) is not divisible by step %s.\n", axis, max, min, step > "/dev/stderr"
+        exit 1
+      }
+      for (i = 0; i <= n; ++i) {
+        v = min + i * step
+        if (v > -1e-12 && v < 1e-12) {
+          v = 0
+        }
+        if (i > 0) {
+          printf " "
+        }
+        printf "%.10g", v
+      }
+    }'
+}
+
+if [[ "${SOURCE_MODE}" == "auto" ]]; then
+  if macro_has_command "/gps/pos/centre"; then
+    SOURCE_MODE="gps"
+  elif macro_has_command "/gun/position"; then
+    SOURCE_MODE="gun"
+  else
+    echo "Could not auto-detect source mode from ${TEMPLATE_MACRO}." >&2
+    echo "Expected /gps/pos/centre or /gun/position." >&2
+    exit 1
+  fi
+fi
+
+if [[ "${SOURCE_MODE}" == "gps" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" &&
+      "${ELECTRON_ENERGY_MODE_OVERRIDE}" != "fixed" ]]; then
+  echo "GPS scan mode currently supports fixed energy only; Sr-90 GPS is a Week 10 task." >&2
+  exit 1
+fi
+
+case "${SOURCE_MODE}" in
+  gps)
+    position_cmd="/gps/pos/centre"
+    direction_cmd="/gps/direction"
+    particle_cmd="/gps/particle"
+    energy_cmd="/gps/energy"
+    ;;
+  gun)
+    position_cmd="/gun/position"
+    direction_cmd="/gun/direction"
+    particle_cmd="/gun/particle"
+    energy_cmd="/gun/energy"
+    ;;
+esac
+
 sipm_size="$(macro_value_after "/opnovice2/sipm/size")"
 read -r sipm_active_u sipm_active_v sipm_thickness sipm_unit _ <<< "${sipm_size}"
 
@@ -347,9 +598,38 @@ case "${GRID}" in
   wide9)
     GRID_UNIT="cm"
     SCAN_NAME="9x9 ${SCAN_LABEL} wide scan"
+    GRID_STEP="1"
     Z0="0.4"
     XS=(-4 -3 -2 -1 0 1 2 3 4)
     YS=(-4 -3 -2 -1 0 1 2 3 4)
+    ;;
+  custom)
+    require_number "--x-min" "${CUSTOM_X_MIN}"
+    require_number "--x-max" "${CUSTOM_X_MAX}"
+    require_number "--y-min" "${CUSTOM_Y_MIN}"
+    require_number "--y-max" "${CUSTOM_Y_MAX}"
+    require_number "--step" "${CUSTOM_STEP}"
+    require_number "--beam-z" "${CUSTOM_BEAM_Z}"
+    case "${CUSTOM_GRID_UNIT}" in
+      mm|cm)
+        ;;
+      "")
+        echo "Missing value for --grid-unit. Use mm or cm." >&2
+        exit 1
+        ;;
+      *)
+        echo "Invalid --grid-unit: ${CUSTOM_GRID_UNIT}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+    GRID_UNIT="${CUSTOM_GRID_UNIT}"
+    GRID_STEP="${CUSTOM_STEP}"
+    Z0="${CUSTOM_BEAM_Z}"
+    x_values="$(axis_values x "${CUSTOM_X_MIN}" "${CUSTOM_X_MAX}" "${CUSTOM_STEP}")"
+    y_values="$(axis_values y "${CUSTOM_Y_MIN}" "${CUSTOM_Y_MAX}" "${CUSTOM_STEP}")"
+    read -r -a XS <<< "${x_values}"
+    read -r -a YS <<< "${y_values}"
+    SCAN_NAME="${#XS[@]}x${#YS[@]} ${SCAN_LABEL} custom scan"
     ;;
   -h|--help|help)
     usage
@@ -362,7 +642,18 @@ case "${GRID}" in
     ;;
 esac
 
-PREFIX="${PREFIX_ROOT}_${GRID}"
+X_MIN_VALUE="${XS[0]}"
+X_MAX_VALUE="${XS[$((${#XS[@]} - 1))]}"
+Y_MIN_VALUE="${YS[0]}"
+Y_MAX_VALUE="${YS[$((${#YS[@]} - 1))]}"
+POINT_COUNT=$(( ${#XS[@]} * ${#YS[@]} ))
+
+if [[ "${SOURCE_MODE}" == "gps" ]]; then
+  SCAN_NAME="${SCAN_NAME} (GPS source)"
+  PREFIX="${PREFIX_ROOT}_gps_${GRID}"
+else
+  PREFIX="${PREFIX_ROOT}_${GRID}"
+fi
 RUN_TIMESTAMP="$(date -u +"%Y%m%d_%H%M%SZ")"
 RUN_ID="${RUN_TIMESTAMP}_${PREFIX}"
 RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
@@ -377,11 +668,11 @@ POINTS_CSV="${RUN_DIR}/points.csv"
 RUN_CONFIG="${RUN_DIR}/run_config.json"
 
 template_output="$(macro_value_after "/analysis/setFileName")"
-template_gun_position="$(macro_value_after "/gun/position")"
-template_gun_direction="$(macro_value_after "/gun/direction")"
+template_position="$(macro_value_after "${position_cmd}")"
+template_direction="$(macro_value_after "${direction_cmd}")"
 template_beam_on="$(macro_value_after "/run/beamOn")"
-primary_particle="$(macro_value_after "/gun/particle")"
-primary_energy="$(macro_value_after "/gun/energy")"
+primary_particle="$(macro_value_after "${particle_cmd}")"
+primary_energy="$(macro_value_after "${energy_cmd}")"
 electron_energy_mode="$(macro_value_after "/opnovice2/gun/electronEnergyMode")"
 sipm_face="$(macro_value_after "/opnovice2/sipm/face")"
 sipm_cavity_mode="$(macro_value_after "/opnovice2/sipm/cavityMode")"
@@ -392,7 +683,9 @@ template_electron_energy_mode="${electron_energy_mode}"
 template_sipm_face="${sipm_face}"
 template_sipm_cavity_mode="${sipm_cavity_mode}"
 template_sipm_local="${sipm_local}"
-if [[ -z "${electron_energy_mode}" ]]; then
+if [[ "${SOURCE_MODE}" == "gps" ]]; then
+  electron_energy_mode="fixed"
+elif [[ -z "${electron_energy_mode}" ]]; then
   electron_energy_mode="fixed"
 fi
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
@@ -441,8 +734,9 @@ if [[ -z "${scint_yield}" ]]; then
   scint_yield=null
 fi
 
-if [[ -z "${template_output}" || -z "${template_gun_position}" || -z "${template_gun_direction}" || -z "${template_beam_on}" || -z "${template_sipm_face}" || -z "${template_sipm_local}" ]]; then
-  echo "Could not parse output/gun/beamOn/SiPM commands from ${TEMPLATE_MACRO}" >&2
+if [[ -z "${template_output}" || -z "${template_position}" || -z "${template_direction}" || -z "${template_beam_on}" || -z "${template_sipm_face}" || -z "${template_sipm_local}" ]]; then
+  echo "Could not parse output/source/beamOn/SiPM commands from ${TEMPLATE_MACRO}" >&2
+  echo "Source mode: ${SOURCE_MODE}; expected ${position_cmd}, ${direction_cmd}, ${particle_cmd}, ${energy_cmd}." >&2
   exit 1
 fi
 
@@ -486,6 +780,7 @@ write_run_config() {
     printf '  "template_macro": "%s",\n' "$(json_string "${TEMPLATE_MACRO}")"
     printf '  "mode": "%s",\n' "$(json_string "${MODE}")"
     printf '  "grid_name": "%s",\n' "$(json_string "${GRID}")"
+    printf '  "source_mode": "%s",\n' "$(json_string "${SOURCE_MODE}")"
     printf '  "run_id": "%s",\n' "$(json_string "${RUN_ID}")"
     printf '  "run_dir": "%s",\n' "$(json_string "${RUN_DIR}")"
     printf '  "dry_run": %s,\n' "$(if [[ "${DRY_RUN}" == "1" ]]; then echo true; else echo false; fi)"
@@ -522,7 +817,7 @@ write_run_config() {
     printf ',\n'
     printf '    "local_position": "%s",\n' "$(json_string "${sipm_local}")"
     printf '    "size": "%s",\n' "$(json_string "${sipm_size}")"
-    if [[ -n "${GRID_STEP:-}" ]]; then
+    if [[ "${GRID}" == "near5" && -n "${GRID_STEP:-}" ]]; then
       printf '    "near_field_step": "%s %s"\n' "$(format_num "${GRID_STEP}")" "$(json_string "${GRID_UNIT}")"
     else
       printf '    "near_field_step": null\n'
@@ -547,6 +842,12 @@ write_run_config() {
     printf '  },\n'
     printf '  "grid": {\n'
     printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
+    printf '    "step": %s,\n' "$(format_num "${GRID_STEP}")"
+    printf '    "x_min": %s,\n' "$(format_num "${X_MIN_VALUE}")"
+    printf '    "x_max": %s,\n' "$(format_num "${X_MAX_VALUE}")"
+    printf '    "y_min": %s,\n' "$(format_num "${Y_MIN_VALUE}")"
+    printf '    "y_max": %s,\n' "$(format_num "${Y_MAX_VALUE}")"
+    printf '    "point_count": %s,\n' "${POINT_COUNT}"
     printf '    "x": '
     json_number_array "${XS[@]}"
     printf ',\n'
@@ -579,6 +880,7 @@ fi
 
 echo "Scan: ${SCAN_NAME}"
 echo "Template: ${TEMPLATE_MACRO}"
+echo "Source mode: ${SOURCE_MODE}"
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
 echo "Events per point: ${N_EVENTS}"
@@ -597,8 +899,8 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
 
   sed_args=(
     -e "s|/analysis/setFileName ${template_output}|/analysis/setFileName ${outfile}|" \
-    -e "s|/gun/position ${template_gun_position}|/gun/position ${x} ${y} ${z} ${unit}|" \
-    -e "s|/gun/direction ${template_gun_direction}|/gun/direction ${BEAM_DIRECTION}|" \
+    -e "s|${position_cmd} ${template_position}|${position_cmd} ${x} ${y} ${z} ${unit}|" \
+    -e "s|${direction_cmd} ${template_direction}|${direction_cmd} ${BEAM_DIRECTION}|" \
     -e "s|/run/beamOn ${template_beam_on}|/run/beamOn ${N_EVENTS}|" \
     -e "s|/opnovice2/sipm/face ${template_sipm_face}|/opnovice2/sipm/face ${sipm_face}|" \
     -e "s|/opnovice2/sipm/localPosition ${template_sipm_local}|/opnovice2/sipm/localPosition ${sipm_local}|"
@@ -628,7 +930,10 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   elif [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" && -z "${template_tank_size_preset}" ]]; then
     tank_size_inject="/opnovice2/tank/sizePreset ${tank_size_preset}"
   fi
-  electron_energy_cmd="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
+  electron_energy_cmd=""
+  if [[ "${SOURCE_MODE}" == "gun" ]]; then
+    electron_energy_cmd="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
+  fi
 
   sed "${sed_args[@]}" "${TEMPLATE_MACRO}" | awk \
     -v bottom_cavity_inject="${bottom_cavity_inject}" \
@@ -656,7 +961,7 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       }
     ' > "${macro}"
 
-  if ! grep -qxF "${electron_energy_cmd}" "${macro}"; then
+  if [[ -n "${electron_energy_cmd}" ]] && ! grep -qxF "${electron_energy_cmd}" "${macro}"; then
     echo "Generated macro is missing expected electron energy mode: ${electron_energy_cmd}" >&2
     echo "Macro: ${macro}" >&2
     exit 1
