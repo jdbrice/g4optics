@@ -77,7 +77,7 @@
 # Initialize
 # ----------------------------
 
-/opnovice2/sipm/face +X
+/opnovice2/sipm/face -Z
 /opnovice2/sipm/localPosition 0 0 0 cm
 /opnovice2/sipm/size 2 2 0.5 mm
 
@@ -104,7 +104,7 @@
 /vis/drawVolume
 /vis/viewer/set/style wireframe
 
-# SiPM is at +X, +Y corner. This camera angle should show the corner reasonably well.
+# SiPM is at the bottom center. This camera angle keeps the tile and sensor visible.
 /vis/viewer/set/viewpointThetaPhi 65 35
 /vis/viewer/zoom 5
 
@@ -132,7 +132,7 @@
 /gun/energy 1 MeV
 /opnovice2/gun/electronEnergyMode sr90Beta
 
-# SiPM is near +X, +Y corner, so shoot close to +Y side for clearer SiPM-hit visualization.
+# Shoot from above center toward the bottom-center SiPM.
 /gun/position 0 0 4 cm
 /gun/direction 0 0 -1
 

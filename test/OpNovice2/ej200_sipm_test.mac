@@ -94,7 +94,7 @@
 # ----------------------------
 
 # SiPM location
-/opnovice2/sipm/face +X
+/opnovice2/sipm/face -Z
 /opnovice2/sipm/localPosition 0 0 0 cm
 /opnovice2/sipm/size 2 2 0.5 mm
 
@@ -117,7 +117,7 @@
 /gun/energy 1 MeV
 /opnovice2/gun/electronEnergyMode sr90Beta
 
-# If SiPM is at +X,+Y corner, shoot closer to that side for first debug.
+# Full-tank baseline uses a bottom-center SiPM.
 /gun/position -6 4 0 cm
 /gun/direction 1 0 0
 

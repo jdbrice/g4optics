@@ -607,9 +607,6 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   if [[ -n "${template_sipm_cavity_mode}" && -n "${sipm_cavity_mode}" ]]; then
     sed_args+=(-e "s|/opnovice2/sipm/cavityMode ${template_sipm_cavity_mode}|/opnovice2/sipm/cavityMode ${sipm_cavity_mode}|")
   fi
-  if [[ -n "${template_electron_energy_mode}" ]]; then
-    sed_args+=(-e "s|/opnovice2/gun/electronEnergyMode ${template_electron_energy_mode}|/opnovice2/gun/electronEnergyMode ${electron_energy_mode}|")
-  fi
   if [[ -n "${template_tank_size}" && -n "${tank_size}" ]]; then
     sed_args+=(-e "s|/opnovice2/tank/size ${template_tank_size}|/opnovice2/tank/size ${tank_size}|")
   fi
@@ -631,15 +628,12 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   elif [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" && -z "${template_tank_size_preset}" ]]; then
     tank_size_inject="/opnovice2/tank/sizePreset ${tank_size_preset}"
   fi
-  electron_energy_inject=""
-  if [[ -z "${template_electron_energy_mode}" && "${electron_energy_mode}" != "fixed" ]]; then
-    electron_energy_inject="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
-  fi
+  electron_energy_cmd="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
 
   sed "${sed_args[@]}" "${TEMPLATE_MACRO}" | awk \
     -v bottom_cavity_inject="${bottom_cavity_inject}" \
     -v tank_size_inject="${tank_size_inject}" \
-    -v electron_energy_inject="${electron_energy_inject}" '
+    -v electron_energy_cmd="${electron_energy_cmd}" '
       !tank_size_inserted && tank_size_inject != "" && $1 == "/run/initialize" {
         print tank_size_inject
         tank_size_inserted = 1
@@ -648,12 +642,25 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
         print bottom_cavity_inject
         bottom_cavity_inserted = 1
       }
+      $1 == "/opnovice2/gun/electronEnergyMode" {
+        if (!electron_energy_written && electron_energy_cmd != "") {
+          print electron_energy_cmd
+        }
+        electron_energy_written = 1
+        next
+      }
       { print }
-      !electron_energy_inserted && electron_energy_inject != "" && $1 == "/gun/energy" {
-        print electron_energy_inject
-        electron_energy_inserted = 1
+      !electron_energy_written && electron_energy_cmd != "" && $1 == "/gun/energy" {
+        print electron_energy_cmd
+        electron_energy_written = 1
       }
     ' > "${macro}"
+
+  if ! grep -qxF "${electron_energy_cmd}" "${macro}"; then
+    echo "Generated macro is missing expected electron energy mode: ${electron_energy_cmd}" >&2
+    echo "Macro: ${macro}" >&2
+    exit 1
+  fi
 
   if [[ "${DRY_RUN}" == "1" ]]; then
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"

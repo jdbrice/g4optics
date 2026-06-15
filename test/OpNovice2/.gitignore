@@ -6,9 +6,6 @@ build-wsl/
 output/
 scan_runs/
 scan_latest
-scan_macros/
-scan_outputs/
-scan_logs/
 run_config.json
 *_run_config.json
 *.root
