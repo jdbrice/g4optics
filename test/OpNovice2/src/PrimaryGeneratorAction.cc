@@ -49,30 +49,43 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
-  : G4VUserPrimaryGeneratorAction(), fParticleGun(nullptr)
+  : G4VUserPrimaryGeneratorAction(), fGeneralParticleSource(nullptr)
 {
   G4int n_particle = 1;
-  fParticleGun = new G4ParticleGun(n_particle);
+  // fParticleGun = new G4ParticleGun(n_particle);
+  fGeneralParticleSource = new G4GeneralParticleSource();
+  fGeneralParticleSource->SetNumberOfParticles(n_particle);
 
   // create a messenger for this class
-  fGunMessenger = new PrimaryGeneratorMessenger(this);
+  // fGunMessenger = new PrimaryGeneratorMessenger(this);
+  fParticleSourceMessenger = new PrimaryGeneratorMessenger(this);
 
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4ParticleDefinition* particle = particleTable->FindParticle("e+");
 
-  fParticleGun->SetParticleDefinition(particle);
-  fParticleGun->SetParticleTime(0.0 * ns);
-  fParticleGun->SetParticlePosition(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1., 0., 0.));
-  fParticleGun->SetParticleEnergy(500.0 * keV);
+  // fParticleGun->SetParticleDefinition(particle);
+  fGeneralParticleSource->SetParticleDefinition(particle);
+  // fParticleGun->SetParticleTime(0.0 * ns);
+  fGeneralParticleSource->SetParticleTime(0.0 * ns);
+  // fParticleGun->SetParticlePosition(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
+  fGeneralParticleSource->SetParticlePosition(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
+  // fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1., 0., 0.));
+  // If problematic, check out https://geant4-forum.web.cern.ch/t/setparticlemomentumdirection-for-gps-is-not-working-properly/937
+  // Also check out https://geant4-forum.web.cern.ch/t/it-is-not-convenient-that-g4generalparticlesource-class-can-not-set-particle-energy-moment-direction/9878
+  // I implemented two helper functions, see `G4GeneralParticleSource.hh`, so I can use a similar syntax as `G4ParticleGun` here.
+    // fGeneralParticleSource->GetCurrentSource()->GetAngDist()->SetParticleMomentumDirection(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
+  fGeneralParticleSource->SetParticleMomentumDirection(G4ThreeVector(1., 0., 0.));
+  // fParticleGun->SetParticleEnergy(500.0 * keV);
+    // fGeneralParticleSource->GetCurrentSource()->GetEneDist()->SetMonoEnergy(500.0 * keV);
+  fGeneralParticleSource->SetParticleEnergy(500.0 * keV);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction()
 {
-  delete fParticleGun;
-  delete fGunMessenger;
+  delete fGeneralParticleSource;
+  delete fParticleSourceMessenger;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -80,7 +93,7 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
   if (fElectronEnergyMode == "sr90Beta") {
-    auto particle = fParticleGun->GetParticleDefinition();
+    auto particle = fGeneralParticleSource->GetParticleDefinition();
     if (!particle || particle->GetParticleName() != "e-") {
       G4ExceptionDescription msg;
       msg << "Electron energy mode sr90Beta requires /gun/particle e-.";
@@ -89,7 +102,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
                   FatalException,
                   msg);
     }
-    fParticleGun->SetParticleEnergy(SampleSr90BetaEnergy());
+    fGeneralParticleSource->SetParticleEnergy(SampleSr90BetaEnergy());
   }
 
   if (fRandomDirection) {
@@ -99,15 +112,15 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     G4double y = std::sin(theta) * std::sin(phi);
     G4double z = std::sin(theta) * std::cos(phi);
     G4ThreeVector dir(x, y, z);
-    fParticleGun->SetParticleMomentumDirection(dir);
+    fGeneralParticleSource->SetParticleMomentumDirection(dir);
   }
-  if (fParticleGun->GetParticleDefinition() == G4OpticalPhoton::OpticalPhotonDefinition()) {
+  if (fGeneralParticleSource->GetParticleDefinition() == G4OpticalPhoton::OpticalPhotonDefinition()) {
     if (fPolarized)
       SetOptPhotonPolar(fPolarization);
     else
       SetOptPhotonPolar();
   }
-  fParticleGun->GeneratePrimaryVertex(anEvent);
+  fGeneralParticleSource->GeneratePrimaryVertex(anEvent);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -122,7 +135,7 @@ void PrimaryGeneratorAction::SetOptPhotonPolar()
 
 void PrimaryGeneratorAction::SetOptPhotonPolar(G4double angle)
 {
-  if (fParticleGun->GetParticleDefinition() != G4OpticalPhoton::OpticalPhotonDefinition()) {
+  if (fGeneralParticleSource->GetParticleDefinition() != G4OpticalPhoton::OpticalPhotonDefinition()) {
     G4ExceptionDescription ed;
     ed << "The particleGun is not an opticalphoton.";
     G4Exception("PrimaryGeneratorAction::SetOptPhotonPolar", "OpNovice2_004", JustWarning, ed);
@@ -133,7 +146,7 @@ void PrimaryGeneratorAction::SetOptPhotonPolar(G4double angle)
   fPolarization = angle;
 
   G4ThreeVector normal(1., 0., 0.);
-  G4ThreeVector kphoton = fParticleGun->GetParticleMomentumDirection();
+  G4ThreeVector kphoton = fGeneralParticleSource->GetParticleMomentumDirection();
   G4ThreeVector product = normal.cross(kphoton);
   G4double modul2 = product * product;
 
@@ -142,7 +155,7 @@ void PrimaryGeneratorAction::SetOptPhotonPolar(G4double angle)
   G4ThreeVector e_paralle = e_perpend.cross(kphoton);
 
   G4ThreeVector polar = std::cos(angle) * e_paralle + std::sin(angle) * e_perpend;
-  fParticleGun->SetParticlePolarization(polar);
+  fGeneralParticleSource->SetParticlePolarization(polar);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

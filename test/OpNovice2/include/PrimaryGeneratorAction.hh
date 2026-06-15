@@ -34,6 +34,7 @@
 #define PrimaryGeneratorAction_h 1
 
 #include "G4ParticleGun.hh"
+#include "G4GeneralParticleSource.hh"
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
 
@@ -50,7 +51,9 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 
     void GeneratePrimaries(G4Event*) override;
 
-    G4ParticleGun* GetParticleGun() { return fParticleGun; };
+    // G4ParticleGun* GetParticleGun() { return fParticleGun; };
+    G4GeneralParticleSource* GetGeneralParticleSource() { return fGeneralParticleSource; }
+
 
     void SetOptPhotonPolar();
     void SetOptPhotonPolar(G4double);
@@ -63,8 +66,10 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
   private:
     G4double SampleSr90BetaEnergy() const;
 
-    G4ParticleGun* fParticleGun = nullptr;
-    PrimaryGeneratorMessenger* fGunMessenger = nullptr;
+    // G4ParticleGun* fParticleGun = nullptr;
+    G4GeneralParticleSource* fGeneralParticleSource = nullptr;
+    // PrimaryGeneratorMessenger* fGunMessenger = nullptr;
+    PrimaryGeneratorMessenger* fParticleSourceMessenger = nullptr;
     G4bool fRandomDirection = false;
     G4bool fPolarized = false;
     G4double fPolarization = 0.;
