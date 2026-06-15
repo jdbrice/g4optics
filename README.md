@@ -131,6 +131,8 @@ You already added (or will add) a `DetectorMessenger`. Add an analogous messenge
   /gps/direction 0 0 -1
   /gps/energy 1.0 MeV
   ```
+> [!NOTE]
+> Completed, 6/15 12:28.
 
 ### 5.2 Scriptable Grid Scans
 Write a small shell or Python script *outside* the container's run loop that generates one macro per grid point, or use Geant4's macro looping:
