@@ -1,9 +1,13 @@
 # Local build/output
 .vscode/
+__pycache__/
+*.pyc
 build/
 build-gui/
 build-wsl/
 output/
+.venv-analysis/
+week6_analysis/
 scan_runs/
 scan_latest
 run_config.json
