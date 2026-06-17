@@ -24,6 +24,7 @@ CUSTOM_Y_MAX=""
 CUSTOM_STEP=""
 CUSTOM_GRID_UNIT=""
 CUSTOM_BEAM_Z=""
+BEAM_Z_INFERRED="0"
 
 BEAM_DIRECTION="0 0 -1"
 SCAN_RUNS_DIR="scan_runs"
@@ -61,7 +62,8 @@ Custom grid options:
   --y-max VALUE                       maximum y coordinate
   --step VALUE                        grid spacing; must evenly divide both ranges
   --grid-unit UNIT                    mm or cm
-  --beam-z VALUE                      beam z coordinate in --grid-unit units
+  --beam-z VALUE                      beam z coordinate in --grid-unit units;
+                                      custom defaults to thickness/2 + 1.5 mm
 
 Environment:
   N_EVENTS=100                        events per scan point
@@ -543,6 +545,70 @@ axis_values() {
     }'
 }
 
+length_to_unit() {
+  local value="$1"
+  local from_unit="$2"
+  local to_unit="$3"
+  awk -v v="${value}" -v from="${from_unit}" -v to="${to_unit}" '
+    BEGIN {
+      if (from == "mm") {
+        mm = v
+      }
+      else if (from == "cm") {
+        mm = v * 10.
+      }
+      else {
+        printf "Unsupported length unit: %s\n", from > "/dev/stderr"
+        exit 1
+      }
+
+      if (to == "mm") {
+        out = mm
+      }
+      else if (to == "cm") {
+        out = mm / 10.
+      }
+      else {
+        printf "Unsupported length unit: %s\n", to > "/dev/stderr"
+        exit 1
+      }
+      printf "%.10g", out
+    }'
+}
+
+infer_custom_beam_z() {
+  local thickness_value thickness_unit thickness_grid offset_grid
+
+  if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then
+    thickness_value="${tank_size_z}"
+    thickness_unit="${tank_size_unit}"
+  elif [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
+    thickness_unit="cm"
+    case "${TANK_SIZE_PRESET_OVERRIDE}" in
+      5x5x0p4|10x10x0p4)
+        thickness_value="0.4"
+        ;;
+      5x5x0p8|10x10x0p8)
+        thickness_value="0.8"
+        ;;
+      5x5x1p6|10x10x1p6)
+        thickness_value="1.6"
+        ;;
+      *)
+        echo "Invalid --tank-size-preset: ${TANK_SIZE_PRESET_OVERRIDE}" >&2
+        exit 1
+        ;;
+    esac
+  else
+    thickness_value="5"
+    thickness_unit="mm"
+  fi
+
+  thickness_grid="$(length_to_unit "${thickness_value}" "${thickness_unit}" "${GRID_UNIT}")"
+  offset_grid="$(length_to_unit "1.5" "mm" "${GRID_UNIT}")"
+  awk -v t="${thickness_grid}" -v dz="${offset_grid}" 'BEGIN { printf "%.10g", 0.5 * t + dz }'
+}
+
 if [[ "${SOURCE_MODE}" == "auto" ]]; then
   if macro_has_command "/gps/pos/centre"; then
     SOURCE_MODE="gps"
@@ -611,7 +677,6 @@ case "${GRID}" in
     require_number "--y-min" "${CUSTOM_Y_MIN}"
     require_number "--y-max" "${CUSTOM_Y_MAX}"
     require_number "--step" "${CUSTOM_STEP}"
-    require_number "--beam-z" "${CUSTOM_BEAM_Z}"
     case "${CUSTOM_GRID_UNIT}" in
       mm|cm)
         ;;
@@ -626,7 +691,13 @@ case "${GRID}" in
     esac
     GRID_UNIT="${CUSTOM_GRID_UNIT}"
     GRID_STEP="${CUSTOM_STEP}"
-    Z0="${CUSTOM_BEAM_Z}"
+    if [[ -n "${CUSTOM_BEAM_Z}" ]]; then
+      require_number "--beam-z" "${CUSTOM_BEAM_Z}"
+      Z0="${CUSTOM_BEAM_Z}"
+    else
+      Z0="$(infer_custom_beam_z)"
+      BEAM_Z_INFERRED="1"
+    fi
     x_values="$(axis_values x "${CUSTOM_X_MIN}" "${CUSTOM_X_MAX}" "${CUSTOM_STEP}")"
     y_values="$(axis_values y "${CUSTOM_Y_MIN}" "${CUSTOM_Y_MAX}" "${CUSTOM_STEP}")"
     read -r -a XS <<< "${x_values}"
@@ -807,7 +878,8 @@ write_run_config() {
     printf '    "primary_energy": "%s",\n' "$(json_string "${primary_energy}")"
     printf '    "electron_energy_mode": "%s",\n' "$(json_string "${electron_energy_mode}")"
     printf '    "beam_direction": "%s",\n' "$(json_string "${BEAM_DIRECTION}")"
-    printf '    "beam_z": "%s %s"\n' "$(format_num "${Z0}")" "$(json_string "${GRID_UNIT}")"
+    printf '    "beam_z": "%s %s",\n' "$(format_num "${Z0}")" "$(json_string "${GRID_UNIT}")"
+    printf '    "beam_z_inferred": %s\n' "$(if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "sipm": {\n'
     printf '    "face": "%s",\n' "$(json_string "${sipm_face}")"
@@ -876,7 +948,7 @@ write_run_config() {
 
 write_efficiency_map() {
   {
-    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,summary_csv,root,log\n'
+    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,summary_csv,root,log\n'
     read -r _points_header
     while IFS=, read -r tag x y z unit macro root log; do
       summary="${root%.root}_summary.csv"
@@ -886,14 +958,21 @@ write_efficiency_map() {
         exit 1
       fi
       read -r _summary_header < "${summary}"
-      read -r events generated scint detected efficiency < <(awk -F, 'NR == 2 { print $1, $2, $3, $4, $5 }' "${summary}")
+      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z < <(
+        awk -F, 'NR == 2 {
+          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+        }' "${summary}"
+      )
       if [[ -z "${events:-}" || -z "${generated:-}" || -z "${scint:-}" || -z "${detected:-}" || -z "${efficiency:-}" ]]; then
         echo "Could not parse scan summary CSV: ${summary}" >&2
         exit 1
       fi
-      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
         "${tag}" "${x}" "${y}" "${z}" "${unit}" \
         "${events}" "${generated}" "${scint}" "${detected}" "${efficiency}" \
+        "${shoot_events}" "${shoot_x}" "${shoot_y}" "${shoot_z}" \
+        "${hit_events}" "${hit_x}" "${hit_y}" "${hit_z}" \
+        "${scint_centroid_events}" "${scint_centroid_x}" "${scint_centroid_y}" "${scint_centroid_z}" \
         "${summary}" "${root}" "${log}"
     done
   } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
@@ -913,6 +992,11 @@ echo "Template: ${TEMPLATE_MACRO}"
 echo "Source mode: ${SOURCE_MODE}"
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
+if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then
+  echo "Beam z: $(format_num "${Z0}") ${GRID_UNIT} (inferred)"
+else
+  echo "Beam z: $(format_num "${Z0}") ${GRID_UNIT}"
+fi
 echo "Events per point: ${N_EVENTS}"
 echo "Electron energy mode: ${electron_energy_mode}"
 if [[ -n "${tank_size}" ]]; then

@@ -53,6 +53,71 @@ void Run::BeginEvent()
   fEventGeneratedOpticalCount = 0;
   fEventScintCount = 0;
   fEventSiPMDetectionCount = 0;
+  fEventHitValid = false;
+  fEventHitPosition = G4ThreeVector();
+  fEventScintPositionSum = G4ThreeVector();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddShootPosition(const G4ThreeVector& pos)
+{
+  fShootPositionCount += 1;
+  fShootPositionSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::SetPrimaryHitPosition(const G4ThreeVector& pos)
+{
+  if (fEventHitValid) {
+    return;
+  }
+  fEventHitValid = true;
+  fEventHitPosition = pos;
+  fHitPositionCount += 1;
+  fHitPositionSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddScintillationCentroid(const G4ThreeVector& pos)
+{
+  fScintCentroidCount += 1;
+  fScintCentroidSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetEventScintillationCentroid() const
+{
+  if (fEventScintCount == 0) {
+    return G4ThreeVector();
+  }
+  return fEventScintPositionSum / G4double(fEventScintCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanShootPosition() const
+{
+  if (fShootPositionCount == 0) {
+    return G4ThreeVector();
+  }
+  return fShootPositionSum / G4double(fShootPositionCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanHitPosition() const
+{
+  if (fHitPositionCount == 0) {
+    return G4ThreeVector();
+  }
+  return fHitPositionSum / G4double(fHitPositionCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanScintillationCentroid() const
+{
+  if (fScintCentroidCount == 0) {
+    return G4ThreeVector();
+  }
+  return fScintCentroidSum / G4double(fScintCentroidCount);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -104,6 +169,13 @@ void Run::Merge(const G4Run* run)
 
   // SiPM count
   fSiPMDetectionCount += localRun->fSiPMDetectionCount;
+
+  fShootPositionCount += localRun->fShootPositionCount;
+  fShootPositionSum += localRun->fShootPositionSum;
+  fHitPositionCount += localRun->fHitPositionCount;
+  fHitPositionSum += localRun->fHitPositionSum;
+  fScintCentroidCount += localRun->fScintCentroidCount;
+  fScintCentroidSum += localRun->fScintCentroidSum;
 
   G4Run::Merge(run);
 }

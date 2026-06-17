@@ -34,6 +34,7 @@
 
 #include "G4OpBoundaryProcess.hh"
 #include "G4Run.hh"
+#include "G4ThreeVector.hh"
 
 class G4ParticleDefinition;
 
@@ -61,11 +62,12 @@ class Run : public G4Run
       fCerenkovCount += 1;
       fEventGeneratedOpticalCount += 1;
     }
-    void AddScintillation()
+    void AddScintillation(const G4ThreeVector& creationPosition)
     {
       fScintCount += 1;
       fEventScintCount += 1;
       fEventGeneratedOpticalCount += 1;
+      fEventScintPositionSum += creationPosition;
     }
     void AddRayleigh() { fRayleighCount += 1; }
     void AddWLSAbsorption() { fWLSAbsorptionCount += 1; }
@@ -144,6 +146,9 @@ class Run : public G4Run
 
     // Per-event bookkeeping for scan ntuples.
     void BeginEvent();
+    void AddShootPosition(const G4ThreeVector& pos);
+    void SetPrimaryHitPosition(const G4ThreeVector& pos);
+    void AddScintillationCentroid(const G4ThreeVector& pos);
     G4int GetGeneratedOpticalCount() const
     {
       return fCerenkovCount + fScintCount + fWLSEmissionCount + fWLS2EmissionCount;
@@ -154,6 +159,17 @@ class Run : public G4Run
     G4int GetEventGeneratedOpticalCount() const { return fEventGeneratedOpticalCount; }
     G4int GetEventScintillationCount() const { return fEventScintCount; }
     G4int GetEventSiPMDetectionCount() const { return fEventSiPMDetectionCount; }
+    G4bool HasEventHitPosition() const { return fEventHitValid; }
+    G4ThreeVector GetEventHitPosition() const { return fEventHitPosition; }
+    G4bool HasEventScintillationCentroid() const { return fEventScintCount > 0; }
+    G4ThreeVector GetEventScintillationCentroid() const;
+
+    G4int GetShootPositionCount() const { return fShootPositionCount; }
+    G4ThreeVector GetMeanShootPosition() const;
+    G4int GetHitPositionCount() const { return fHitPositionCount; }
+    G4ThreeVector GetMeanHitPosition() const;
+    G4int GetScintillationCentroidCount() const { return fScintCentroidCount; }
+    G4ThreeVector GetMeanScintillationCentroid() const;
 
     // SiPM Detection
     void AddSiPMDetection()
@@ -205,6 +221,17 @@ class Run : public G4Run
     G4int fEventGeneratedOpticalCount = 0;
     G4int fEventScintCount = 0;
     G4int fEventSiPMDetectionCount = 0;
+    G4bool fEventHitValid = false;
+    G4ThreeVector fEventHitPosition;
+    G4ThreeVector fEventScintPositionSum;
+
+    // Per-run position means for scan-point summary CSVs.
+    G4int fShootPositionCount = 0;
+    G4ThreeVector fShootPositionSum;
+    G4int fHitPositionCount = 0;
+    G4ThreeVector fHitPositionSum;
+    G4int fScintCentroidCount = 0;
+    G4ThreeVector fScintCentroidSum;
 };
 
 #endif /* Run_h */

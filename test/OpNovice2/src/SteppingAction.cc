@@ -72,16 +72,22 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   G4Track* track = step->GetTrack();
   G4StepPoint* endPoint = step->GetPostStepPoint();
   G4StepPoint* startPoint = step->GetPreStepPoint();
+  auto prePV = startPoint->GetPhysicalVolume();
+  auto postPV = endPoint->GetPhysicalVolume();
 
   const G4DynamicParticle* theParticle = track->GetDynamicParticle();
   const G4ParticleDefinition* particleDef = theParticle->GetParticleDefinition();
 
   auto trackInfo = (TrackInformation*)(track->GetUserInformation());
 
+  if (track->GetParentID() == 0 && prePV && postPV
+      && prePV->GetName() != "Tank" && postPV->GetName() == "Tank")
+  {
+    run->SetPrimaryHitPosition(endPoint->GetPosition());
+  }
+
   if (particleDef == opticalphoton) {
     // SiPM detection
-    auto prePV = startPoint->GetPhysicalVolume();
-
     if (prePV && prePV->GetName() == "SiPM") {
       run->AddSiPMDetection();
 
@@ -406,7 +412,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
         else if (creator_process == "Scintillation") {
           G4double en = sec->GetKineticEnergy();
           run->AddScintillationEnergy(en);
-          run->AddScintillation();
+          run->AddScintillation(sec->GetPosition());
           analysisMan->FillH1(2, en / eV);
 
           G4double time = sec->GetGlobalTime();

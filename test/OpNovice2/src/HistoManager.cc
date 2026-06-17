@@ -134,9 +134,17 @@ void HistoManager::Book()
   // https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/Analysis/managers.html#ntuples
   // The first column will have id 0, and increasing as more columns filling in.
   analysisMan->CreateNtupleIColumn("event_id");
-  analysisMan->CreateNtupleDColumn("primary_x_mm");
-  analysisMan->CreateNtupleDColumn("primary_y_mm");
-  analysisMan->CreateNtupleDColumn("primary_z_mm");
+  analysisMan->CreateNtupleDColumn("shoot_x_mm");
+  analysisMan->CreateNtupleDColumn("shoot_y_mm");
+  analysisMan->CreateNtupleDColumn("shoot_z_mm");
+  analysisMan->CreateNtupleIColumn("hit_valid");
+  analysisMan->CreateNtupleDColumn("hit_x_mm");
+  analysisMan->CreateNtupleDColumn("hit_y_mm");
+  analysisMan->CreateNtupleDColumn("hit_z_mm");
+  analysisMan->CreateNtupleIColumn("scint_centroid_valid");
+  analysisMan->CreateNtupleDColumn("scint_centroid_x_mm");
+  analysisMan->CreateNtupleDColumn("scint_centroid_y_mm");
+  analysisMan->CreateNtupleDColumn("scint_centroid_z_mm");
   analysisMan->CreateNtupleIColumn("generated_optical_photons");
   analysisMan->CreateNtupleIColumn("scintillation_photons");
   analysisMan->CreateNtupleIColumn("sipm_detected_photons");
