@@ -39,7 +39,42 @@
 #include "G4Run.hh"
 #include "G4UnitsTable.hh"
 
+#include <fstream>
+#include <iomanip>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+namespace
+{
+  void WriteScanSummary(const Run* run, const G4String& outputBaseName)
+  {
+    G4String summaryBaseName = outputBaseName;
+    const auto rootExtension = summaryBaseName.rfind(".root");
+    if (rootExtension != G4String::npos
+        && rootExtension == summaryBaseName.size() - G4String(".root").size())
+    {
+      summaryBaseName.erase(rootExtension);
+    }
+    const G4String summaryFileName = summaryBaseName + "_summary.csv";
+    std::ofstream out(summaryFileName);
+    if (!out) {
+      G4cerr << "Could not write scan summary CSV: " << summaryFileName << G4endl;
+      return;
+    }
+
+    const auto generatedOptical = run->GetGeneratedOpticalCount();
+    const auto sipmDetected = run->GetSiPMDetectionCount();
+    const auto collectionEfficiency =
+      generatedOptical > 0 ? G4double(sipmDetected) / G4double(generatedOptical) : 0.;
+
+    out << "events,generated_optical_photons,scintillation_photons,"
+        << "sipm_detected_photons,collection_efficiency\n";
+    out << run->GetNumberOfEvents() << ','
+        << generatedOptical << ','
+        << run->GetScintillationCount() << ','
+        << sipmDetected << ','
+        << std::setprecision(17) << collectionEfficiency << '\n';
+  }
+}
 
 RunAction::RunAction(PrimaryGeneratorAction* prim)
   : G4UserRunAction(), fRun(nullptr), fHistoManager(nullptr), fPrimary(prim)
@@ -83,9 +118,12 @@ void RunAction::BeginOfRunAction(const G4Run*)
 
 void RunAction::EndOfRunAction(const G4Run*)
 {
-  if (isMaster) fRun->EndOfRun();
-
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+
+  if (isMaster) {
+    fRun->EndOfRun();
+    WriteScanSummary(fRun, analysisManager->GetFileName());
+  }
 
   G4cout << G4endl << " Histogram statistics for the ";
   if (isMaster) {

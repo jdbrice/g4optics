@@ -56,13 +56,30 @@ class Run : public G4Run
     void AddWLS2EmissionEnergy(G4double en) { fWLS2EmissionEnergy += en; }
 
     // number of particles
-    void AddCerenkov() { fCerenkovCount += 1; }
-    void AddScintillation() { fScintCount += 1; }
+    void AddCerenkov()
+    {
+      fCerenkovCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
+    void AddScintillation()
+    {
+      fScintCount += 1;
+      fEventScintCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
     void AddRayleigh() { fRayleighCount += 1; }
     void AddWLSAbsorption() { fWLSAbsorptionCount += 1; }
-    void AddWLSEmission() { fWLSEmissionCount += 1; }
+    void AddWLSEmission()
+    {
+      fWLSEmissionCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
     void AddWLS2Absorption() { fWLS2AbsorptionCount += 1; }
-    void AddWLS2Emission() { fWLS2EmissionCount += 1; }
+    void AddWLS2Emission()
+    {
+      fWLS2EmissionCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
 
     void AddOpAbsorption() { fOpAbsorption += 1; }
     void AddOpAbsorptionPrior() { fOpAbsorptionPrior += 1; }
@@ -125,8 +142,25 @@ class Run : public G4Run
 
     void EndOfRun();
 
+    // Per-event bookkeeping for scan ntuples.
+    void BeginEvent();
+    G4int GetGeneratedOpticalCount() const
+    {
+      return fCerenkovCount + fScintCount + fWLSEmissionCount + fWLS2EmissionCount;
+    }
+    G4int GetScintillationCount() const { return fScintCount; }
+    G4int GetSiPMDetectionCount() const { return fSiPMDetectionCount; }
+    G4int GetNumberOfEvents() const { return numberOfEvent; }
+    G4int GetEventGeneratedOpticalCount() const { return fEventGeneratedOpticalCount; }
+    G4int GetEventScintillationCount() const { return fEventScintCount; }
+    G4int GetEventSiPMDetectionCount() const { return fEventSiPMDetectionCount; }
+
     // SiPM Detection
-    void AddSiPMDetection() { fSiPMDetectionCount += 1; }
+    void AddSiPMDetection()
+    {
+      fSiPMDetectionCount += 1;
+      fEventSiPMDetectionCount += 1;
+    }
 
   private:
     // primary particle
@@ -166,6 +200,11 @@ class Run : public G4Run
 
     // SiPM counting
     G4int fSiPMDetectionCount = 0;
+
+    // Current event counts used for the Week 5.3 scan ntuple.
+    G4int fEventGeneratedOpticalCount = 0;
+    G4int fEventScintCount = 0;
+    G4int fEventSiPMDetectionCount = 0;
 };
 
 #endif /* Run_h */

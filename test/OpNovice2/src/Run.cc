@@ -48,6 +48,14 @@ Run::Run() : G4Run()
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::BeginEvent()
+{
+  fEventGeneratedOpticalCount = 0;
+  fEventScintCount = 0;
+  fEventSiPMDetectionCount = 0;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void Run::SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
                      G4double polarization, const G4String& electronEnergyMode)
 {

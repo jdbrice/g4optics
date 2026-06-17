@@ -30,6 +30,7 @@ SCAN_RUNS_DIR="scan_runs"
 LATEST_RUN_LINK="scan_latest"
 LATEST_POINTS_CSV="points.csv"
 LATEST_RUN_CONFIG="run_config.json"
+LATEST_EFFICIENCY_MAP="efficiency_map.csv"
 
 usage() {
   cat <<'USAGE'
@@ -69,6 +70,7 @@ Environment:
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
+  scan_runs/<UTC timestamp>_<mode>_<grid>/efficiency_map.csv
   scan_latest -> most recent run directory
 USAGE
 }
@@ -666,6 +668,7 @@ ROOT_DIR="${RUN_DIR}/outputs"
 LOG_DIR="${RUN_DIR}/logs"
 POINTS_CSV="${RUN_DIR}/points.csv"
 RUN_CONFIG="${RUN_DIR}/run_config.json"
+EFFICIENCY_MAP_CSV="${RUN_DIR}/efficiency_map.csv"
 
 template_output="$(macro_value_after "/analysis/setFileName")"
 template_position="$(macro_value_after "${position_cmd}")"
@@ -863,10 +866,37 @@ write_run_config() {
     printf '    "latest_run_config": "%s",\n' "$(json_string "${LATEST_RUN_CONFIG}")"
     printf '    "points_csv": "%s",\n' "$(json_string "${POINTS_CSV}")"
     printf '    "latest_points_csv": "%s",\n' "$(json_string "${LATEST_POINTS_CSV}")"
+    printf '    "efficiency_map_csv": "%s",\n' "$(json_string "${EFFICIENCY_MAP_CSV}")"
+    printf '    "latest_efficiency_map_csv": "%s",\n' "$(json_string "${LATEST_EFFICIENCY_MAP}")"
     printf '    "latest_run_link": "%s"\n' "$(json_string "${LATEST_RUN_LINK}")"
     printf '  }\n'
     printf '}\n'
   } > "${RUN_CONFIG}"
+}
+
+write_efficiency_map() {
+  {
+    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,summary_csv,root,log\n'
+    read -r _points_header
+    while IFS=, read -r tag x y z unit macro root log; do
+      summary="${root%.root}_summary.csv"
+      if [[ ! -f "${summary}" ]]; then
+        echo "Missing scan summary CSV: ${summary}" >&2
+        echo "Point: ${tag}" >&2
+        exit 1
+      fi
+      read -r _summary_header < "${summary}"
+      read -r events generated scint detected efficiency < <(awk -F, 'NR == 2 { print $1, $2, $3, $4, $5 }' "${summary}")
+      if [[ -z "${events:-}" || -z "${generated:-}" || -z "${scint:-}" || -z "${detected:-}" || -z "${efficiency:-}" ]]; then
+        echo "Could not parse scan summary CSV: ${summary}" >&2
+        exit 1
+      fi
+      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+        "${tag}" "${x}" "${y}" "${z}" "${unit}" \
+        "${events}" "${generated}" "${scint}" "${detected}" "${efficiency}" \
+        "${summary}" "${root}" "${log}"
+    done
+  } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
 }
 
 write_run_config
@@ -978,5 +1008,9 @@ done
 if [[ "${DRY_RUN}" == "1" ]]; then
   echo "Dry run complete; no simulations were executed."
 else
+  write_efficiency_map
+  cp "${EFFICIENCY_MAP_CSV}" "${LATEST_EFFICIENCY_MAP}"
+  echo "Efficiency map: ${EFFICIENCY_MAP_CSV}"
+  echo "Latest efficiency map: ${LATEST_EFFICIENCY_MAP}"
   echo "Scan complete."
 fi
