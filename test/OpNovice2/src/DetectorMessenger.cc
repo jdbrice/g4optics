@@ -71,6 +71,12 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fSurfaceModelCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fSurfaceModelCmd->SetToBeBroadcasted(false);
 
+  fSurfacePresetCmd = new G4UIcmdWithAString("/opnovice2/surfacePreset", this);
+  fSurfacePresetCmd->SetGuidance("Apply a Week 7 surface preset.");
+  fSurfacePresetCmd->SetGuidance("Options: polished, ground, wrapped.");
+  fSurfacePresetCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fSurfacePresetCmd->SetToBeBroadcasted(false);
+
   fSurfaceSigmaAlphaCmd = new G4UIcmdWithADouble("/opnovice2/surfaceSigmaAlpha", this);
   fSurfaceSigmaAlphaCmd->SetGuidance("surface sigma alpha");
   fSurfaceSigmaAlphaCmd->SetGuidance(" parameter.");
@@ -189,6 +195,7 @@ DetectorMessenger::~DetectorMessenger()
   delete fSurfaceFinishCmd;
   delete fSurfaceTypeCmd;
   delete fSurfaceModelCmd;
+  delete fSurfacePresetCmd;
   delete fSurfaceSigmaAlphaCmd;
   delete fSurfacePolishCmd;
   delete fSurfaceMatPropVectorCmd;
@@ -361,6 +368,9 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
       ed << "Invalid surface model: " << newValue;
       G4Exception("DetectorMessenger", "ONovice2_001", FatalException, ed);
     }
+  }
+  else if (command == fSurfacePresetCmd) {
+    fDetector->SetSurfacePreset(newValue);
   }
 
   // TYPE

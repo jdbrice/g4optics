@@ -25,6 +25,7 @@ SIPM_LOCAL_POSITION_OVERRIDE=""
 TANK_SIZE_OVERRIDE=""
 TANK_SIZE_PRESET_OVERRIDE=""
 ELECTRON_ENERGY_MODE_OVERRIDE=""
+SURFACE_PRESET_OVERRIDE=""
 CUSTOM_X_MIN=""
 CUSTOM_X_MAX=""
 CUSTOM_Y_MIN=""
@@ -56,6 +57,9 @@ Source options:
   --source-mode MODE                  auto, gun, or gps
   --template-macro FILE               override the selected template macro
   --electron-energy-mode MODE         fixed or sr90Beta
+
+Surface options:
+  --surface-preset PRESET             polished, ground, or wrapped
 
 Geometry options:
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
@@ -230,6 +234,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --electron-energy-mode=*)
       ELECTRON_ENERGY_MODE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-preset)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-preset" >&2
+        exit 1
+      fi
+      SURFACE_PRESET_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-preset=*)
+      SURFACE_PRESET_OVERRIDE="${1#*=}"
       shift
       ;;
     --x-min)
@@ -500,6 +516,17 @@ if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
       ;;
     *)
       echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed or sr90Beta." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then
+  case "${SURFACE_PRESET_OVERRIDE}" in
+    polished|ground|wrapped)
+      ;;
+    *)
+      echo "Invalid --surface-preset: ${SURFACE_PRESET_OVERRIDE}. Use polished, ground, or wrapped." >&2
       exit 1
       ;;
   esac
@@ -865,6 +892,10 @@ sipm_cavity_mode="$(macro_value_after "/opnovice2/sipm/cavityMode")"
 sipm_local="$(macro_value_after "/opnovice2/sipm/localPosition")"
 template_tank_size="$(macro_value_after "/opnovice2/tank/size")"
 template_tank_size_preset="$(macro_value_after "/opnovice2/tank/sizePreset")"
+template_surface_model="$(macro_value_after "/opnovice2/surfaceModel")"
+template_surface_type="$(macro_value_after "/opnovice2/surfaceType")"
+template_surface_finish="$(macro_value_after "/opnovice2/surfaceFinish")"
+template_surface_sigma_alpha="$(macro_value_after "/opnovice2/surfaceSigmaAlpha")"
 if [[ "${SOURCE_MODE}" == "gps" ]]; then
   electron_energy_mode="fixed"
 elif [[ -z "${electron_energy_mode}" ]]; then
@@ -895,6 +926,35 @@ fi
 if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
   tank_size=""
   tank_size_preset="${TANK_SIZE_PRESET_OVERRIDE}"
+fi
+surface_preset="${SURFACE_PRESET_OVERRIDE}"
+surface_model="${template_surface_model}"
+surface_type="${template_surface_type}"
+surface_finish="${template_surface_finish}"
+surface_sigma_alpha="${template_surface_sigma_alpha}"
+surface_reflectivity=""
+surface_reflectivity_energy_min=""
+surface_reflectivity_energy_max=""
+if [[ -n "${surface_preset}" ]]; then
+  surface_model="unified"
+  surface_type="dielectric_dielectric"
+  case "${surface_preset}" in
+    polished)
+      surface_finish="polished"
+      surface_sigma_alpha="0.0"
+      ;;
+    ground)
+      surface_finish="ground"
+      surface_sigma_alpha="0.2"
+      ;;
+    wrapped)
+      surface_finish="polishedfrontpainted"
+      surface_sigma_alpha="0.0"
+      surface_reflectivity="0.95"
+      surface_reflectivity_energy_min="0.0000020 MeV"
+      surface_reflectivity_energy_max="0.0000033 MeV"
+      ;;
+  esac
 fi
 template_bottom_cavity="$(macro_value_after "/opnovice2/tank/bottomCavity")"
 if [[ "${MODE}" == "full" ]]; then
@@ -1009,7 +1069,8 @@ write_run_config() {
     printf '    "sipm_local_position": %s,\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
-    printf '    "electron_energy_mode": %s\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "surface_preset": %s\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
     printf '    "commit": "%s",\n' "$(json_string "${git_commit}")"
@@ -1059,6 +1120,63 @@ write_run_config() {
       printf 'null'
     fi
     printf '\n'
+    printf '  },\n'
+    printf '  "surface": {\n'
+    printf '    "preset": '
+    if [[ -n "${surface_preset}" ]]; then
+      printf '"%s"' "$(json_string "${surface_preset}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "model": '
+    if [[ -n "${surface_model}" ]]; then
+      printf '"%s"' "$(json_string "${surface_model}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "type": '
+    if [[ -n "${surface_type}" ]]; then
+      printf '"%s"' "$(json_string "${surface_type}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "finish": '
+    if [[ -n "${surface_finish}" ]]; then
+      printf '"%s"' "$(json_string "${surface_finish}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "sigma_alpha": '
+    if [[ -n "${surface_sigma_alpha}" ]]; then
+      printf '%s' "$(format_num "${surface_sigma_alpha}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity": '
+    if [[ -n "${surface_reflectivity}" ]]; then
+      printf '%s' "$(format_num "${surface_reflectivity}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_energy_min": '
+    if [[ -n "${surface_reflectivity_energy_min}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_energy_min}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_energy_max": '
+    if [[ -n "${surface_reflectivity_energy_max}" ]]; then
+      printf '"%s"\n' "$(json_string "${surface_reflectivity_energy_max}")"
+    else
+      printf 'null\n'
+    fi
     printf '  },\n'
     printf '  "grid": {\n'
     printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
@@ -1177,6 +1295,9 @@ fi
 if [[ -n "${tank_size_preset}" ]]; then
   echo "Tank size preset: ${tank_size_preset}"
 fi
+if [[ -n "${surface_preset}" ]]; then
+  echo "Surface preset: ${surface_preset} (finish=${surface_finish}, sigma_alpha=${surface_sigma_alpha})"
+fi
 echo "Metadata: ${RUN_CONFIG}, ${POINTS_CSV}"
 echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS_CSV}"
 
@@ -1211,6 +1332,12 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   fi
   if [[ "${MODE}" == "full" ]]; then
     macro_args+=(--set "/opnovice2/tank/bottomCavity=false")
+  fi
+  if [[ -n "${surface_preset}" ]]; then
+    macro_args+=(
+      --set "/opnovice2/surfacePreset=${surface_preset}"
+      --require "/opnovice2/surfacePreset"
+    )
   fi
   if [[ "${SOURCE_MODE}" == "gun" ]]; then
     macro_args+=(

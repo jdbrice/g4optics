@@ -213,6 +213,53 @@ void DetectorConstruction::SetSurfacePolish(G4double v)
   G4cout << "Surface polish set to: " << fSurface->GetPolish() << G4endl;
 }
 
+void DetectorConstruction::ResetSurfaceMaterialPropertiesTable()
+{
+  delete fSurfaceMPT;
+  fSurfaceMPT = new G4MaterialPropertiesTable();
+  fSurface->SetMaterialPropertiesTable(fSurfaceMPT);
+}
+
+void DetectorConstruction::SetSurfacePreset(const G4String& preset)
+{
+  ResetSurfaceMaterialPropertiesTable();
+  fSurface->SetModel(unified);
+  fSurface->SetType(dielectric_dielectric);
+
+  if (preset == "polished") {
+    fSurface->SetFinish(polished);
+    fSurface->SetSigmaAlpha(0.0);
+  }
+  else if (preset == "ground") {
+    fSurface->SetFinish(ground);
+    fSurface->SetSigmaAlpha(0.2);
+  }
+  else if (preset == "wrapped") {
+    fSurface->SetFinish(polishedfrontpainted);
+    fSurface->SetSigmaAlpha(0.0);
+
+    const G4int nEntries = 2;
+    G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
+    G4double reflectivity[nEntries] = {0.95, 0.95};
+    fSurfaceMPT->AddProperty("REFLECTIVITY", photonEnergy, reflectivity, nEntries);
+  }
+  else {
+    G4ExceptionDescription msg;
+    msg << "Invalid surface preset: " << preset
+        << ". Use polished, ground, or wrapped.";
+    G4Exception("DetectorConstruction::SetSurfacePreset",
+                "OpNovice2_Surface_001",
+                FatalException,
+                msg);
+  }
+
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+  G4cout << "Surface preset applied: " << preset
+         << " (model=unified, type=dielectric_dielectric, finish="
+         << fSurface->GetFinish() << ", sigma_alpha="
+         << fSurface->GetSigmaAlpha() << ")" << G4endl;
+}
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void DetectorConstruction::AddTankMPV(const G4String& prop, G4MaterialPropertyVector* mpv)
 {
@@ -234,6 +281,9 @@ void DetectorConstruction::AddWorldMPV(const G4String& prop, G4MaterialPropertyV
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void DetectorConstruction::AddSurfaceMPV(const G4String& prop, G4MaterialPropertyVector* mpv)
 {
+  if (fSurfaceMPT->GetProperty(prop) != nullptr) {
+    fSurfaceMPT->RemoveProperty(prop);
+  }
   fSurfaceMPT->AddProperty(prop, mpv);
   G4cout << "The MPT for the surface is now: " << G4endl;
   fSurfaceMPT->DumpTable();
@@ -260,6 +310,9 @@ void DetectorConstruction::AddWorldMPC(const G4String& prop, G4double v)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void DetectorConstruction::AddSurfaceMPC(const G4String& prop, G4double v)
 {
+  if (fSurfaceMPT->ConstPropertyExists(prop)) {
+    fSurfaceMPT->RemoveConstProperty(prop);
+  }
   fSurfaceMPT->AddConstProperty(prop, v);
   G4cout << "The MPT for the surface is now: " << G4endl;
   fSurfaceMPT->DumpTable();

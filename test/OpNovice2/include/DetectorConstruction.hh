@@ -81,6 +81,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     void SetSurfaceSigmaAlpha(G4double v);
     void SetSurfacePolish(G4double v);
+    void SetSurfacePreset(const G4String& preset);
 
     void AddTankMPV(const G4String& prop, G4MaterialPropertyVector* mpv);
     void AddTankMPC(const G4String& prop, G4double v);
@@ -169,6 +170,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                               G4double& hz,
                               G4ThreeVector& pos) const;
     G4double GetBottomCavityRadius() const;
+    void ResetSurfaceMaterialPropertiesTable();
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

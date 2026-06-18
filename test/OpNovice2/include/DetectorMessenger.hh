@@ -65,6 +65,7 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fSurfaceTypeCmd = nullptr;
     G4UIcmdWithAString* fSurfaceFinishCmd = nullptr;
     G4UIcmdWithAString* fSurfaceModelCmd = nullptr;
+    G4UIcmdWithAString* fSurfacePresetCmd = nullptr;
     G4UIcmdWithADouble* fSurfaceSigmaAlphaCmd = nullptr;
     G4UIcmdWithADouble* fSurfacePolishCmd = nullptr;
     G4UIcmdWithAString* fSurfaceMatPropVectorCmd = nullptr;
