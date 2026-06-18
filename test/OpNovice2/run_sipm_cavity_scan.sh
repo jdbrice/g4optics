@@ -6,6 +6,11 @@ cd "${SCRIPT_DIR}"
 
 N_EVENTS="${N_EVENTS:-100}"
 DRY_RUN="${DRY_RUN:-0}"
+PLOT_WITH_ROOT="${PLOT_WITH_ROOT:-1}"
+ROOT_COMMAND="${ROOT_COMMAND:-root}"
+ROOT_PLOT_MACRO="plot_efficiency_map.C"
+ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
+ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
 
 MODE="surface"
 GRID="near5"
@@ -69,10 +74,14 @@ Environment:
   N_EVENTS=100                        events per scan point
   DRY_RUN=1                           generate macros/config only
   SOURCE_MODE=auto                    source command mode: auto, gun, or gps
+  PLOT_WITH_ROOT=1                    generate ROOT macro plots after scan if ROOT is available
+  ROOT_COMMAND=root                   ROOT executable used for plot generation
+  ROOT_PLOT_FIDUCIAL_LIMIT_MM=45      fiducial box half-width shown by ROOT plots
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
   scan_runs/<UTC timestamp>_<mode>_<grid>/efficiency_map.csv
+  scan_runs/<UTC timestamp>_<mode>_<grid>/root_*.png and root_*.pdf when ROOT plotting runs
   scan_latest -> most recent run directory
 USAGE
 }
@@ -295,6 +304,19 @@ if [[ "${#POSITIONAL[@]}" -ge 2 ]]; then
   GRID="${POSITIONAL[1]}"
 fi
 
+case "${PLOT_WITH_ROOT}" in
+  1|true|TRUE|yes|YES|on|ON)
+    PLOT_WITH_ROOT="1"
+    ;;
+  0|false|FALSE|no|NO|off|OFF)
+    PLOT_WITH_ROOT="0"
+    ;;
+  *)
+    echo "Invalid PLOT_WITH_ROOT: ${PLOT_WITH_ROOT}. Use 1 or 0." >&2
+    exit 1
+    ;;
+esac
+
 if [[ "${GRID}" != "custom" ]]; then
   if [[ -n "${CUSTOM_X_MIN}" || -n "${CUSTOM_X_MAX}" || -n "${CUSTOM_Y_MIN}" ||
         -n "${CUSTOM_Y_MAX}" || -n "${CUSTOM_STEP}" || -n "${CUSTOM_GRID_UNIT}" ||
@@ -505,6 +527,8 @@ require_number() {
     exit 1
   fi
 }
+
+require_number "ROOT_PLOT_FIDUCIAL_LIMIT_MM" "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
 
 axis_values() {
   local axis="$1"
@@ -940,6 +964,9 @@ write_run_config() {
     printf '    "latest_points_csv": "%s",\n' "$(json_string "${LATEST_POINTS_CSV}")"
     printf '    "efficiency_map_csv": "%s",\n' "$(json_string "${EFFICIENCY_MAP_CSV}")"
     printf '    "latest_efficiency_map_csv": "%s",\n' "$(json_string "${LATEST_EFFICIENCY_MAP}")"
+    printf '    "root_plot_enabled": %s,\n' "$(if [[ "${PLOT_WITH_ROOT}" == "1" ]]; then echo true; else echo false; fi)"
+    printf '    "root_plot_macro": "%s",\n' "$(json_string "${ROOT_PLOT_MACRO}")"
+    printf '    "root_plot_fiducial_limit_mm": %s,\n' "$(format_num "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
     printf '    "latest_run_link": "%s"\n' "$(json_string "${LATEST_RUN_LINK}")"
     printf '  }\n'
     printf '}\n'
@@ -976,6 +1003,30 @@ write_efficiency_map() {
         "${summary}" "${root}" "${log}"
     done
   } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
+}
+
+generate_root_plots() {
+  if [[ "${PLOT_WITH_ROOT}" != "1" ]]; then
+    echo "ROOT plot generation disabled: PLOT_WITH_ROOT=0"
+    return 0
+  fi
+  if [[ "${ROOT_PLOT_SKIP_LOCAL}" == "1" ]]; then
+    echo "ROOT plot generation deferred to caller."
+    return 0
+  fi
+  if [[ ! -f "${ROOT_PLOT_MACRO}" ]]; then
+    echo "ROOT plot generation skipped: macro not found: ${ROOT_PLOT_MACRO}" >&2
+    return 0
+  fi
+  if ! command -v "${ROOT_COMMAND}" >/dev/null 2>&1; then
+    echo "ROOT plot generation skipped: ROOT command not found: ${ROOT_COMMAND}" >&2
+    echo "Set ROOT_COMMAND=/path/to/root or PLOT_WITH_ROOT=0." >&2
+    return 0
+  fi
+
+  echo "Generating ROOT plots with ${ROOT_PLOT_MACRO}"
+  "${ROOT_COMMAND}" -b -q "${ROOT_PLOT_MACRO}(\"${RUN_DIR}\",${ROOT_PLOT_FIDUCIAL_LIMIT_MM})"
+  echo "ROOT plots: ${RUN_DIR}/root_*.png and ${RUN_DIR}/root_*.pdf"
 }
 
 write_run_config
@@ -1096,5 +1147,6 @@ else
   cp "${EFFICIENCY_MAP_CSV}" "${LATEST_EFFICIENCY_MAP}"
   echo "Efficiency map: ${EFFICIENCY_MAP_CSV}"
   echo "Latest efficiency map: ${LATEST_EFFICIENCY_MAP}"
+  generate_root_plots
   echo "Scan complete."
 fi
