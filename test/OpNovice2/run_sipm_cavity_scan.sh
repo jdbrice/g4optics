@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
+ORIGINAL_ARGS=("$@")
+
 N_EVENTS="${N_EVENTS:-100}"
 DRY_RUN="${DRY_RUN:-0}"
 PLOT_WITH_ROOT="${PLOT_WITH_ROOT:-1}"
@@ -11,6 +13,7 @@ ROOT_COMMAND="${ROOT_COMMAND:-root}"
 ROOT_PLOT_MACRO="plot_efficiency_map.C"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
 ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
+MACRO_GENERATOR="generate_scan_macro.py"
 
 MODE="surface"
 GRID="near5"
@@ -49,18 +52,20 @@ Usage:
   ./run_sipm_cavity_scan.sh opening wide9
   ./run_sipm_cavity_scan.sh full custom --x-min -50 --x-max 50 --y-min -50 --y-max 50 --step 5 --grid-unit mm --beam-z 4
 
-Placement options:
+Source options:
   --source-mode MODE                  auto, gun, or gps
   --template-macro FILE               override the selected template macro
+  --electron-energy-mode MODE         fixed or sr90Beta
+
+Geometry options:
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
   --sipm-cavity-mode MODE             surface or opening
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
   --tank-size "x y z unit"            override full tank size, e.g. "10 10 0.8 cm"
   --tank-size-preset PRESET           5x5x0p4, 5x5x0p8, 5x5x1p6,
                                       10x10x0p4, 10x10x0p8, or 10x10x1p6
-  --electron-energy-mode MODE         fixed or sr90Beta
 
-Custom grid options:
+Grid / beam options:
   --x-min VALUE                       minimum x coordinate
   --x-max VALUE                       maximum x coordinate
   --y-min VALUE                       minimum y coordinate
@@ -69,6 +74,12 @@ Custom grid options:
   --grid-unit UNIT                    mm or cm
   --beam-z VALUE                      beam z coordinate in --grid-unit units;
                                       custom defaults to thickness/2 + 1.5 mm
+
+Output / execution options:
+  --events N                          events per scan point; overrides N_EVENTS
+  --dry-run                           generate macros/config only
+  --no-root-plots                     skip ROOT quick-look plot generation
+  --root-command PATH                 ROOT executable used for plot generation
 
 Environment:
   N_EVENTS=100                        events per scan point
@@ -92,6 +103,38 @@ while [[ $# -gt 0 ]]; do
     -h|--help|help)
       usage
       exit 0
+      ;;
+    --events)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --events" >&2
+        exit 1
+      fi
+      N_EVENTS="$2"
+      shift 2
+      ;;
+    --events=*)
+      N_EVENTS="${1#*=}"
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN="1"
+      shift
+      ;;
+    --no-root-plots)
+      PLOT_WITH_ROOT="0"
+      shift
+      ;;
+    --root-command)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --root-command" >&2
+        exit 1
+      fi
+      ROOT_COMMAND="$2"
+      shift 2
+      ;;
+    --root-command=*)
+      ROOT_COMMAND="${1#*=}"
+      shift
       ;;
     --sipm-face)
       if [[ $# -lt 2 ]]; then
@@ -317,6 +360,24 @@ case "${PLOT_WITH_ROOT}" in
     ;;
 esac
 
+case "${DRY_RUN}" in
+  1|true|TRUE|yes|YES|on|ON)
+    DRY_RUN="1"
+    ;;
+  0|false|FALSE|no|NO|off|OFF)
+    DRY_RUN="0"
+    ;;
+  *)
+    echo "Invalid DRY_RUN: ${DRY_RUN}. Use 1 or 0." >&2
+    exit 1
+    ;;
+esac
+
+if [[ ! "${N_EVENTS}" =~ ^[0-9]+$ || "${N_EVENTS}" -le 0 ]]; then
+  echo "Invalid --events/N_EVENTS: ${N_EVENTS}. Expected a positive integer." >&2
+  exit 1
+fi
+
 if [[ "${GRID}" != "custom" ]]; then
   if [[ -n "${CUSTOM_X_MIN}" || -n "${CUSTOM_X_MAX}" || -n "${CUSTOM_Y_MIN}" ||
         -n "${CUSTOM_Y_MAX}" || -n "${CUSTOM_STEP}" || -n "${CUSTOM_GRID_UNIT}" ||
@@ -449,6 +510,11 @@ if [[ ! -f "${TEMPLATE_MACRO}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "${MACRO_GENERATOR}" ]]; then
+  echo "Macro generator not found: ${MACRO_GENERATOR}" >&2
+  exit 1
+fi
+
 if [[ "${DRY_RUN}" != "1" && ! -x "./build/OpNovice2" ]]; then
   echo "Missing executable: ./build/OpNovice2" >&2
   echo "Build first with: cmake -S . -B build && cmake --build build -j\$(nproc)" >&2
@@ -517,6 +583,32 @@ json_string() {
   s="${s//\\/\\\\}"
   s="${s//\"/\\\"}"
   printf '%s' "${s}"
+}
+
+json_string_array() {
+  local first=1
+  local v
+  printf "["
+  for v in "$@"; do
+    if [[ "${first}" -eq 0 ]]; then
+      printf ", "
+    fi
+    printf '"%s"' "$(json_string "${v}")"
+    first=0
+  done
+  printf "]"
+}
+
+shell_join() {
+  local first=1
+  local v
+  for v in "$@"; do
+    if [[ "${first}" -eq 0 ]]; then
+      printf " "
+    fi
+    printf "%q" "${v}"
+    first=0
+  done
 }
 
 require_number() {
@@ -765,10 +857,6 @@ POINTS_CSV="${RUN_DIR}/points.csv"
 RUN_CONFIG="${RUN_DIR}/run_config.json"
 EFFICIENCY_MAP_CSV="${RUN_DIR}/efficiency_map.csv"
 
-template_output="$(macro_value_after "/analysis/setFileName")"
-template_position="$(macro_value_after "${position_cmd}")"
-template_direction="$(macro_value_after "${direction_cmd}")"
-template_beam_on="$(macro_value_after "/run/beamOn")"
 primary_particle="$(macro_value_after "${particle_cmd}")"
 primary_energy="$(macro_value_after "${energy_cmd}")"
 electron_energy_mode="$(macro_value_after "/opnovice2/gun/electronEnergyMode")"
@@ -777,10 +865,6 @@ sipm_cavity_mode="$(macro_value_after "/opnovice2/sipm/cavityMode")"
 sipm_local="$(macro_value_after "/opnovice2/sipm/localPosition")"
 template_tank_size="$(macro_value_after "/opnovice2/tank/size")"
 template_tank_size_preset="$(macro_value_after "/opnovice2/tank/sizePreset")"
-template_electron_energy_mode="${electron_energy_mode}"
-template_sipm_face="${sipm_face}"
-template_sipm_cavity_mode="${sipm_cavity_mode}"
-template_sipm_local="${sipm_local}"
 if [[ "${SOURCE_MODE}" == "gps" ]]; then
   electron_energy_mode="fixed"
 elif [[ -z "${electron_energy_mode}" ]]; then
@@ -832,23 +916,46 @@ if [[ -z "${scint_yield}" ]]; then
   scint_yield=null
 fi
 
-if [[ -z "${template_output}" || -z "${template_position}" || -z "${template_direction}" || -z "${template_beam_on}" || -z "${template_sipm_face}" || -z "${template_sipm_local}" ]]; then
-  echo "Could not parse output/source/beamOn/SiPM commands from ${TEMPLATE_MACRO}" >&2
+if [[ -z "${primary_particle}" || -z "${primary_energy}" || -z "${sipm_face}" || -z "${sipm_local}" ]]; then
+  echo "Could not parse required source/SiPM defaults from ${TEMPLATE_MACRO}" >&2
   echo "Source mode: ${SOURCE_MODE}; expected ${position_cmd}, ${direction_cmd}, ${particle_cmd}, ${energy_cmd}." >&2
+  echo "Use --template-macro with the expected defaults, or pass --sipm-face and --sipm-local-position explicitly." >&2
   exit 1
 fi
 
 generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-git_commit="$(git rev-parse HEAD 2>/dev/null || echo "unknown")"
-git_branch="$(git branch --show-current 2>/dev/null || echo "unknown")"
+git_commit="${SCAN_GIT_COMMIT:-$(git rev-parse HEAD 2>/dev/null || echo "unknown")}"
+git_branch="${SCAN_GIT_BRANCH:-$(git branch --show-current 2>/dev/null || echo "unknown")}"
 if [[ -z "${git_branch}" ]]; then
   git_branch="detached"
 fi
-if [[ -n "$(git status --porcelain 2>/dev/null || true)" ]]; then
+if [[ -n "${SCAN_GIT_DIRTY:-}" ]]; then
+  case "${SCAN_GIT_DIRTY}" in
+    true|false)
+      git_dirty="${SCAN_GIT_DIRTY}"
+      ;;
+    *)
+      echo "Invalid SCAN_GIT_DIRTY: ${SCAN_GIT_DIRTY}. Use true or false." >&2
+      exit 1
+      ;;
+  esac
+elif [[ -n "$(git status --porcelain 2>/dev/null || true)" ]]; then
   git_dirty=true
 else
   git_dirty=false
 fi
+
+COMMAND_SCRIPT="${SCAN_COMMAND_SCRIPT:-$0}"
+COMMAND_ARGV=("${COMMAND_SCRIPT}" "${ORIGINAL_ARGS[@]}")
+COMMAND_ENV=(
+  "N_EVENTS=${N_EVENTS}"
+  "DRY_RUN=${DRY_RUN}"
+  "SOURCE_MODE=${SOURCE_MODE}"
+  "PLOT_WITH_ROOT=${PLOT_WITH_ROOT}"
+  "ROOT_COMMAND=${ROOT_COMMAND}"
+  "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
+)
+COMMAND_SHELL="$(shell_join "${COMMAND_ENV[@]}" "${COMMAND_ARGV[@]}")"
 
 mkdir -p "${MACRO_DIR}" "${ROOT_DIR}" "${LOG_DIR}"
 
@@ -873,6 +980,20 @@ write_run_config() {
   {
     printf '{\n'
     printf '  "generated_at_utc": "%s",\n' "$(json_string "${generated_at}")"
+    printf '  "command": {\n'
+    printf '    "argv": '
+    json_string_array "${COMMAND_ARGV[@]}"
+    printf ',\n'
+    printf '    "shell": "%s",\n' "$(json_string "${COMMAND_SHELL}")"
+    printf '    "environment": {\n'
+    printf '      "N_EVENTS": "%s",\n' "$(json_string "${N_EVENTS}")"
+    printf '      "DRY_RUN": "%s",\n' "$(json_string "${DRY_RUN}")"
+    printf '      "SOURCE_MODE": "%s",\n' "$(json_string "${SOURCE_MODE}")"
+    printf '      "PLOT_WITH_ROOT": "%s",\n' "$(json_string "${PLOT_WITH_ROOT}")"
+    printf '      "ROOT_COMMAND": "%s",\n' "$(json_string "${ROOT_COMMAND}")"
+    printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s"\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '    }\n'
+    printf '  },\n'
     printf '  "scan_name": "%s",\n' "$(json_string "${SCAN_NAME}")"
     printf '  "script": "%s",\n' "$(json_string "$0")"
     printf '  "template_macro": "%s",\n' "$(json_string "${TEMPLATE_MACRO}")"
@@ -1062,75 +1183,43 @@ echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS
 tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; do
   outfile="${root%.root}"
 
-  sed_args=(
-    -e "s|/analysis/setFileName ${template_output}|/analysis/setFileName ${outfile}|" \
-    -e "s|${position_cmd} ${template_position}|${position_cmd} ${x} ${y} ${z} ${unit}|" \
-    -e "s|${direction_cmd} ${template_direction}|${direction_cmd} ${BEAM_DIRECTION}|" \
-    -e "s|/run/beamOn ${template_beam_on}|/run/beamOn ${N_EVENTS}|" \
-    -e "s|/opnovice2/sipm/face ${template_sipm_face}|/opnovice2/sipm/face ${sipm_face}|" \
-    -e "s|/opnovice2/sipm/localPosition ${template_sipm_local}|/opnovice2/sipm/localPosition ${sipm_local}|"
+  macro_args=(
+    --template "${TEMPLATE_MACRO}"
+    --out "${macro}"
+    --set "/analysis/setFileName=${outfile}"
+    --set "${position_cmd}=${x} ${y} ${z} ${unit}"
+    --set "${direction_cmd}=${BEAM_DIRECTION}"
+    --set "/run/beamOn=${N_EVENTS}"
+    --set "/opnovice2/sipm/face=${sipm_face}"
+    --set "/opnovice2/sipm/localPosition=${sipm_local}"
+    --require "/analysis/setFileName"
+    --require "${position_cmd}"
+    --require "${direction_cmd}"
+    --require "/run/beamOn"
+    --require "/opnovice2/sipm/face"
+    --require "/opnovice2/sipm/localPosition"
   )
 
-  if [[ -n "${template_sipm_cavity_mode}" && -n "${sipm_cavity_mode}" ]]; then
-    sed_args+=(-e "s|/opnovice2/sipm/cavityMode ${template_sipm_cavity_mode}|/opnovice2/sipm/cavityMode ${sipm_cavity_mode}|")
+  if [[ -n "${sipm_cavity_mode}" ]]; then
+    macro_args+=(--set "/opnovice2/sipm/cavityMode=${sipm_cavity_mode}")
   fi
-  if [[ -n "${template_tank_size}" && -n "${tank_size}" ]]; then
-    sed_args+=(-e "s|/opnovice2/tank/size ${template_tank_size}|/opnovice2/tank/size ${tank_size}|")
+  if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then
+    macro_args+=(--set "/opnovice2/tank/size=${tank_size}")
   fi
-  if [[ -n "${template_tank_size_preset}" && -n "${tank_size_preset}" ]]; then
-    sed_args+=(-e "s|/opnovice2/tank/sizePreset ${template_tank_size_preset}|/opnovice2/tank/sizePreset ${tank_size_preset}|")
+  if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
+    macro_args+=(--set "/opnovice2/tank/sizePreset=${tank_size_preset}")
   fi
-
-  if [[ "${MODE}" == "full" && -n "${template_bottom_cavity}" ]]; then
-    sed_args+=(-e "s|/opnovice2/tank/bottomCavity ${template_bottom_cavity}|/opnovice2/tank/bottomCavity false|")
+  if [[ "${MODE}" == "full" ]]; then
+    macro_args+=(--set "/opnovice2/tank/bottomCavity=false")
   fi
-
-  bottom_cavity_inject=""
-  if [[ "${MODE}" == "full" && -z "${template_bottom_cavity}" ]]; then
-    bottom_cavity_inject="/opnovice2/tank/bottomCavity false"
-  fi
-  tank_size_inject=""
-  if [[ -n "${TANK_SIZE_OVERRIDE}" && -z "${template_tank_size}" ]]; then
-    tank_size_inject="/opnovice2/tank/size ${tank_size}"
-  elif [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" && -z "${template_tank_size_preset}" ]]; then
-    tank_size_inject="/opnovice2/tank/sizePreset ${tank_size_preset}"
-  fi
-  electron_energy_cmd=""
   if [[ "${SOURCE_MODE}" == "gun" ]]; then
-    electron_energy_cmd="/opnovice2/gun/electronEnergyMode ${electron_energy_mode}"
+    macro_args+=(
+      --set "/opnovice2/gun/electronEnergyMode=${electron_energy_mode}"
+      --require "/opnovice2/gun/electronEnergyMode"
+    )
   fi
 
-  sed "${sed_args[@]}" "${TEMPLATE_MACRO}" | awk \
-    -v bottom_cavity_inject="${bottom_cavity_inject}" \
-    -v tank_size_inject="${tank_size_inject}" \
-    -v electron_energy_cmd="${electron_energy_cmd}" '
-      !tank_size_inserted && tank_size_inject != "" && $1 == "/run/initialize" {
-        print tank_size_inject
-        tank_size_inserted = 1
-      }
-      !bottom_cavity_inserted && bottom_cavity_inject != "" && $1 == "/opnovice2/sipm/face" {
-        print bottom_cavity_inject
-        bottom_cavity_inserted = 1
-      }
-      $1 == "/opnovice2/gun/electronEnergyMode" {
-        if (!electron_energy_written && electron_energy_cmd != "") {
-          print electron_energy_cmd
-        }
-        electron_energy_written = 1
-        next
-      }
-      { print }
-      !electron_energy_written && electron_energy_cmd != "" && $1 == "/gun/energy" {
-        print electron_energy_cmd
-        electron_energy_written = 1
-      }
-    ' > "${macro}"
-
-  if [[ -n "${electron_energy_cmd}" ]] && ! grep -qxF "${electron_energy_cmd}" "${macro}"; then
-    echo "Generated macro is missing expected electron energy mode: ${electron_energy_cmd}" >&2
-    echo "Macro: ${macro}" >&2
-    exit 1
-  fi
+  python3 "${MACRO_GENERATOR}" "${macro_args[@]}"
 
   if [[ "${DRY_RUN}" == "1" ]]; then
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"

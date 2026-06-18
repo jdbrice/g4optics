@@ -13,6 +13,18 @@ SOURCE_MODE_VALUE="${SOURCE_MODE:-auto}"
 PLOT_WITH_ROOT_VALUE="${PLOT_WITH_ROOT:-1}"
 ROOT_COMMAND_VALUE="${ROOT_COMMAND:-root}"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM_VALUE="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
+USER_ARGS=("$@")
+
+HOST_GIT_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo "unknown")"
+HOST_GIT_BRANCH="$(git branch --show-current 2>/dev/null || echo "unknown")"
+if [[ -z "${HOST_GIT_BRANCH}" ]]; then
+  HOST_GIT_BRANCH="detached"
+fi
+if [[ -n "$(git status --porcelain 2>/dev/null || true)" ]]; then
+  HOST_GIT_DIRTY="true"
+else
+  HOST_GIT_DIRTY="false"
+fi
 
 usage() {
   cat <<'USAGE'
@@ -41,6 +53,42 @@ case "${1:-}" in
     ;;
 esac
 
+i=0
+while [[ "${i}" -lt "${#USER_ARGS[@]}" ]]; do
+  arg="${USER_ARGS[${i}]}"
+  case "${arg}" in
+    --events)
+      i=$((i + 1))
+      if [[ "${i}" -ge "${#USER_ARGS[@]}" ]]; then
+        echo "Missing value for --events" >&2
+        exit 1
+      fi
+      N_EVENTS_VALUE="${USER_ARGS[${i}]}"
+      ;;
+    --events=*)
+      N_EVENTS_VALUE="${arg#*=}"
+      ;;
+    --dry-run)
+      DRY_RUN_VALUE="1"
+      ;;
+    --no-root-plots)
+      PLOT_WITH_ROOT_VALUE="0"
+      ;;
+    --root-command)
+      i=$((i + 1))
+      if [[ "${i}" -ge "${#USER_ARGS[@]}" ]]; then
+        echo "Missing value for --root-command" >&2
+        exit 1
+      fi
+      ROOT_COMMAND_VALUE="${USER_ARGS[${i}]}"
+      ;;
+    --root-command=*)
+      ROOT_COMMAND_VALUE="${arg#*=}"
+      ;;
+  esac
+  i=$((i + 1))
+done
+
 case "${PLOT_WITH_ROOT_VALUE}" in
   1|true|TRUE|yes|YES|on|ON)
     PLOT_WITH_ROOT_VALUE="1"
@@ -59,8 +107,13 @@ docker exec \
   -e "DRY_RUN=${DRY_RUN_VALUE}" \
   -e "SOURCE_MODE=${SOURCE_MODE_VALUE}" \
   -e "PLOT_WITH_ROOT=${PLOT_WITH_ROOT_VALUE}" \
+  -e "ROOT_COMMAND=${ROOT_COMMAND_VALUE}" \
   -e "ROOT_PLOT_SKIP_LOCAL=1" \
   -e "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM_VALUE}" \
+  -e "SCAN_COMMAND_SCRIPT=./run_sipm_cavity_scan_docker.sh" \
+  -e "SCAN_GIT_COMMIT=${HOST_GIT_COMMIT}" \
+  -e "SCAN_GIT_BRANCH=${HOST_GIT_BRANCH}" \
+  -e "SCAN_GIT_DIRTY=${HOST_GIT_DIRTY}" \
   "${CONTAINER}" \
   bash -lc 'cd "$1" && shift && ./run_sipm_cavity_scan.sh "$@"' \
   bash "${CONTAINER_WORKDIR}" "$@"
