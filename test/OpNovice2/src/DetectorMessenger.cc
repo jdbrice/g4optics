@@ -138,6 +138,30 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fTankBottomCavityCmd->AvailableForStates(G4State_PreInit);
   fTankBottomCavityCmd->SetToBeBroadcasted(false);
 
+  fDimpleEnabledCmd = new G4UIcmdWithABool("/opnovice2/dimple/enabled", this);
+  fDimpleEnabledCmd->SetGuidance("Enable the Week 8.1 bottom-center hemispherical dimple.");
+  fDimpleEnabledCmd->SetDefaultValue(false);
+  fDimpleEnabledCmd->AvailableForStates(G4State_PreInit);
+  fDimpleEnabledCmd->SetToBeBroadcasted(false);
+
+  fDimpleRadiusCmd = new G4UIcmdWithADoubleAndUnit("/opnovice2/dimple/radius", this);
+  fDimpleRadiusCmd->SetGuidance("Set strict hemispherical dimple radius and depth.");
+  fDimpleRadiusCmd->SetParameterName("radius", false);
+  fDimpleRadiusCmd->SetUnitCategory("Length");
+  fDimpleRadiusCmd->SetDefaultUnit("mm");
+  fDimpleRadiusCmd->AvailableForStates(G4State_PreInit);
+  fDimpleRadiusCmd->SetToBeBroadcasted(false);
+
+  fDimpleModeCmd = new G4UIcmdWithAString("/opnovice2/dimple/mode", this);
+  fDimpleModeCmd->SetGuidance("Set dimple shape mode. Week 8.1 supports hemisphere only.");
+  fDimpleModeCmd->AvailableForStates(G4State_PreInit);
+  fDimpleModeCmd->SetToBeBroadcasted(false);
+
+  fDimpleSiPMModeCmd = new G4UIcmdWithAString("/opnovice2/dimple/sipmMode", this);
+  fDimpleSiPMModeCmd->SetGuidance("Set dimple SiPM placement mode: surface or opening.");
+  fDimpleSiPMModeCmd->AvailableForStates(G4State_PreInit);
+  fDimpleSiPMModeCmd->SetToBeBroadcasted(false);
+
   fWorldMatPropVectorCmd = new G4UIcmdWithAString("/opnovice2/worldProperty", this);
   fWorldMatPropVectorCmd->SetGuidance("Set material property vector ");
   fWorldMatPropVectorCmd->SetGuidance("for the world.");
@@ -206,6 +230,10 @@ DetectorMessenger::~DetectorMessenger()
   delete fTankSizeCmd;
   delete fTankSizePresetCmd;
   delete fTankBottomCavityCmd;
+  delete fDimpleEnabledCmd;
+  delete fDimpleRadiusCmd;
+  delete fDimpleModeCmd;
+  delete fDimpleSiPMModeCmd;
   delete fWorldMatPropVectorCmd;
   delete fWorldMatPropConstCmd;
   delete fWorldMaterialCmd;
@@ -518,6 +546,18 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   }
   else if (command == fTankBottomCavityCmd) {
     fDetector->SetBottomCavityEnabled(fTankBottomCavityCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fDimpleEnabledCmd) {
+    fDetector->SetDimpleEnabled(fDimpleEnabledCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fDimpleRadiusCmd) {
+    fDetector->SetDimpleRadius(fDimpleRadiusCmd->GetNewDoubleValue(newValue));
+  }
+  else if (command == fDimpleModeCmd) {
+    fDetector->SetDimpleMode(newValue);
+  }
+  else if (command == fDimpleSiPMModeCmd) {
+    fDetector->SetDimpleSiPMMode(newValue);
   }
 
   // --- SiPM commands ---

@@ -78,6 +78,10 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWith3VectorAndUnit* fTankSizeCmd = nullptr;
     G4UIcmdWithAString* fTankSizePresetCmd = nullptr;
     G4UIcmdWithABool* fTankBottomCavityCmd = nullptr;
+    G4UIcmdWithABool* fDimpleEnabledCmd = nullptr;
+    G4UIcmdWithADoubleAndUnit* fDimpleRadiusCmd = nullptr;
+    G4UIcmdWithAString* fDimpleModeCmd = nullptr;
+    G4UIcmdWithAString* fDimpleSiPMModeCmd = nullptr;
 
     // the world
     G4UIcmdWithAString* fWorldMatPropVectorCmd = nullptr;

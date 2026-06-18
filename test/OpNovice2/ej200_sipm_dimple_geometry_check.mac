@@ -1,0 +1,28 @@
+/control/verbose 0
+/tracking/verbose 0
+/process/optical/verbose 0
+/run/verbose 0
+/control/cout/ignoreThreadsExcept 0
+
+/run/numberOfThreads 1
+
+# Week 8.1 dimple geometry smoke check.
+# Strict hemisphere: radius is both opening radius and depth.
+
+/opnovice2/boxMaterial G4_PLASTIC_SC_VINYLTOLUENE
+/opnovice2/worldMaterial G4_AIR
+
+/opnovice2/tank/size 100 100 5 mm
+/opnovice2/tank/bottomCavity false
+
+/opnovice2/sipm/face -Z
+/opnovice2/sipm/localPosition 0 0 0 cm
+/opnovice2/sipm/size 2 2 0.5 mm
+
+/opnovice2/dimple/enabled true
+/opnovice2/dimple/radius 3 mm
+/opnovice2/dimple/mode hemisphere
+/opnovice2/dimple/sipmMode surface
+
+/run/initialize
+/geometry/test/run

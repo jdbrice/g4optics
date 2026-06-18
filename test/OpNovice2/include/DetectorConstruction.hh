@@ -102,6 +102,10 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     void SetTankSize(const G4ThreeVector& fullSize);
     void SetTankSizePreset(const G4String& preset);
     void SetBottomCavityEnabled(G4bool enabled);
+    void SetDimpleEnabled(G4bool enabled);
+    void SetDimpleRadius(G4double radius);
+    void SetDimpleMode(const G4String& mode);
+    void SetDimpleSiPMMode(const G4String& mode);
 
     // setting SiPM
     void SetSiPMFace(const G4String& face);
@@ -120,6 +124,11 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4double fTank_y = 5. * CLHEP::cm;
     G4double fTank_z = .25 * CLHEP::cm;
     G4bool fBottomCavityEnabled = false;
+    G4bool fDimpleEnabled = false;
+    G4double fDimpleRadius = 3. * CLHEP::mm;
+    G4String fDimpleMode = "hemisphere";
+    G4String fDimpleSiPMMode = "surface";
+    G4bool fDimpleSiPMModeExplicit = false;
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;
@@ -149,6 +158,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     // Accepted values: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.
     G4String fSiPMFace = "+X";
     G4String fSiPMCavityMode = "surface";
+    G4bool fSiPMCavityModeExplicit = false;
 
     // Local position on the selected face.
     // For +/-X: local x = y, local y = z.
@@ -170,6 +180,12 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                               G4double& hz,
                               G4ThreeVector& pos) const;
     G4double GetBottomCavityRadius() const;
+    G4String GetEffectiveDimpleSiPMMode() const;
+    G4double GetSiPMFootprintCornerRadius(G4double u,
+                                          G4double v,
+                                          G4double hu,
+                                          G4double hv) const;
+    void ValidateDimpleConfiguration() const;
     void ResetSurfaceMaterialPropertiesTable();
 };
 

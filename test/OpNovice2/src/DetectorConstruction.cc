@@ -133,6 +133,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto tank_box = new G4Box("Tank_Box", fTank_x, fTank_y, fTank_z);
   G4VSolid* tank_solid = tank_box;
 
+  if (fBottomCavityEnabled && fDimpleEnabled) {
+    G4ExceptionDescription msg;
+    msg << "/opnovice2/dimple/enabled cannot be combined with "
+        << "/opnovice2/tank/bottomCavity true. Use one cavity model at a time.";
+    G4Exception("DetectorConstruction::Construct",
+                "OpNovice2_Dimple_001",
+                FatalException,
+                msg);
+  }
+
   if (fBottomCavityEnabled) {
     auto bottomCavitySphere = new G4Sphere("Tank_BottomCavitySphere",
                                            0.,
@@ -145,6 +155,23 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     tank_solid = new G4SubtractionSolid("Tank",
                                         tank_box,
                                         bottomCavitySphere,
+                                        nullptr,
+                                        G4ThreeVector(0., 0., -fTank_z));
+  }
+  else if (fDimpleEnabled) {
+    ValidateDimpleConfiguration();
+
+    auto dimpleSphere = new G4Sphere("Tank_DimpleSphere",
+                                     0.,
+                                     fDimpleRadius,
+                                     0.,
+                                     360. * deg,
+                                     0.,
+                                     180. * deg);
+
+    tank_solid = new G4SubtractionSolid("Tank",
+                                        tank_box,
+                                        dimpleSphere,
                                         nullptr,
                                         G4ThreeVector(0., 0., -fTank_z));
   }
@@ -414,11 +441,216 @@ void DetectorConstruction::SetBottomCavityEnabled(G4bool enabled)
          << (fBottomCavityEnabled ? "true" : "false") << G4endl;
 }
 
+void DetectorConstruction::SetDimpleEnabled(G4bool enabled)
+{
+  fDimpleEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Dimple set to "
+         << (fDimpleEnabled ? "true" : "false") << G4endl;
+}
+
+void DetectorConstruction::SetDimpleRadius(G4double radius)
+{
+  if (radius <= 0.) {
+    G4ExceptionDescription msg;
+    msg << "Invalid dimple radius: " << radius / mm
+        << " mm. Radius must be positive.";
+    G4Exception("DetectorConstruction::SetDimpleRadius",
+                "OpNovice2_Dimple_012",
+                FatalException,
+                msg);
+  }
+
+  fDimpleRadius = radius;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Dimple radius set to " << fDimpleRadius / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetDimpleMode(const G4String& mode)
+{
+  if (mode != "hemisphere") {
+    G4ExceptionDescription msg;
+    msg << "Invalid dimple mode: " << mode
+        << ". Only hemisphere is supported in Week 8.1.";
+    G4Exception("DetectorConstruction::SetDimpleMode",
+                "OpNovice2_Dimple_013",
+                FatalException,
+                msg);
+  }
+
+  fDimpleMode = mode;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Dimple mode set to " << fDimpleMode << G4endl;
+}
+
+void DetectorConstruction::SetDimpleSiPMMode(const G4String& mode)
+{
+  if (mode != "surface" && mode != "opening") {
+    G4ExceptionDescription msg;
+    msg << "Invalid dimple SiPM mode: " << mode << ". Use surface or opening.";
+    G4Exception("DetectorConstruction::SetDimpleSiPMMode",
+                "OpNovice2_Dimple_014",
+                FatalException,
+                msg);
+  }
+
+  fDimpleSiPMMode = mode;
+  fDimpleSiPMModeExplicit = true;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Dimple SiPM mode set to " << fDimpleSiPMMode << G4endl;
+}
+
 G4double DetectorConstruction::GetBottomCavityRadius() const
 {
   const G4double tankThickness = 2. * fTank_z;
   const G4double minimumTopThickness = 0.25 * tankThickness;
   return tankThickness - minimumTopThickness;
+}
+
+G4String DetectorConstruction::GetEffectiveDimpleSiPMMode() const
+{
+  if (fDimpleSiPMModeExplicit && fSiPMCavityModeExplicit &&
+      fDimpleSiPMMode != fSiPMCavityMode) {
+    G4ExceptionDescription msg;
+    msg << "Conflicting dimple SiPM placement modes: /opnovice2/dimple/sipmMode="
+        << fDimpleSiPMMode << " but legacy /opnovice2/sipm/cavityMode="
+        << fSiPMCavityMode << ". Use one mode, or set both to the same value.";
+    G4Exception("DetectorConstruction::GetEffectiveDimpleSiPMMode",
+                "OpNovice2_Dimple_002",
+                FatalException,
+                msg);
+  }
+
+  if (!fDimpleSiPMModeExplicit && fSiPMCavityModeExplicit) {
+    return fSiPMCavityMode;
+  }
+
+  return fDimpleSiPMMode;
+}
+
+G4double DetectorConstruction::GetSiPMFootprintCornerRadius(G4double u,
+                                                            G4double v,
+                                                            G4double hu,
+                                                            G4double hv) const
+{
+  const G4double cornerRadii[] = {
+    std::sqrt((u - hu) * (u - hu) + (v - hv) * (v - hv)),
+    std::sqrt((u - hu) * (u - hu) + (v + hv) * (v + hv)),
+    std::sqrt((u + hu) * (u + hu) + (v - hv) * (v - hv)),
+    std::sqrt((u + hu) * (u + hu) + (v + hv) * (v + hv))
+  };
+
+  G4double rMax = cornerRadii[0];
+  for (G4int i = 1; i < 4; ++i) {
+    rMax = std::max(rMax, cornerRadii[i]);
+  }
+  return rMax;
+}
+
+void DetectorConstruction::ValidateDimpleConfiguration() const
+{
+  const G4double safety = 1.e-6 * mm;
+
+  if (fDimpleMode != "hemisphere") {
+    G4ExceptionDescription msg;
+    msg << "Invalid dimple mode: " << fDimpleMode
+        << ". Only hemisphere is supported in Week 8.1.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_003",
+                FatalException,
+                msg);
+  }
+
+  if (fDimpleRadius <= 0.) {
+    G4ExceptionDescription msg;
+    msg << "Invalid dimple radius: " << fDimpleRadius / mm
+        << " mm. Radius must be positive.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_004",
+                FatalException,
+                msg);
+  }
+
+  const G4double tankThickness = 2. * fTank_z;
+  if (fDimpleRadius >= tankThickness - safety) {
+    G4ExceptionDescription msg;
+    msg << "Strict hemispherical dimple radius is too large for this tile. "
+        << "radius=" << fDimpleRadius / mm
+        << " mm, tile thickness=" << tankThickness / mm
+        << " mm. Radius must be smaller than thickness with safety margin.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_005",
+                FatalException,
+                msg);
+  }
+
+  if (fSiPMFace != "-Z" && fSiPMFace != "bottom") {
+    G4ExceptionDescription msg;
+    msg << "Week 8.1 dimple supports only bottom-center -Z SiPM placement. "
+        << "Current /opnovice2/sipm/face is " << fSiPMFace << ".";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_006",
+                FatalException,
+                msg);
+  }
+
+  if (std::abs(fSiPMLocalPosition.x()) > safety ||
+      std::abs(fSiPMLocalPosition.y()) > safety ||
+      std::abs(fSiPMLocalPosition.z()) > safety) {
+    G4ExceptionDescription msg;
+    msg << "Week 8.1 dimple supports only bottom-center SiPM local position "
+        << "0 0 0. Current local position is "
+        << fSiPMLocalPosition / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_007",
+                FatalException,
+                msg);
+  }
+
+  const G4double hu = 0.5 * fSiPMActiveU;
+  const G4double hv = 0.5 * fSiPMActiveV;
+  const G4double rMax = GetSiPMFootprintCornerRadius(0., 0., hu, hv);
+  if (rMax >= fDimpleRadius - safety) {
+    G4ExceptionDescription msg;
+    msg << "SiPM active face does not fit inside the dimple opening. "
+        << "farthest corner radius=" << rMax / mm
+        << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_008",
+                FatalException,
+                msg);
+  }
+
+  const G4String sipmMode = GetEffectiveDimpleSiPMMode();
+  if (sipmMode != "surface" && sipmMode != "opening") {
+    G4ExceptionDescription msg;
+    msg << "Unknown dimple SiPM mode: " << sipmMode
+        << ". Use surface or opening.";
+    G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                "OpNovice2_Dimple_009",
+                FatalException,
+                msg);
+  }
+
+  if (sipmMode == "opening") {
+    const G4double dimpleTopAtFootprint =
+      -fTank_z + std::sqrt(fDimpleRadius * fDimpleRadius - rMax * rMax);
+    const G4double topFace = -fTank_z + fSiPMThickness;
+    if (topFace >= dimpleTopAtFootprint - safety) {
+      G4ExceptionDescription msg;
+      msg << "Dimple opening placement would overlap EJ-200. "
+          << "top face z=" << topFace / mm
+          << " mm, dimple clearance z=" << dimpleTopAtFootprint / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateDimpleConfiguration",
+                  "OpNovice2_Dimple_010",
+                  FatalException,
+                  msg);
+    }
+  }
 }
 
 
@@ -468,7 +700,32 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
     hx = hu;
     hy = hv;
     hz = ht;
-    pos = G4ThreeVector(u, v, -fTank_z - ht);
+    if (fDimpleEnabled) {
+      const G4double safety = 1.e-6 * mm;
+      const G4double rMax = GetSiPMFootprintCornerRadius(u, v, hu, hv);
+      const G4double dimpleTopAtFootprint =
+        -fTank_z + std::sqrt(fDimpleRadius * fDimpleRadius - rMax * rMax);
+      const G4String sipmMode = GetEffectiveDimpleSiPMMode();
+
+      if (sipmMode == "surface") {
+        pos = G4ThreeVector(u, v, dimpleTopAtFootprint - ht - safety);
+      }
+      else if (sipmMode == "opening") {
+        pos = G4ThreeVector(u, v, -fTank_z + ht);
+      }
+      else {
+        G4ExceptionDescription msg;
+        msg << "Unknown dimple SiPM mode: " << sipmMode
+            << ". Use surface or opening.";
+        G4Exception("DetectorConstruction::ComputeSiPMPlacement",
+                    "OpNovice2_Dimple_011",
+                    FatalException,
+                    msg);
+      }
+    }
+    else {
+      pos = G4ThreeVector(u, v, -fTank_z - ht);
+    }
   }
   else if (fSiPMFace == "bottomCavity") {
     hx = hu;
@@ -485,16 +742,7 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
     }
 
     const G4double cavityRadius = GetBottomCavityRadius();
-    const G4double cornerRadii[] = {
-      std::sqrt((u - hu) * (u - hu) + (v - hv) * (v - hv)),
-      std::sqrt((u - hu) * (u - hu) + (v + hv) * (v + hv)),
-      std::sqrt((u + hu) * (u + hu) + (v - hv) * (v - hv)),
-      std::sqrt((u + hu) * (u + hu) + (v + hv) * (v + hv))
-    };
-    G4double rMax = cornerRadii[0];
-    for (G4int i = 1; i < 4; ++i) {
-      rMax = std::max(rMax, cornerRadii[i]);
-    }
+    const G4double rMax = GetSiPMFootprintCornerRadius(u, v, hu, hv);
     const G4double safety = 1.e-6 * mm;
 
     if (rMax >= cavityRadius - safety) {
@@ -569,6 +817,7 @@ void DetectorConstruction::SetSiPMCavityMode(const G4String& mode)
   }
 
   fSiPMCavityMode = mode;
+  fSiPMCavityModeExplicit = true;
   G4RunManager::GetRunManager()->GeometryHasBeenModified();
 
   G4cout << "SiPM cavity mode set to " << fSiPMCavityMode << G4endl;

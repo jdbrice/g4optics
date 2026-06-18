@@ -26,6 +26,13 @@ TANK_SIZE_OVERRIDE=""
 TANK_SIZE_PRESET_OVERRIDE=""
 ELECTRON_ENERGY_MODE_OVERRIDE=""
 SURFACE_PRESET_OVERRIDE=""
+DIMPLE_ENABLED="0"
+DIMPLE_RADIUS=""
+DIMPLE_UNIT="mm"
+DIMPLE_SIPM_MODE="surface"
+DIMPLE_RADIUS_SET="0"
+DIMPLE_UNIT_SET="0"
+DIMPLE_SIPM_MODE_SET="0"
 CUSTOM_X_MIN=""
 CUSTOM_X_MAX=""
 CUSTOM_Y_MIN=""
@@ -68,6 +75,10 @@ Geometry options:
   --tank-size "x y z unit"            override full tank size, e.g. "10 10 0.8 cm"
   --tank-size-preset PRESET           5x5x0p4, 5x5x0p8, 5x5x1p6,
                                       10x10x0p4, 10x10x0p8, or 10x10x1p6
+  --dimple                            enable Week 8.1 strict hemispherical dimple
+  --dimple-radius VALUE               dimple radius/depth; required with --dimple
+  --dimple-unit UNIT                  mm or cm; default mm
+  --dimple-sipm-mode MODE             surface or opening; default surface
 
 Grid / beam options:
   --x-min VALUE                       minimum x coordinate
@@ -246,6 +257,52 @@ while [[ $# -gt 0 ]]; do
       ;;
     --surface-preset=*)
       SURFACE_PRESET_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --dimple)
+      DIMPLE_ENABLED="1"
+      shift
+      ;;
+    --dimple-radius)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --dimple-radius" >&2
+        exit 1
+      fi
+      DIMPLE_RADIUS="$2"
+      DIMPLE_RADIUS_SET="1"
+      shift 2
+      ;;
+    --dimple-radius=*)
+      DIMPLE_RADIUS="${1#*=}"
+      DIMPLE_RADIUS_SET="1"
+      shift
+      ;;
+    --dimple-unit)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --dimple-unit" >&2
+        exit 1
+      fi
+      DIMPLE_UNIT="$2"
+      DIMPLE_UNIT_SET="1"
+      shift 2
+      ;;
+    --dimple-unit=*)
+      DIMPLE_UNIT="${1#*=}"
+      DIMPLE_UNIT_SET="1"
+      shift
+      ;;
+    --dimple-sipm-mode)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --dimple-sipm-mode" >&2
+        exit 1
+      fi
+      DIMPLE_SIPM_MODE="$2"
+      DIMPLE_SIPM_MODE_SET="1"
+      shift 2
+      ;;
+    --dimple-sipm-mode=*)
+      DIMPLE_SIPM_MODE="${1#*=}"
+      DIMPLE_SIPM_MODE_SET="1"
       shift
       ;;
     --x-min)
@@ -431,6 +488,11 @@ case "${MODE}" in
     ;;
 esac
 
+if [[ "${DIMPLE_ENABLED}" == "1" && "${MODE}" != "full" ]]; then
+  echo "--dimple is supported only with MODE=full. Legacy surface/opening modes use /opnovice2/tank/bottomCavity." >&2
+  exit 1
+fi
+
 case "${SOURCE_MODE}" in
   auto|gun|gps)
     ;;
@@ -530,6 +592,56 @@ if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then
       exit 1
       ;;
   esac
+fi
+
+if [[ "${DIMPLE_ENABLED}" != "1" &&
+      ( "${DIMPLE_RADIUS_SET}" == "1" || "${DIMPLE_UNIT_SET}" == "1" || "${DIMPLE_SIPM_MODE_SET}" == "1" ) ]]; then
+  echo "Dimple options require --dimple." >&2
+  exit 1
+fi
+
+if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+  if [[ "${MODE}" != "full" ]]; then
+    echo "--dimple is supported only with MODE=full. Legacy surface/opening modes use /opnovice2/tank/bottomCavity." >&2
+    exit 1
+  fi
+  if [[ "${DIMPLE_RADIUS_SET}" != "1" ]]; then
+    echo "--dimple requires --dimple-radius VALUE." >&2
+    exit 1
+  fi
+  if [[ -z "${DIMPLE_RADIUS}" || ! "${DIMPLE_RADIUS}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --dimple-radius: ${DIMPLE_RADIUS}. Expected a positive number." >&2
+    exit 1
+  fi
+  case "${DIMPLE_UNIT}" in
+    mm|cm)
+      ;;
+    *)
+      echo "Invalid --dimple-unit: ${DIMPLE_UNIT}. Use mm or cm." >&2
+      exit 1
+      ;;
+  esac
+  case "${DIMPLE_SIPM_MODE}" in
+    surface|opening)
+      ;;
+    *)
+      echo "Invalid --dimple-sipm-mode: ${DIMPLE_SIPM_MODE}. Use surface or opening." >&2
+      exit 1
+      ;;
+  esac
+  if [[ -n "${SIPM_FACE_OVERRIDE}" && "${SIPM_FACE_OVERRIDE}" != "-Z" ]]; then
+    echo "--dimple supports only --sipm-face -Z in Week 8.1." >&2
+    exit 1
+  fi
+  if [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]]; then
+    if [[ "${DIMPLE_SIPM_MODE_SET}" == "1" && "${SIPM_CAVITY_MODE_OVERRIDE}" != "${DIMPLE_SIPM_MODE}" ]]; then
+      echo "Conflicting dimple SiPM modes: --dimple-sipm-mode ${DIMPLE_SIPM_MODE} but legacy --sipm-cavity-mode ${SIPM_CAVITY_MODE_OVERRIDE}." >&2
+      exit 1
+    fi
+    if [[ "${DIMPLE_SIPM_MODE_SET}" != "1" ]]; then
+      DIMPLE_SIPM_MODE="${SIPM_CAVITY_MODE_OVERRIDE}"
+    fi
+  fi
 fi
 
 if [[ ! -f "${TEMPLATE_MACRO}" ]]; then
@@ -971,6 +1083,102 @@ if [[ "${MODE}" == "full" && "${sipm_face}" == "bottomCavity" ]]; then
   exit 1
 fi
 
+DIMPLE_RADIUS_MM=""
+if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+  if [[ "${sipm_face}" != "-Z" ]]; then
+    echo "Week 8.1 dimple supports only bottom-center --sipm-face -Z; resolved face is ${sipm_face}." >&2
+    exit 1
+  fi
+
+  read -r resolved_sipm_local_x resolved_sipm_local_y resolved_sipm_local_z resolved_sipm_local_unit resolved_sipm_local_extra <<< "${sipm_local}"
+  if [[ -z "${resolved_sipm_local_x:-}" || -z "${resolved_sipm_local_y:-}" ||
+        -z "${resolved_sipm_local_z:-}" || -z "${resolved_sipm_local_unit:-}" ||
+        -n "${resolved_sipm_local_extra:-}" ]]; then
+    echo "Could not parse resolved SiPM local position for dimple validation: ${sipm_local}" >&2
+    exit 1
+  fi
+  require_number "resolved SiPM local x" "${resolved_sipm_local_x}"
+  require_number "resolved SiPM local y" "${resolved_sipm_local_y}"
+  require_number "resolved SiPM local z" "${resolved_sipm_local_z}"
+  sipm_local_x_mm="$(length_to_unit "${resolved_sipm_local_x}" "${resolved_sipm_local_unit}" "mm")"
+  sipm_local_y_mm="$(length_to_unit "${resolved_sipm_local_y}" "${resolved_sipm_local_unit}" "mm")"
+  sipm_local_z_mm="$(length_to_unit "${resolved_sipm_local_z}" "${resolved_sipm_local_unit}" "mm")"
+  awk -v x="${sipm_local_x_mm}" -v y="${sipm_local_y_mm}" -v z="${sipm_local_z_mm}" '
+    BEGIN {
+      if (x < 0) x = -x
+      if (y < 0) y = -y
+      if (z < 0) z = -z
+      if (x > 1e-9 || y > 1e-9 || z > 1e-9) {
+        printf "Week 8.1 dimple supports only --sipm-local-position \"0 0 0 unit\".\n" > "/dev/stderr"
+        exit 1
+      }
+    }'
+
+  DIMPLE_RADIUS_MM="$(length_to_unit "${DIMPLE_RADIUS}" "${DIMPLE_UNIT}" "mm")"
+  require_number "resolved SiPM activeU" "${sipm_active_u}"
+  require_number "resolved SiPM activeV" "${sipm_active_v}"
+  require_number "resolved SiPM thickness" "${sipm_thickness}"
+  sipm_active_u_mm="$(length_to_unit "${sipm_active_u}" "${sipm_unit}" "mm")"
+  sipm_active_v_mm="$(length_to_unit "${sipm_active_v}" "${sipm_unit}" "mm")"
+  sipm_thickness_mm="$(length_to_unit "${sipm_thickness}" "${sipm_unit}" "mm")"
+  sipm_corner_radius_mm="$(awk -v u="${sipm_active_u_mm}" -v v="${sipm_active_v_mm}" 'BEGIN { printf "%.10g", sqrt((0.5*u)^2 + (0.5*v)^2) }')"
+
+  if [[ -n "${tank_size}" ]]; then
+    read -r resolved_tank_x resolved_tank_y resolved_tank_z resolved_tank_unit resolved_tank_extra <<< "${tank_size}"
+    if [[ -z "${resolved_tank_z:-}" || -z "${resolved_tank_unit:-}" || -n "${resolved_tank_extra:-}" ]]; then
+      echo "Could not parse resolved tank size for dimple validation: ${tank_size}" >&2
+      exit 1
+    fi
+    require_number "resolved tank thickness" "${resolved_tank_z}"
+    tank_thickness_mm="$(length_to_unit "${resolved_tank_z}" "${resolved_tank_unit}" "mm")"
+  elif [[ -n "${tank_size_preset}" ]]; then
+    case "${tank_size_preset}" in
+      5x5x0p4|10x10x0p4)
+        tank_thickness_mm="4"
+        ;;
+      5x5x0p8|10x10x0p8)
+        tank_thickness_mm="8"
+        ;;
+      5x5x1p6|10x10x1p6)
+        tank_thickness_mm="16"
+        ;;
+      *)
+        echo "Invalid resolved tank size preset for dimple validation: ${tank_size_preset}" >&2
+        exit 1
+        ;;
+    esac
+  else
+    tank_thickness_mm="5"
+  fi
+
+  awk -v radius="${DIMPLE_RADIUS_MM}" -v corner="${sipm_corner_radius_mm}" -v thickness="${tank_thickness_mm}" '
+    BEGIN {
+      safety = 1e-6
+      if (radius <= corner + safety) {
+        printf "Invalid dimple geometry: radius %.10g mm must exceed SiPM farthest active-face corner radius %.10g mm.\n", radius, corner > "/dev/stderr"
+        exit 1
+      }
+      if (radius >= thickness - safety) {
+        printf "Invalid dimple geometry: radius %.10g mm must be smaller than tile thickness %.10g mm.\n", radius, thickness > "/dev/stderr"
+        exit 1
+      }
+    }'
+
+  if [[ "${DIMPLE_SIPM_MODE}" == "opening" ]]; then
+    awk -v radius="${DIMPLE_RADIUS_MM}" -v corner="${sipm_corner_radius_mm}" -v thickness="${tank_thickness_mm}" -v sipm_t="${sipm_thickness_mm}" '
+      BEGIN {
+        safety = 1e-6
+        bottom = -0.5 * thickness
+        clearance_z = bottom + sqrt(radius * radius - corner * corner)
+        top_face_z = bottom + sipm_t
+        if (top_face_z >= clearance_z - safety) {
+          printf "Invalid dimple opening placement: SiPM top face z %.10g mm reaches dimple clearance z %.10g mm.\n", top_face_z, clearance_z > "/dev/stderr"
+          exit 1
+        }
+      }'
+  fi
+fi
+
 scint_yield="$(macro_box_const "SCINTILLATIONYIELD")"
 if [[ -z "${scint_yield}" ]]; then
   scint_yield=null
@@ -1070,7 +1278,8 @@ write_run_config() {
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
-    printf '    "surface_preset": %s\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "dimple": %s\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
     printf '    "commit": "%s",\n' "$(json_string "${git_commit}")"
@@ -1102,6 +1311,24 @@ write_run_config() {
       printf '    "near_field_step": "%s %s"\n' "$(format_num "${GRID_STEP}")" "$(json_string "${GRID_UNIT}")"
     else
       printf '    "near_field_step": null\n'
+    fi
+    printf '  },\n'
+    printf '  "dimple": {\n'
+    printf '    "enabled": %s,\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
+    if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+      printf '    "mode": "hemisphere",\n'
+      printf '    "radius": "%s %s",\n' "$(format_num "${DIMPLE_RADIUS}")" "$(json_string "${DIMPLE_UNIT}")"
+      printf '    "radius_mm": %s,\n' "$(format_num "${DIMPLE_RADIUS_MM}")"
+      printf '    "sipm_mode": "%s",\n' "$(json_string "${DIMPLE_SIPM_MODE}")"
+      printf '    "supported_sipm_face": "-Z",\n'
+      printf '    "strict_hemisphere": true\n'
+    else
+      printf '    "mode": null,\n'
+      printf '    "radius": null,\n'
+      printf '    "radius_mm": null,\n'
+      printf '    "sipm_mode": null,\n'
+      printf '    "supported_sipm_face": "-Z",\n'
+      printf '    "strict_hemisphere": true\n'
     fi
     printf '  },\n'
     printf '  "tank": {\n'
@@ -1298,6 +1525,9 @@ fi
 if [[ -n "${surface_preset}" ]]; then
   echo "Surface preset: ${surface_preset} (finish=${surface_finish}, sigma_alpha=${surface_sigma_alpha})"
 fi
+if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+  echo "Dimple: hemisphere radius=$(format_num "${DIMPLE_RADIUS}") ${DIMPLE_UNIT} (${DIMPLE_SIPM_MODE}, radius_mm=$(format_num "${DIMPLE_RADIUS_MM}"))"
+fi
 echo "Metadata: ${RUN_CONFIG}, ${POINTS_CSV}"
 echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS_CSV}"
 
@@ -1332,6 +1562,18 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   fi
   if [[ "${MODE}" == "full" ]]; then
     macro_args+=(--set "/opnovice2/tank/bottomCavity=false")
+  fi
+  if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+    macro_args+=(
+      --set "/opnovice2/dimple/enabled=true"
+      --set "/opnovice2/dimple/radius=$(format_num "${DIMPLE_RADIUS}") ${DIMPLE_UNIT}"
+      --set "/opnovice2/dimple/mode=hemisphere"
+      --set "/opnovice2/dimple/sipmMode=${DIMPLE_SIPM_MODE}"
+      --require "/opnovice2/dimple/enabled"
+      --require "/opnovice2/dimple/radius"
+      --require "/opnovice2/dimple/mode"
+      --require "/opnovice2/dimple/sipmMode"
+    )
   fi
   if [[ -n "${surface_preset}" ]]; then
     macro_args+=(

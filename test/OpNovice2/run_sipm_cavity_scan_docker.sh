@@ -33,7 +33,7 @@ Usage:
 
 This host-side wrapper runs the Geant4 scan inside the g4dev Docker container,
 then generates ROOT macro plots on the host from scan_latest/efficiency_map.csv.
-All scan options are passed through, including --surface-preset.
+All scan options are passed through, including --surface-preset and --dimple.
 
 Environment:
   G4_DOCKER_CONTAINER=g4dev
