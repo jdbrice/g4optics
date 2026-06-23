@@ -3,6 +3,24 @@
 **Duration:** 4 Weeks  
 **Goal:** Study light collection uniformity in plastic scintillator tiles of varying sizes/thicknesses using Geant4 simulations.
 
+## Working on OSC
+
+The base geant4 image was built and pushed to jdbburg's docker registry. You can build an image from it on the cluster (login to pitzer etc.) via:
+
+```
+apptainer build geant4.sif docker://carlomt/geant4:11.4.2-almalinux9
+```
+
+then you can run an interactive shell in the container via:
+```
+apprtainer run geant4.sif bash
+```
+
+or you can directly run your command via:
+```
+apptainer exec geant4.sif <command_here>
+```
+
 ---
 
 ## Week 1: Environment Setup & Geant4 Basics
