@@ -38,3 +38,7 @@ Useful environment variables:
 - `PLOT_WITH_ROOT=0`
 
 The wrapper binds this repository into the container at `/work/g4optics`, builds `test/OpNovice2` in `build-osc`, then calls the existing `run_sipm_cavity_scan.sh`.
+
+## Troubleshooting
+
+If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, pull the latest wrapper. It auto-detects common `/opt/geant4/data` paths and exports Geant4 data environment variables inside the container.

@@ -68,6 +68,39 @@ apptainer exec \
       source /opt/geant4/bin/geant4.sh
     fi
 
+    set_g4data_env() {
+      local var_name="$1"
+      local dir_glob="$2"
+      if [[ -n "${!var_name:-}" ]]; then
+        return
+      fi
+
+      local candidate
+      for candidate in \
+        /opt/geant4/data/${dir_glob} \
+        /opt/geant4/share/Geant4/data/${dir_glob} \
+        /usr/local/share/Geant4/data/${dir_glob} \
+        /usr/share/Geant4/data/${dir_glob}; do
+        if [[ -d "${candidate}" ]]; then
+          export "${var_name}=${candidate}"
+          return
+        fi
+      done
+    }
+
+    set_g4data_env G4ENSDFSTATEDATA "G4ENSDFSTATE*"
+    set_g4data_env G4NEUTRONHPDATA "G4NDL*"
+    set_g4data_env G4LEDATA "G4EMLOW*"
+    set_g4data_env G4LEVELGAMMADATA "PhotonEvaporation*"
+    set_g4data_env G4RADIOACTIVEDATA "RadioactiveDecay*"
+    set_g4data_env G4PARTICLEXSDATA "G4PARTICLEXS*"
+    set_g4data_env G4PIIDATA "G4PII*"
+    set_g4data_env G4REALSURFACEDATA "RealSurface*"
+    set_g4data_env G4SAIDXSDATA "G4SAIDDATA*"
+    set_g4data_env G4ABLADATA "G4ABLA*"
+    set_g4data_env G4INCLDATA "G4INCL*"
+    set_g4data_env G4CHANNELINGDATA "G4CHANNELING*"
+
     if [[ "${G4_FORCE_REBUILD:-0}" == "1" || ! -x "${build_dir}/OpNovice2" ]]; then
       cmake -S . -B "${build_dir}" -DWITH_GEANT4_UIVIS=OFF
       cmake --build "${build_dir}" -j"${build_jobs}"
