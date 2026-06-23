@@ -9,7 +9,7 @@
 #SBATCH --output=slurm-%x-%A_%a.out
 
 # Add OSC-specific account or partition lines when needed, for example:
-##SBATCH --account=YOUR_ACCOUNT
+#SBATCH --account=PAS2524
 ##SBATCH --partition=YOUR_PARTITION
 
 set -euo pipefail
