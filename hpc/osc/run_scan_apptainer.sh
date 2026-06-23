@@ -21,6 +21,7 @@ Environment:
   G4_BUILD_DIR=build-osc
   G4_BUILD_JOBS=4
   G4_FORCE_REBUILD=0
+  G4_PRINT_DATA_ENV=0
   PLOT_WITH_ROOT=0
 
 If no scan args are supplied, a 1-event 1-point GPS smoke scan is run.
@@ -70,20 +71,34 @@ apptainer exec \
 
     set_g4data_env() {
       local var_name="$1"
-      local dir_glob="$2"
-      if [[ -n "${!var_name:-}" ]]; then
+      local dir_pattern="$2"
+      if [[ -n "${!var_name:-}" && -d "${!var_name}" ]]; then
         return
       fi
 
       local candidate
       for candidate in \
-        /opt/geant4/data/${dir_glob} \
-        /opt/geant4/share/Geant4/data/${dir_glob} \
-        /usr/local/share/Geant4/data/${dir_glob} \
-        /usr/share/Geant4/data/${dir_glob}; do
+        /opt/geant4/data/${dir_pattern} \
+        /opt/geant4/share/Geant4/data/${dir_pattern} \
+        /opt/geant4/share/Geant4-*/data/${dir_pattern} \
+        /usr/local/share/Geant4/data/${dir_pattern} \
+        /usr/local/share/Geant4-*/data/${dir_pattern} \
+        /usr/share/Geant4/data/${dir_pattern} \
+        /usr/share/Geant4-*/data/${dir_pattern}; do
         if [[ -d "${candidate}" ]]; then
           export "${var_name}=${candidate}"
           return
+        fi
+      done
+
+      local root
+      for root in /opt/geant4 /usr/local/share /usr/share; do
+        if [[ -d "${root}" ]]; then
+          candidate="$(find "${root}" -type d -name "${dir_pattern}" -print -quit 2>/dev/null || true)"
+          if [[ -n "${candidate}" ]]; then
+            export "${var_name}=${candidate}"
+            return
+          fi
         fi
       done
     }
@@ -100,6 +115,16 @@ apptainer exec \
     set_g4data_env G4ABLADATA "G4ABLA*"
     set_g4data_env G4INCLDATA "G4INCL*"
     set_g4data_env G4CHANNELINGDATA "G4CHANNELING*"
+
+    if [[ "${G4_PRINT_DATA_ENV:-0}" == "1" ]]; then
+      env | sort | grep -E "^G4.*DATA=" || true
+    fi
+
+    if [[ -z "${G4ENSDFSTATEDATA:-}" || ! -d "${G4ENSDFSTATEDATA}" ]]; then
+      echo "Missing Geant4 data directory for G4ENSDFSTATEDATA inside the Apptainer image." >&2
+      echo "Check with: apptainer exec geant4.sif find /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print" >&2
+      exit 1
+    fi
 
     if [[ "${G4_FORCE_REBUILD:-0}" == "1" || ! -x "${build_dir}/OpNovice2" ]]; then
       cmake -S . -B "${build_dir}" -DWITH_GEANT4_UIVIS=OFF

@@ -35,10 +35,21 @@ Useful environment variables:
 - `G4_BUILD_DIR=build-osc`
 - `G4_BUILD_JOBS=4`
 - `G4_FORCE_REBUILD=1`
+- `G4_PRINT_DATA_ENV=1`
 - `PLOT_WITH_ROOT=0`
 
 The wrapper binds this repository into the container at `/work/g4optics`, builds `test/OpNovice2` in `build-osc`, then calls the existing `run_sipm_cavity_scan.sh`.
 
 ## Troubleshooting
 
-If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, pull the latest wrapper. It auto-detects common `/opt/geant4/data` paths and exports Geant4 data environment variables inside the container.
+If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, pull the latest wrapper. It auto-detects common Geant4 data paths and exports Geant4 data environment variables inside the container. To inspect what the wrapper finds, run:
+
+```bash
+G4_PRINT_DATA_ENV=1 hpc/osc/run_scan_apptainer.sh
+```
+
+If `G4ENSDFSTATEDATA` is still missing, inspect the image contents directly:
+
+```bash
+apptainer exec geant4.sif find /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print
+```
