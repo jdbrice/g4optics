@@ -13,6 +13,7 @@ ROOT_COMMAND="${ROOT_COMMAND:-root}"
 ROOT_PLOT_MACRO="plot_efficiency_map.C"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
 ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
+OPNOVICE2_EXECUTABLE="${OPNOVICE2_EXECUTABLE:-./build/OpNovice2}"
 MACRO_GENERATOR="generate_scan_macro.py"
 
 MODE="surface"
@@ -100,6 +101,8 @@ Environment:
   N_EVENTS=100                        events per scan point
   DRY_RUN=1                           generate macros/config only
   SOURCE_MODE=auto                    source command mode: auto, gun, or gps
+  OPNOVICE2_EXECUTABLE=./build/OpNovice2
+                                      executable used for each generated macro
   PLOT_WITH_ROOT=1                    generate ROOT macro plots after scan if ROOT is available
   ROOT_COMMAND=root                   ROOT executable used for plot generation
   ROOT_PLOT_FIDUCIAL_LIMIT_MM=45      fiducial box half-width shown by ROOT plots
@@ -654,8 +657,8 @@ if [[ ! -f "${MACRO_GENERATOR}" ]]; then
   exit 1
 fi
 
-if [[ "${DRY_RUN}" != "1" && ! -x "./build/OpNovice2" ]]; then
-  echo "Missing executable: ./build/OpNovice2" >&2
+if [[ "${DRY_RUN}" != "1" && ! -x "${OPNOVICE2_EXECUTABLE}" ]]; then
+  echo "Missing executable: ${OPNOVICE2_EXECUTABLE}" >&2
   echo "Build first with: cmake -S . -B build && cmake --build build -j\$(nproc)" >&2
   exit 1
 fi
@@ -1219,6 +1222,7 @@ COMMAND_ENV=(
   "N_EVENTS=${N_EVENTS}"
   "DRY_RUN=${DRY_RUN}"
   "SOURCE_MODE=${SOURCE_MODE}"
+  "OPNOVICE2_EXECUTABLE=${OPNOVICE2_EXECUTABLE}"
   "PLOT_WITH_ROOT=${PLOT_WITH_ROOT}"
   "ROOT_COMMAND=${ROOT_COMMAND}"
   "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
@@ -1594,7 +1598,7 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"
   else
     echo "Running ${tag}: x=${x} ${unit}, y=${y} ${unit}"
-    ./build/OpNovice2 "${macro}" > "${log}" 2>&1
+    "${OPNOVICE2_EXECUTABLE}" "${macro}" > "${log}" 2>&1
   fi
 done
 

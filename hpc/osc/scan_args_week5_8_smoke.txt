@@ -1,0 +1,14 @@
+# Week 5: GPS grid scan smoke.
+full custom --events 1 --source-mode gps --tank-size "100 100 5 mm" --x-min -5 --x-max 5 --y-min -5 --y-max 5 --step 5 --grid-unit mm
+
+# Week 6: thickness parameter smoke.
+full custom --events 1 --source-mode gps --tank-size "100 100 4 mm" --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 1 --source-mode gps --tank-size "100 100 8 mm" --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+
+# Week 7: surface preset smoke.
+full custom --events 1 --source-mode gps --tank-size "100 100 5 mm" --surface-preset polished --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 1 --source-mode gps --tank-size "100 100 5 mm" --surface-preset ground --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 1 --source-mode gps --tank-size "100 100 5 mm" --surface-preset wrapped --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+
+# Week 8: strict hemispherical dimple smoke.
+full custom --events 1 --source-mode gps --tank-size "100 100 5 mm" --dimple --dimple-radius 3 --dimple-sipm-mode surface --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm

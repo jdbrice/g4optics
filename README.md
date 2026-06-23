@@ -13,7 +13,7 @@ apptainer build geant4.sif docker://carlomt/geant4:11.4.2-almalinux9
 
 then you can run an interactive shell in the container via:
 ```
-apprtainer run geant4.sif bash
+apptainer run geant4.sif bash
 ```
 
 or you can directly run your command via:
