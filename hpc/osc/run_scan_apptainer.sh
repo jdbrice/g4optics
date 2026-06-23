@@ -11,6 +11,7 @@ CONTAINER_G4_DATA_ROOT="${G4_CONTAINER_DATA_ROOT:-/opt/geant4-data}"
 BUILD_DIR="${G4_BUILD_DIR:-build-osc}"
 BUILD_JOBS="${G4_BUILD_JOBS:-${SLURM_CPUS_PER_TASK:-1}}"
 PLOT_WITH_ROOT_VALUE="${PLOT_WITH_ROOT:-0}"
+RUN_MANAGER_TYPE="${G4RUN_MANAGER_TYPE:-Serial}"
 
 usage() {
   cat <<'USAGE'
@@ -24,6 +25,7 @@ Environment:
   G4_BUILD_JOBS=4
   G4_FORCE_REBUILD=0
   G4_PRINT_DATA_ENV=0
+  G4RUN_MANAGER_TYPE=Serial
   PLOT_WITH_ROOT=0
 
 If no scan args are supplied, a 1-event 1-point GPS smoke scan is run.
@@ -72,7 +74,8 @@ apptainer exec \
     build_dir="$2"
     build_jobs="$3"
     plot_with_root="$4"
-    shift 4
+    run_manager_type="$5"
+    shift 5
 
     cd "${opnovice_dir}"
     if [[ -f /opt/geant4/bin/geant4.sh ]]; then
@@ -144,7 +147,11 @@ apptainer exec \
       cmake --build "${build_dir}" -j"${build_jobs}"
     fi
 
+    if [[ -n "${run_manager_type}" ]]; then
+      export G4RUN_MANAGER_TYPE="${run_manager_type}"
+    fi
+
     OPNOVICE2_EXECUTABLE="./${build_dir}/OpNovice2" \
     PLOT_WITH_ROOT="${plot_with_root}" \
     ./run_sipm_cavity_scan.sh "$@"
-  ' bash "${CONTAINER_OPNOVICE2}" "${BUILD_DIR}" "${BUILD_JOBS}" "${PLOT_WITH_ROOT_VALUE}" "$@"
+  ' bash "${CONTAINER_OPNOVICE2}" "${BUILD_DIR}" "${BUILD_JOBS}" "${PLOT_WITH_ROOT_VALUE}" "${RUN_MANAGER_TYPE}" "$@"

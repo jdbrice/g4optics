@@ -14,6 +14,7 @@ ROOT_PLOT_MACRO="plot_efficiency_map.C"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
 ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
 OPNOVICE2_EXECUTABLE="${OPNOVICE2_EXECUTABLE:-./build/OpNovice2}"
+SCAN_LOG_TAIL_LINES="${SCAN_LOG_TAIL_LINES:-120}"
 MACRO_GENERATOR="generate_scan_macro.py"
 
 MODE="surface"
@@ -106,6 +107,7 @@ Environment:
   PLOT_WITH_ROOT=1                    generate ROOT macro plots after scan if ROOT is available
   ROOT_COMMAND=root                   ROOT executable used for plot generation
   ROOT_PLOT_FIDUCIAL_LIMIT_MM=45      fiducial box half-width shown by ROOT plots
+  SCAN_LOG_TAIL_LINES=120             lines printed from a failed point log
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
@@ -1452,6 +1454,10 @@ write_efficiency_map() {
       if [[ ! -f "${summary}" ]]; then
         echo "Missing scan summary CSV: ${summary}" >&2
         echo "Point: ${tag}" >&2
+        if [[ -f "${log}" ]]; then
+          echo "Last ${SCAN_LOG_TAIL_LINES} lines from ${log}:" >&2
+          tail -n "${SCAN_LOG_TAIL_LINES}" "${log}" >&2 || true
+        fi
         exit 1
       fi
       read -r _summary_header < "${summary}"
@@ -1598,7 +1604,20 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"
   else
     echo "Running ${tag}: x=${x} ${unit}, y=${y} ${unit}"
+    set +e
     "${OPNOVICE2_EXECUTABLE}" "${macro}" > "${log}" 2>&1
+    status=$?
+    set -e
+    if [[ "${status}" -ne 0 ]]; then
+      echo "Simulation failed for ${tag} with exit status ${status}." >&2
+      echo "Macro: ${macro}" >&2
+      echo "Log: ${log}" >&2
+      if [[ -f "${log}" ]]; then
+        echo "Last ${SCAN_LOG_TAIL_LINES} lines from ${log}:" >&2
+        tail -n "${SCAN_LOG_TAIL_LINES}" "${log}" >&2 || true
+      fi
+      exit "${status}"
+    fi
   fi
 done
 

@@ -37,9 +37,10 @@ Useful environment variables:
 - `G4_BUILD_JOBS=4`
 - `G4_FORCE_REBUILD=1`
 - `G4_PRINT_DATA_ENV=1`
+- `G4RUN_MANAGER_TYPE=Serial`
 - `PLOT_WITH_ROOT=0`
 
-The wrapper binds this repository into the container at `/work/g4optics`, builds `test/OpNovice2` in `build-osc`, then calls the existing `run_sipm_cavity_scan.sh`.
+The wrapper binds this repository into the container at `/work/g4optics`, builds `test/OpNovice2` in `build-osc`, then calls the existing `run_sipm_cavity_scan.sh`. OSC runs default to `G4RUN_MANAGER_TYPE=Serial` because the scan macros use one Geant4 thread per point.
 
 ## Troubleshooting
 
