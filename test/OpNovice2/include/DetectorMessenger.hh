@@ -40,10 +40,12 @@ class DetectorConstruction;
 class G4UIdirectory;
 class G4UIcommand;
 class G4UIcmdWithAString;
+class G4UIcmdWithABool;
 class G4UIcmdWithAnInteger;
 class G4UIcmdWithADouble;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithoutParameter;
+class G4UIcmdWith3VectorAndUnit;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -63,6 +65,7 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fSurfaceTypeCmd = nullptr;
     G4UIcmdWithAString* fSurfaceFinishCmd = nullptr;
     G4UIcmdWithAString* fSurfaceModelCmd = nullptr;
+    G4UIcmdWithAString* fSurfacePresetCmd = nullptr;
     G4UIcmdWithADouble* fSurfaceSigmaAlphaCmd = nullptr;
     G4UIcmdWithADouble* fSurfacePolishCmd = nullptr;
     G4UIcmdWithAString* fSurfaceMatPropVectorCmd = nullptr;
@@ -72,11 +75,24 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fTankMatPropVectorCmd = nullptr;
     G4UIcmdWithAString* fTankMatPropConstCmd = nullptr;
     G4UIcmdWithAString* fTankMaterialCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fTankSizeCmd = nullptr;
+    G4UIcmdWithAString* fTankSizePresetCmd = nullptr;
+    G4UIcmdWithABool* fTankBottomCavityCmd = nullptr;
+    G4UIcmdWithABool* fDimpleEnabledCmd = nullptr;
+    G4UIcmdWithADoubleAndUnit* fDimpleRadiusCmd = nullptr;
+    G4UIcmdWithAString* fDimpleModeCmd = nullptr;
+    G4UIcmdWithAString* fDimpleSiPMModeCmd = nullptr;
 
     // the world
     G4UIcmdWithAString* fWorldMatPropVectorCmd = nullptr;
     G4UIcmdWithAString* fWorldMatPropConstCmd = nullptr;
     G4UIcmdWithAString* fWorldMaterialCmd = nullptr;
+
+    // SiPM geometry
+    G4UIcmdWithAString* fSiPMFaceCmd = nullptr;
+    G4UIcmdWithAString* fSiPMCavityModeCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fSiPMLocalPositionCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fSiPMSizeCmd = nullptr;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

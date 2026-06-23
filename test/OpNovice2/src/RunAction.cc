@@ -37,9 +37,70 @@
 #include "Run.hh"
 
 #include "G4Run.hh"
+#include "G4SystemOfUnits.hh"
 #include "G4UnitsTable.hh"
 
+#include <fstream>
+#include <iomanip>
+#include <limits>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+namespace
+{
+  void WriteScanSummary(const Run* run, const G4String& outputBaseName)
+  {
+    G4String summaryBaseName = outputBaseName;
+    const auto rootExtension = summaryBaseName.rfind(".root");
+    if (rootExtension != G4String::npos
+        && rootExtension == summaryBaseName.size() - G4String(".root").size())
+    {
+      summaryBaseName.erase(rootExtension);
+    }
+    const G4String summaryFileName = summaryBaseName + "_summary.csv";
+    std::ofstream out(summaryFileName);
+    if (!out) {
+      G4cerr << "Could not write scan summary CSV: " << summaryFileName << G4endl;
+      return;
+    }
+
+    const auto generatedOptical = run->GetGeneratedOpticalCount();
+    const auto sipmDetected = run->GetSiPMDetectionCount();
+    const auto collectionEfficiency =
+      generatedOptical > 0 ? G4double(sipmDetected) / G4double(generatedOptical) : 0.;
+    const auto missingPosition = std::numeric_limits<G4double>::quiet_NaN();
+    const auto shootPosition = run->GetMeanShootPosition();
+    const auto hitPosition = run->GetMeanHitPosition();
+    const auto scintCentroid = run->GetMeanScintillationCentroid();
+
+    out << "events,generated_optical_photons,scintillation_photons,"
+        << "sipm_detected_photons,collection_efficiency,"
+        << "shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,"
+        << "hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,"
+        << "scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,"
+        << "scint_centroid_z_mm\n";
+    out << std::setprecision(17);
+    out << run->GetNumberOfEvents() << ','
+        << generatedOptical << ','
+        << run->GetScintillationCount() << ','
+        << sipmDetected << ','
+        << collectionEfficiency << ','
+        << run->GetShootPositionCount() << ','
+        << (run->GetShootPositionCount() > 0 ? shootPosition.x() / mm : missingPosition) << ','
+        << (run->GetShootPositionCount() > 0 ? shootPosition.y() / mm : missingPosition) << ','
+        << (run->GetShootPositionCount() > 0 ? shootPosition.z() / mm : missingPosition) << ','
+        << run->GetHitPositionCount() << ','
+        << (run->GetHitPositionCount() > 0 ? hitPosition.x() / mm : missingPosition) << ','
+        << (run->GetHitPositionCount() > 0 ? hitPosition.y() / mm : missingPosition) << ','
+        << (run->GetHitPositionCount() > 0 ? hitPosition.z() / mm : missingPosition) << ','
+        << run->GetScintillationCentroidCount() << ','
+        << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.x() / mm : missingPosition)
+        << ','
+        << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.y() / mm : missingPosition)
+        << ','
+        << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.z() / mm : missingPosition)
+        << '\n';
+  }
+}
 
 RunAction::RunAction(PrimaryGeneratorAction* prim)
   : G4UserRunAction(), fRun(nullptr), fHistoManager(nullptr), fPrimary(prim)
@@ -65,11 +126,11 @@ G4Run* RunAction::GenerateRun()
 void RunAction::BeginOfRunAction(const G4Run*)
 {
   if (fPrimary) {
-    G4ParticleDefinition* particle = fPrimary->GetParticleGun()->GetParticleDefinition();
-    G4double energy = fPrimary->GetParticleGun()->GetParticleEnergy();
+    G4ParticleDefinition* particle = fPrimary->GetGeneralParticleSource()->GetParticleDefinition();
+    G4double energy = fPrimary->GetGeneralParticleSource()->GetParticleEnergy();
     G4bool polarized = fPrimary->GetPolarized();
     G4double polarization = fPrimary->GetPolarization();
-    fRun->SetPrimary(particle, energy, polarized, polarization);
+    fRun->SetPrimary(particle, energy, polarized, polarization, fPrimary->GetElectronEnergyMode());
   }
 
   // histograms
@@ -83,9 +144,12 @@ void RunAction::BeginOfRunAction(const G4Run*)
 
 void RunAction::EndOfRunAction(const G4Run*)
 {
-  if (isMaster) fRun->EndOfRun();
-
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
+
+  if (isMaster) {
+    fRun->EndOfRun();
+    WriteScanSummary(fRun, analysisManager->GetFileName());
+  }
 
   G4cout << G4endl << " Histogram statistics for the ";
   if (isMaster) {

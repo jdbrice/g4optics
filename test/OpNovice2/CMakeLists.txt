@@ -50,6 +50,17 @@ set(OpNovice2_SCRIPTS
     scint_by_particle.mac
     vis.mac
     wls.mac
+    ej200_electron_boundary.mac
+    ej200_electron_boundary_debug.mac
+    ej200_electron_boundary_visual.mac
+    ej200_sipm_test.mac
+    ej200_sipm_visual.mac
+    ej200_sipm_cavity_surface_test.mac
+    ej200_sipm_cavity_surface_visual.mac
+    ej200_sipm_cavity_opening_test.mac
+    ej200_sipm_cavity_opening_visual.mac
+    # Testing gps replacement
+    ej200_sipm_gps_test.mac
   )
 
 foreach(_script ${OpNovice2_SCRIPTS})
@@ -64,4 +75,3 @@ endforeach()
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS OpNovice2 DESTINATION bin)
-

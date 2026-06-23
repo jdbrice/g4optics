@@ -29,6 +29,7 @@
 
 #include "ActionInitialization.hh"
 
+#include "EventAction.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "SteppingAction.hh"
@@ -46,6 +47,7 @@ void ActionInitialization::Build() const
   auto primary = new PrimaryGeneratorAction();
   SetUserAction(primary);
   SetUserAction(new RunAction(primary));
+  SetUserAction(new EventAction());
   SetUserAction(new SteppingAction());
   SetUserAction(new TrackingAction);
 }

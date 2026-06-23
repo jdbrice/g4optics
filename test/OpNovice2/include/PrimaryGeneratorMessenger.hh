@@ -43,6 +43,7 @@ class PrimaryGeneratorAction;
 class G4UIdirectory;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithABool;
+class G4UIcmdWithAString;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -59,6 +60,7 @@ class PrimaryGeneratorMessenger : public G4UImessenger
     G4UIdirectory* fGunDir = nullptr;
     G4UIcmdWithADoubleAndUnit* fPolarCmd = nullptr;
     G4UIcmdWithABool* fRandomDirectionCmd = nullptr;
+    G4UIcmdWithAString* fElectronEnergyModeCmd = nullptr;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

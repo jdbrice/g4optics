@@ -52,6 +52,7 @@ void HistoManager::Book()
   analysisMan->SetFileName(fFileName);
   analysisMan->SetVerboseLevel(1);
   analysisMan->SetActivation(true);  // enable inactivation of histograms
+  analysisMan->SetNtupleMerging(true);
 
   // Define histograms
   // Default values (to be reset via /analysis/h1/set command)
@@ -115,6 +116,41 @@ void HistoManager::Book()
   analysisMan->CreateH1("Transmitted", "Transmitted photons", n, xmn, xmx);
   // 26
   analysisMan->CreateH1("Spike reflection", "Spike reflected photons", n, xmn, xmx);
+
+  // ----- SiPM histograms -----
+  // 27
+  analysisMan->CreateH1("SiPM detected spectrum",
+                        "Energy spectrum of photons detected by SiPM",
+                        n, xmn, xmx);
+
+  // 28
+  analysisMan->CreateH1("SiPM detected time",
+                        "Arrival time of photons detected by SiPM",
+                        n, xmn, xmx);
+
+  // Since this is the first ntuple, its default id value is 0
+  analysisMan->CreateNtuple("scan", "Per-event position scan response");
+  // I: G4int, D: G4double; if not specified id (i.e. using the signature G4int CreateNtupleXColumn(const G4String& name, std::vector<Xtype>& vector), then the column is added to the last created tuple)
+  // https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/Analysis/managers.html#ntuples
+  // The first column will have id 0, and increasing as more columns filling in.
+  analysisMan->CreateNtupleIColumn("event_id");
+  analysisMan->CreateNtupleDColumn("shoot_x_mm");
+  analysisMan->CreateNtupleDColumn("shoot_y_mm");
+  analysisMan->CreateNtupleDColumn("shoot_z_mm");
+  analysisMan->CreateNtupleIColumn("hit_valid");
+  analysisMan->CreateNtupleDColumn("hit_x_mm");
+  analysisMan->CreateNtupleDColumn("hit_y_mm");
+  analysisMan->CreateNtupleDColumn("hit_z_mm");
+  analysisMan->CreateNtupleIColumn("scint_centroid_valid");
+  analysisMan->CreateNtupleDColumn("scint_centroid_x_mm");
+  analysisMan->CreateNtupleDColumn("scint_centroid_y_mm");
+  analysisMan->CreateNtupleDColumn("scint_centroid_z_mm");
+  analysisMan->CreateNtupleIColumn("generated_optical_photons");
+  analysisMan->CreateNtupleIColumn("scintillation_photons");
+  analysisMan->CreateNtupleIColumn("sipm_detected_photons");
+  analysisMan->CreateNtupleDColumn("collection_efficiency");
+  // When all ntuple columns are created, the ntuple has to be closed using `FinishNtuple()` function.
+  analysisMan->FinishNtuple();
 
   for (G4int i = 0; i < analysisMan->GetNofH1s(); ++i) {
     analysisMan->SetH1Activation(i, false);

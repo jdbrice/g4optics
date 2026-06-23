@@ -34,6 +34,7 @@
 
 #include "G4OpBoundaryProcess.hh"
 #include "G4Run.hh"
+#include "G4ThreeVector.hh"
 
 class G4ParticleDefinition;
 
@@ -45,7 +46,7 @@ class Run : public G4Run
     ~Run() override = default;
 
     void SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
-                    G4double polarization);
+                    G4double polarization, const G4String& electronEnergyMode);
 
     //  particle energy
     void AddCerenkovEnergy(G4double en) { fCerenkovEnergy += en; }
@@ -56,13 +57,31 @@ class Run : public G4Run
     void AddWLS2EmissionEnergy(G4double en) { fWLS2EmissionEnergy += en; }
 
     // number of particles
-    void AddCerenkov() { fCerenkovCount += 1; }
-    void AddScintillation() { fScintCount += 1; }
+    void AddCerenkov()
+    {
+      fCerenkovCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
+    void AddScintillation(const G4ThreeVector& creationPosition)
+    {
+      fScintCount += 1;
+      fEventScintCount += 1;
+      fEventGeneratedOpticalCount += 1;
+      fEventScintPositionSum += creationPosition;
+    }
     void AddRayleigh() { fRayleighCount += 1; }
     void AddWLSAbsorption() { fWLSAbsorptionCount += 1; }
-    void AddWLSEmission() { fWLSEmissionCount += 1; }
+    void AddWLSEmission()
+    {
+      fWLSEmissionCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
     void AddWLS2Absorption() { fWLS2AbsorptionCount += 1; }
-    void AddWLS2Emission() { fWLS2EmissionCount += 1; }
+    void AddWLS2Emission()
+    {
+      fWLS2EmissionCount += 1;
+      fEventGeneratedOpticalCount += 1;
+    }
 
     void AddOpAbsorption() { fOpAbsorption += 1; }
     void AddOpAbsorptionPrior() { fOpAbsorptionPrior += 1; }
@@ -125,12 +144,47 @@ class Run : public G4Run
 
     void EndOfRun();
 
+    // Per-event bookkeeping for scan ntuples.
+    void BeginEvent();
+    void AddShootPosition(const G4ThreeVector& pos);
+    void SetPrimaryHitPosition(const G4ThreeVector& pos);
+    void AddScintillationCentroid(const G4ThreeVector& pos);
+    G4int GetGeneratedOpticalCount() const
+    {
+      return fCerenkovCount + fScintCount + fWLSEmissionCount + fWLS2EmissionCount;
+    }
+    G4int GetScintillationCount() const { return fScintCount; }
+    G4int GetSiPMDetectionCount() const { return fSiPMDetectionCount; }
+    G4int GetNumberOfEvents() const { return numberOfEvent; }
+    G4int GetEventGeneratedOpticalCount() const { return fEventGeneratedOpticalCount; }
+    G4int GetEventScintillationCount() const { return fEventScintCount; }
+    G4int GetEventSiPMDetectionCount() const { return fEventSiPMDetectionCount; }
+    G4bool HasEventHitPosition() const { return fEventHitValid; }
+    G4ThreeVector GetEventHitPosition() const { return fEventHitPosition; }
+    G4bool HasEventScintillationCentroid() const { return fEventScintCount > 0; }
+    G4ThreeVector GetEventScintillationCentroid() const;
+
+    G4int GetShootPositionCount() const { return fShootPositionCount; }
+    G4ThreeVector GetMeanShootPosition() const;
+    G4int GetHitPositionCount() const { return fHitPositionCount; }
+    G4ThreeVector GetMeanHitPosition() const;
+    G4int GetScintillationCentroidCount() const { return fScintCentroidCount; }
+    G4ThreeVector GetMeanScintillationCentroid() const;
+
+    // SiPM Detection
+    void AddSiPMDetection()
+    {
+      fSiPMDetectionCount += 1;
+      fEventSiPMDetectionCount += 1;
+    }
+
   private:
     // primary particle
     G4ParticleDefinition* fParticle = nullptr;
     G4double fEkin = -1.;
     G4bool fPolarized = false;
     G4double fPolarization = 0.;
+    G4String fElectronEnergyMode = "fixed";
 
     G4double fCerenkovEnergy = 0.;
     G4double fScintEnergy = 0.;
@@ -159,6 +213,25 @@ class Run : public G4Run
     std::vector<G4int> fBoundaryProcs;
 
     G4int fTotalSurface = 0;
+
+    // SiPM counting
+    G4int fSiPMDetectionCount = 0;
+
+    // Current event counts used for the Week 5.3 scan ntuple.
+    G4int fEventGeneratedOpticalCount = 0;
+    G4int fEventScintCount = 0;
+    G4int fEventSiPMDetectionCount = 0;
+    G4bool fEventHitValid = false;
+    G4ThreeVector fEventHitPosition;
+    G4ThreeVector fEventScintPositionSum;
+
+    // Per-run position means for scan-point summary CSVs.
+    G4int fShootPositionCount = 0;
+    G4ThreeVector fShootPositionSum;
+    G4int fHitPositionCount = 0;
+    G4ThreeVector fHitPositionSum;
+    G4int fScintCentroidCount = 0;
+    G4ThreeVector fScintCentroidSum;
 };
 
 #endif /* Run_h */

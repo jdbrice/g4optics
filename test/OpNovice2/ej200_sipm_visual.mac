@@ -1,0 +1,140 @@
+/control/verbose 1
+/tracking/verbose 0
+/process/optical/verbose 0
+/run/verbose 1
+/control/cout/ignoreThreadsExcept 0
+
+/run/numberOfThreads 1
+
+# ----------------------------
+# Materials
+# ----------------------------
+
+/opnovice2/boxMaterial G4_PLASTIC_SC_VINYLTOLUENE
+/opnovice2/worldMaterial G4_AIR
+
+# ----------------------------
+# EJ-200 properties
+# IMPORTANT:
+# For /opnovice2 custom commands, use Geant4 internal units:
+#   energy = MeV
+#   length = mm
+#   time   = ns
+# Native Geant4 commands such as /gun/energy may still use units.
+# ----------------------------
+
+# Visualization-only yield.
+# Production runs use EJ-200 nominal SCINTILLATIONYIELD = 10000.
+/opnovice2/boxConstProperty SCINTILLATIONYIELD 30
+/opnovice2/boxConstProperty SCINTILLATIONYIELD1 1.0
+/opnovice2/boxConstProperty RESOLUTIONSCALE 1.0
+
+/opnovice2/boxProperty SCINTILLATIONCOMPONENT1 0.0000024982 0.069 0.0000025419 0.109 0.0000025623 0.134 0.0000025838 0.174 0.0000026039 0.214 0.0000026273 0.274 0.0000026495 0.335 0.0000026823 0.415 0.0000027196 0.468 0.0000027700 0.582 0.0000028458 0.851 0.0000029033 0.991 0.0000029173 1.000 0.0000029313 0.985 0.0000029383 0.960 0.0000029516 0.881 0.0000030092 0.352 0.0000031001 0.017
+
+# EJ-200 attenuation length: 380 cm = 3800 mm
+/opnovice2/boxProperty ABSLENGTH 0.0000020 3800 0.0000033 3800
+
+/opnovice2/boxConstProperty SCINTILLATIONRISETIME1 0.9
+/opnovice2/boxConstProperty SCINTILLATIONTIMECONSTANT1 2.1
+
+/opnovice2/boxProperty RINDEX 0.0000020 1.58 0.0000033 1.58
+
+# ----------------------------
+# World properties
+# ----------------------------
+
+/opnovice2/worldProperty RINDEX 0.0000020 1.0003 0.0000033 1.0003
+/opnovice2/worldProperty ABSLENGTH 0.0000020 100 0.0000033 100
+
+# ----------------------------
+# Boundary behavior
+# ----------------------------
+
+/opnovice2/surfaceModel unified
+/opnovice2/surfaceType dielectric_dielectric
+/opnovice2/surfaceFinish polished
+/opnovice2/surfaceSigmaAlpha 0.0
+
+# ----------------------------
+# Optical processes
+# ----------------------------
+
+/process/optical/processActivation Cerenkov false
+/process/optical/processActivation Scintillation true
+/process/optical/processActivation OpAbsorption true
+/process/optical/processActivation OpBoundary true
+/process/optical/processActivation OpRayleigh false
+/process/optical/processActivation OpMieHG false
+/process/optical/processActivation OpWLS false
+
+/process/optical/scintillation/setByParticleType false
+/process/optical/scintillation/setTrackInfo false
+/process/optical/scintillation/setFiniteRiseTime true
+/process/optical/scintillation/setStackPhotons true
+/process/optical/scintillation/setTrackSecondariesFirst true
+
+# ----------------------------
+# Initialize
+# ----------------------------
+
+/opnovice2/sipm/face -Z
+/opnovice2/sipm/localPosition 0 0 0 cm
+/opnovice2/sipm/size 2 2 0.5 mm
+
+/run/initialize
+
+# ----------------------------
+# ROOT output
+# ----------------------------
+
+/analysis/setFileName ej200_sipm_visual
+/analysis/h1/set 2 100 2.0 3.5
+/analysis/h1/set 3 400 0 100
+/analysis/h1/set 27 100 2.0 3.5
+/analysis/h1/set 28 400 0 100
+
+# ----------------------------
+# Visualization
+# ----------------------------
+
+/vis/open TSGQtZB
+/vis/viewer/set/autoRefresh false
+/vis/verbose errors
+
+/vis/drawVolume
+/vis/viewer/set/style wireframe
+
+# SiPM is at the bottom center. This camera angle keeps the tile and sensor visible.
+/vis/viewer/set/viewpointThetaPhi 65 35
+/vis/viewer/zoom 5
+
+/vis/scene/add/axes 0 0 0 5 cm
+
+/tracking/storeTrajectory 1
+/vis/scene/add/trajectories smooth
+
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/default/setDrawStepPts true
+/vis/modeling/trajectories/drawByParticleID-0/default/setStepPtsSize 2
+/vis/modeling/trajectories/drawByParticleID-0/set e- red
+/vis/modeling/trajectories/drawByParticleID-0/set opticalphoton cyan
+
+/vis/scene/endOfEventAction accumulate
+
+/vis/viewer/set/autoRefresh true
+/vis/verbose warnings
+
+# ----------------------------
+# Electron gun
+# ----------------------------
+
+/gun/particle e-
+/gun/energy 1 MeV
+/opnovice2/gun/electronEnergyMode sr90Beta
+
+# Shoot from above center toward the bottom-center SiPM.
+/gun/position 0 0 4 cm
+/gun/direction 0 0 -1
+
+/run/printProgress 1
+/run/beamOn 1

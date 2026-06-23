@@ -72,13 +72,35 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   G4Track* track = step->GetTrack();
   G4StepPoint* endPoint = step->GetPostStepPoint();
   G4StepPoint* startPoint = step->GetPreStepPoint();
+  auto prePV = startPoint->GetPhysicalVolume();
+  auto postPV = endPoint->GetPhysicalVolume();
 
   const G4DynamicParticle* theParticle = track->GetDynamicParticle();
   const G4ParticleDefinition* particleDef = theParticle->GetParticleDefinition();
 
   auto trackInfo = (TrackInformation*)(track->GetUserInformation());
 
+  if (track->GetParentID() == 0 && prePV && postPV
+      && prePV->GetName() != "Tank" && postPV->GetName() == "Tank")
+  {
+    run->SetPrimaryHitPosition(endPoint->GetPosition());
+  }
+
   if (particleDef == opticalphoton) {
+    // SiPM detection
+    if (prePV && prePV->GetName() == "SiPM") {
+      run->AddSiPMDetection();
+
+      G4double en = track->GetKineticEnergy();
+      analysisMan->FillH1(27, en / eV);  // detected photon energy
+
+      G4double time = track->GetGlobalTime();
+      analysisMan->FillH1(28, time / ns);  // detected photon arrival time
+
+      track->SetTrackStatus(fStopAndKill);
+      return;
+    }
+    
     const G4VProcess* pds = endPoint->GetProcessDefinedStep();
     G4String procname = pds->GetProcessName();
     if (procname == "OpAbsorption") {
@@ -390,7 +412,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
         else if (creator_process == "Scintillation") {
           G4double en = sec->GetKineticEnergy();
           run->AddScintillationEnergy(en);
-          run->AddScintillation();
+          run->AddScintillation(sec->GetPosition());
           analysisMan->FillH1(2, en / eV);
 
           G4double time = sec->GetGlobalTime();

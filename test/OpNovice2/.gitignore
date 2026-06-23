@@ -1,0 +1,24 @@
+# Local build/output
+.vscode/
+__pycache__/
+*.pyc
+build/
+build-gui/
+build-wsl/
+output/
+.venv-analysis/
+week6_analysis/
+scan_runs/
+scan_latest
+run_config.json
+*_run_config.json
+*.root
+*.csv
+*.dat
+*.prim
+*.heprep
+*.wrl
+*.pdf
+*.png
+.vscode/ipch/
+.DS_Store

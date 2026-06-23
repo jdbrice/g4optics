@@ -48,13 +48,87 @@ Run::Run() : G4Run()
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::BeginEvent()
+{
+  fEventGeneratedOpticalCount = 0;
+  fEventScintCount = 0;
+  fEventSiPMDetectionCount = 0;
+  fEventHitValid = false;
+  fEventHitPosition = G4ThreeVector();
+  fEventScintPositionSum = G4ThreeVector();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddShootPosition(const G4ThreeVector& pos)
+{
+  fShootPositionCount += 1;
+  fShootPositionSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::SetPrimaryHitPosition(const G4ThreeVector& pos)
+{
+  if (fEventHitValid) {
+    return;
+  }
+  fEventHitValid = true;
+  fEventHitPosition = pos;
+  fHitPositionCount += 1;
+  fHitPositionSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddScintillationCentroid(const G4ThreeVector& pos)
+{
+  fScintCentroidCount += 1;
+  fScintCentroidSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetEventScintillationCentroid() const
+{
+  if (fEventScintCount == 0) {
+    return G4ThreeVector();
+  }
+  return fEventScintPositionSum / G4double(fEventScintCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanShootPosition() const
+{
+  if (fShootPositionCount == 0) {
+    return G4ThreeVector();
+  }
+  return fShootPositionSum / G4double(fShootPositionCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanHitPosition() const
+{
+  if (fHitPositionCount == 0) {
+    return G4ThreeVector();
+  }
+  return fHitPositionSum / G4double(fHitPositionCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4ThreeVector Run::GetMeanScintillationCentroid() const
+{
+  if (fScintCentroidCount == 0) {
+    return G4ThreeVector();
+  }
+  return fScintCentroidSum / G4double(fScintCentroidCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void Run::SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
-                     G4double polarization)
+                     G4double polarization, const G4String& electronEnergyMode)
 {
   fParticle = particle;
   fEkin = energy;
   fPolarized = polarized;
   fPolarization = polarization;
+  fElectronEnergyMode = electronEnergyMode;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -67,6 +141,7 @@ void Run::Merge(const G4Run* run)
   fEkin = localRun->fEkin;
   fPolarized = localRun->fPolarized;
   fPolarization = localRun->fPolarization;
+  fElectronEnergyMode = localRun->fElectronEnergyMode;
 
   fCerenkovEnergy += localRun->fCerenkovEnergy;
   fScintEnergy += localRun->fScintEnergy;
@@ -91,6 +166,16 @@ void Run::Merge(const G4Run* run)
   for (size_t i = 0; i < fBoundaryProcs.size(); ++i) {
     fBoundaryProcs[i] += localRun->fBoundaryProcs[i];
   }
+
+  // SiPM count
+  fSiPMDetectionCount += localRun->fSiPMDetectionCount;
+
+  fShootPositionCount += localRun->fShootPositionCount;
+  fShootPositionSum += localRun->fShootPositionSum;
+  fHitPositionCount += localRun->fHitPositionCount;
+  fHitPositionSum += localRun->fHitPositionSum;
+  fScintCentroidCount += localRun->fScintCentroidCount;
+  fScintCentroidSum += localRun->fScintCentroidSum;
 
   G4Run::Merge(run);
 }
@@ -214,8 +299,15 @@ void Run::EndOfRun()
 
   G4cout << "\n    Run Summary\n";
   G4cout << "---------------------------------\n";
-  G4cout << "Primary particle was: " << fParticle->GetParticleName() << " with energy "
-         << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  G4cout << "Primary particle was: " << fParticle->GetParticleName();
+  if (fElectronEnergyMode == "fixed") {
+    G4cout << " with energy " << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  }
+  else {
+    G4cout << " with " << fElectronEnergyMode
+           << " energy sampling; nominal /gun/energy is "
+           << G4BestUnit(fEkin, "Energy") << "." << G4endl;
+  }
   G4cout << "Number of events: " << numberOfEvent << G4endl;
 
   G4cout << "Material of world: " << det->GetWorldMaterial()->GetName() << G4endl;
@@ -273,6 +365,12 @@ void Run::EndOfRun()
   G4cout << "Average number of OpRayleigh per event:   " << fRayleighCount / TotNbofEvents
          << G4endl;
   G4cout << "Average number of OpAbsorption per event: " << fOpAbsorption / TotNbofEvents << G4endl;
+
+  // SiPM summary
+  G4cout << "Average number of photons detected by SiPM per event: "
+       << fSiPMDetectionCount / TotNbofEvents << G4endl;
+
+
   G4cout << "\nSurface events (on +X surface, maximum one per photon) this run:" << G4endl;
   G4cout << "# of primary particles:      " << std::setw(8) << TotNbofEvents << G4endl;
   G4cout << "OpAbsorption before surface: " << std::setw(8) << fOpAbsorptionPrior << G4endl;
@@ -447,6 +545,12 @@ void Run::EndOfRun()
   if (fBoundaryProcs[CoatedDielectricFrustratedTransmission] > 0) {
     G4cout << "  CoatedDielectricFrustratedTransmission: " << std::setw(8)
            << fBoundaryProcs[CoatedDielectricFrustratedTransmission] << G4endl;
+  }
+
+  // SiPM count vs. scint count
+  if (fScintCount > 0) {
+    G4cout << "SiPM collection fraction relative to created scintillation photons: "
+          << G4double(fSiPMDetectionCount) / G4double(fScintCount) << G4endl;
   }
 
   G4int sum = std::accumulate(fBoundaryProcs.begin(), fBoundaryProcs.end(), 0);

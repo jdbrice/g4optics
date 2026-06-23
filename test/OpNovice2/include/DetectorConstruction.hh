@@ -37,6 +37,7 @@
 #include "G4OpticalSurface.hh"
 #include "G4RunManager.hh"
 #include "G4VUserDetectorConstruction.hh"
+#include "G4ThreeVector.hh"
 #include "globals.hh"
 
 #include <CLHEP/Units/SystemOfUnits.h>
@@ -80,6 +81,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     void SetSurfaceSigmaAlpha(G4double v);
     void SetSurfacePolish(G4double v);
+    void SetSurfacePreset(const G4String& preset);
 
     void AddTankMPV(const G4String& prop, G4MaterialPropertyVector* mpv);
     void AddTankMPC(const G4String& prop, G4double v);
@@ -97,17 +99,36 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* GetWorldMaterial() const { return fWorldMaterial; }
     void SetTankMaterial(const G4String&);
     G4Material* GetTankMaterial() const { return fTankMaterial; }
+    void SetTankSize(const G4ThreeVector& fullSize);
+    void SetTankSizePreset(const G4String& preset);
+    void SetBottomCavityEnabled(G4bool enabled);
+    void SetDimpleEnabled(G4bool enabled);
+    void SetDimpleRadius(G4double radius);
+    void SetDimpleMode(const G4String& mode);
+    void SetDimpleSiPMMode(const G4String& mode);
+
+    // setting SiPM
+    void SetSiPMFace(const G4String& face);
+    void SetSiPMCavityMode(const G4String& mode);
+    void SetSiPMLocalPosition(const G4ThreeVector& pos);
+    void SetSiPMSize(const G4ThreeVector& size);
 
   private:
-    G4double fExpHall_x = 10. * CLHEP::m;
-    G4double fExpHall_y = 10. * CLHEP::m;
-    G4double fExpHall_z = 10. * CLHEP::m;
+    G4double fExpHall_x = 50. * CLHEP::cm;
+    G4double fExpHall_y = 50. * CLHEP::cm;
+    G4double fExpHall_z = 50. * CLHEP::cm;
 
     G4VPhysicalVolume* fTank = nullptr;
 
-    G4double fTank_x = 1. * CLHEP::m;
-    G4double fTank_y = 1. * CLHEP::m;
-    G4double fTank_z = 1. * CLHEP::m;
+    G4double fTank_x = 5. * CLHEP::cm;
+    G4double fTank_y = 5. * CLHEP::cm;
+    G4double fTank_z = .25 * CLHEP::cm;
+    G4bool fBottomCavityEnabled = false;
+    G4bool fDimpleEnabled = false;
+    G4double fDimpleRadius = 3. * CLHEP::mm;
+    G4String fDimpleMode = "hemisphere";
+    G4String fDimpleSiPMMode = "surface";
+    G4bool fDimpleSiPMModeExplicit = false;
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;
@@ -122,6 +143,50 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4MaterialPropertiesTable* fTankMPT = nullptr;
     G4MaterialPropertiesTable* fWorldMPT = nullptr;
     G4MaterialPropertiesTable* fSurfaceMPT = nullptr;
+
+    /// Adding SiPM
+    // Physical Volume & Logical Volume
+    G4VPhysicalVolume* fSiPM = nullptr;
+    G4LogicalVolume* fSiPM_LV = nullptr;
+
+    // Material & Properties Table
+    G4Material* fSiPMMaterial = nullptr;
+    G4MaterialPropertiesTable* fSiPMMPT = nullptr;
+
+    // General SiPM placement.
+    // fSiPMFace controls which tile face the SiPM is attached to.
+    // Accepted values: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.
+    G4String fSiPMFace = "+X";
+    G4String fSiPMCavityMode = "surface";
+    G4bool fSiPMCavityModeExplicit = false;
+
+    // Local position on the selected face.
+    // For +/-X: local x = y, local y = z.
+    // For +/-Y: local x = x, local y = z.
+    // For +/-Z: local x = x, local y = y.
+    // The third component is currently unused.
+    G4ThreeVector fSiPMLocalPosition =
+      G4ThreeVector(4.85 * CLHEP::cm, 0.0, 0.0);
+
+    // SiPM physical dimensions:
+    // activeU and activeV are the active face dimensions;
+    // thickness is normal to the selected face.
+    G4double fSiPMActiveU = 3.0 * CLHEP::mm;
+    G4double fSiPMActiveV = 3.0 * CLHEP::mm;
+    G4double fSiPMThickness = 1.0 * CLHEP::mm;
+
+    void ComputeSiPMPlacement(G4double& hx,
+                              G4double& hy,
+                              G4double& hz,
+                              G4ThreeVector& pos) const;
+    G4double GetBottomCavityRadius() const;
+    G4String GetEffectiveDimpleSiPMMode() const;
+    G4double GetSiPMFootprintCornerRadius(G4double u,
+                                          G4double v,
+                                          G4double hu,
+                                          G4double hv) const;
+    void ValidateDimpleConfiguration() const;
+    void ResetSurfaceMaterialPropertiesTable();
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
