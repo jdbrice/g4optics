@@ -26,7 +26,9 @@ SCRIPT_DIR="${PROJECT_ROOT}/hpc/osc"
 
 cd "${PROJECT_ROOT}"
 
-if [[ -n "${SCAN_ARGS_FILE:-}" ]]; then
+if [[ $# -gt 0 ]]; then
+  :
+elif [[ -n "${SCAN_ARGS_FILE:-}" ]]; then
   args_file="${SCAN_ARGS_FILE}"
   if [[ "${args_file}" != /* ]]; then
     args_file="${PROJECT_ROOT}/${args_file}"

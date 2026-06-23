@@ -26,8 +26,10 @@ Submit the Week 5-8 smoke matrix as a Slurm array:
 
 ```bash
 SCAN_ARGS_FILE=hpc/osc/scan_args_week5_8_smoke.txt \
-  sbatch --array=1-7 hpc/osc/submit_scan.sbatch
+  sbatch -A YOUR_ACCOUNT --array=1-7 hpc/osc/submit_scan.sbatch
 ```
+
+Explicit scan arguments passed after `submit_scan.sbatch` take precedence over `SCAN_ARGS_FILE`.
 
 Useful environment variables:
 
