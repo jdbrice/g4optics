@@ -1,4 +1,6 @@
 *.DS_Store
+__pycache__/
+*.pyc
 *.sif
 slurm-*.out
 test/OpNovice2/LOCAL_USAGE_GUIDE.zh.md

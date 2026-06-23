@@ -31,6 +31,74 @@ SCAN_ARGS_FILE=hpc/osc/scan_args_week5_8_smoke.txt \
 
 Explicit scan arguments passed after `submit_scan.sbatch` take precedence over `SCAN_ARGS_FILE`.
 
+## Point-Level Array Scans
+
+For longer scans, split the grid so each Slurm array task runs one `(x, y)` point in serial Geant4. This keeps the stable `G4RUN_MANAGER_TYPE=Serial` path while letting Slurm run points concurrently.
+
+Run the checked-in 3x3, 100-event pilot plan:
+
+```bash
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/scan_args_pilot_3x3_100events.txt \
+  sbatch -A YOUR_ACCOUNT --array=1-9 hpc/osc/submit_scan.sbatch
+```
+
+After the array finishes, merge the per-point `efficiency_map.csv` files:
+
+```bash
+python3 hpc/osc/merge_array_efficiency_maps.py --job-id JOBID
+```
+
+Generate a new point-level plan:
+
+```bash
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week5_grid_1000events.txt \
+  --description "Week 5 19x19 position scan, 1000 events per point" \
+  --events 1000 \
+  --tank-size "100 100 5 mm" \
+  --x-min -45 --x-max 45 \
+  --y-min -45 --y-max 45 \
+  --step 5 --grid-unit mm
+```
+
+The same generator can sweep Week 6 thicknesses or Week 7 surface presets by repeating options:
+
+```bash
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week6_thickness_1000events.txt \
+  --events 1000 \
+  --tank-size "100 100 4 mm" \
+  --tank-size "100 100 8 mm" \
+  --x-min -45 --x-max 45 \
+  --y-min -45 --y-max 45 \
+  --step 5 --grid-unit mm
+
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week7_surface_1000events.txt \
+  --events 1000 \
+  --tank-size "100 100 5 mm" \
+  --surface-preset polished \
+  --surface-preset ground \
+  --surface-preset wrapped \
+  --x-min -45 --x-max 45 \
+  --y-min -45 --y-max 45 \
+  --step 5 --grid-unit mm
+```
+
+For Week 8 dimple scans, add dimple options:
+
+```bash
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week8_dimple_1000events.txt \
+  --events 1000 \
+  --tank-size "100 100 5 mm" \
+  --dimple --dimple-radius 3 --dimple-sipm-mode surface \
+  --x-min -45 --x-max 45 \
+  --y-min -45 --y-max 45 \
+  --step 5 --grid-unit mm
+```
+
 Useful environment variables:
 
 - `G4_APPTAINER_IMAGE=/path/to/geant4.sif`

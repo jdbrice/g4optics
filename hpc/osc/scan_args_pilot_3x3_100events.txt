@@ -1,0 +1,13 @@
+# Point-level 3x3 pilot plan: one Slurm array task per grid point.
+# Generated equivalent:
+# hpc/osc/generate_scan_plan.py --out hpc/osc/scan_args_pilot_3x3_100events.txt --description "Point-level 3x3 pilot plan: one Slurm array task per grid point." --events 100 --tank-size "100 100 5 mm" --x-min -5 --x-max 5 --y-min -5 --y-max 5 --step 5 --grid-unit mm
+
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min -5 --x-max -5 --y-min -5 --y-max -5 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min -5 --x-max -5 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min -5 --x-max -5 --y-min 5 --y-max 5 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 0 --x-max 0 --y-min -5 --y-max -5 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 0 --x-max 0 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 0 --x-max 0 --y-min 5 --y-max 5 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 5 --x-max 5 --y-min -5 --y-max -5 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 5 --x-max 5 --y-min 0 --y-max 0 --step 5 --grid-unit mm
+full custom --events 100 --source-mode gps --tank-size "100 100 5 mm" --x-min 5 --x-max 5 --y-min 5 --y-max 5 --step 5 --grid-unit mm
