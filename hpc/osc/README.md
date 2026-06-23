@@ -43,14 +43,10 @@ The wrapper binds this repository into the container at `/work/g4optics`, builds
 
 ## Troubleshooting
 
-If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, the Apptainer image does not expose the Geant4 runtime datasets. Keep the datasets in a persistent OSC directory and pass it to the wrapper:
+If Geant4 aborts with messages such as `G4ENSDFSTATEDATA environment variable must be set`, `G4LEDATA data directory was not found`, or `G4LEVELGAMMADATA environment variable not set`, the Apptainer image does not expose the Geant4 runtime datasets. Keep the datasets in a persistent OSC directory and pass it to the wrapper:
 
 ```bash
-mkdir -p ~/geant4-data/11.4.2
-cd ~/geant4-data/11.4.2
-wget https://cern.ch/geant4-data/datasets/G4ENSDFSTATE.3.0.tar.gz
-tar -xzf G4ENSDFSTATE.3.0.tar.gz
-cd -
+hpc/osc/install_geant4_data.sh ~/geant4-data/11.4.2
 
 G4_DATA_ROOT=~/geant4-data/11.4.2 G4_PRINT_DATA_ENV=1 hpc/osc/run_scan_apptainer.sh
 ```
