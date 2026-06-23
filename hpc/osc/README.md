@@ -34,6 +34,7 @@ Explicit scan arguments passed after `submit_scan.sbatch` take precedence over `
 ## Point-Level Array Scans
 
 For longer scans, split the grid so each Slurm array task runs one `(x, y)` point in serial Geant4. This keeps the stable `G4RUN_MANAGER_TYPE=Serial` path while letting Slurm run points concurrently.
+`submit_scan.sbatch` automatically tags array outputs with `SCAN_RUN_ID_SUFFIX=job<jobid>_task<taskid>` so tasks that start in the same second do not overwrite each other's run directories.
 
 Run the checked-in 3x3, 100-event pilot plan:
 

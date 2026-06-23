@@ -26,6 +26,12 @@ SCRIPT_DIR="${PROJECT_ROOT}/hpc/osc"
 
 cd "${PROJECT_ROOT}"
 
+if [[ -z "${SCAN_RUN_ID_SUFFIX:-}" && -n "${SLURM_ARRAY_JOB_ID:-}" && -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+  export SCAN_RUN_ID_SUFFIX="job${SLURM_ARRAY_JOB_ID}_task${SLURM_ARRAY_TASK_ID}"
+elif [[ -z "${SCAN_RUN_ID_SUFFIX:-}" && -n "${SLURM_JOB_ID:-}" ]]; then
+  export SCAN_RUN_ID_SUFFIX="job${SLURM_JOB_ID}"
+fi
+
 if [[ $# -gt 0 ]]; then
   :
 elif [[ -n "${SCAN_ARGS_FILE:-}" ]]; then

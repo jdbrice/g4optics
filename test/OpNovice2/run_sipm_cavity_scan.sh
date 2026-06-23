@@ -15,6 +15,7 @@ ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
 ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
 OPNOVICE2_EXECUTABLE="${OPNOVICE2_EXECUTABLE:-./build/OpNovice2}"
 SCAN_LOG_TAIL_LINES="${SCAN_LOG_TAIL_LINES:-120}"
+SCAN_RUN_ID_SUFFIX="${SCAN_RUN_ID_SUFFIX:-}"
 MACRO_GENERATOR="generate_scan_macro.py"
 
 MODE="surface"
@@ -108,6 +109,7 @@ Environment:
   ROOT_COMMAND=root                   ROOT executable used for plot generation
   ROOT_PLOT_FIDUCIAL_LIMIT_MM=45      fiducial box half-width shown by ROOT plots
   SCAN_LOG_TAIL_LINES=120             lines printed from a failed point log
+  SCAN_RUN_ID_SUFFIX=value            optional suffix appended to the run directory
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
@@ -755,6 +757,12 @@ shell_join() {
   done
 }
 
+sanitize_run_id_part() {
+  local value="$1"
+  value="${value//[^A-Za-z0-9_.-]/_}"
+  echo "${value}"
+}
+
 require_number() {
   local option="$1"
   local value="$2"
@@ -988,12 +996,19 @@ else
   PREFIX="${PREFIX_ROOT}_${GRID}"
 fi
 RUN_TIMESTAMP="$(date -u +"%Y%m%d_%H%M%SZ")"
-RUN_ID="${RUN_TIMESTAMP}_${PREFIX}"
-RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
-if [[ -e "${RUN_DIR}" ]]; then
-  RUN_ID="${RUN_ID}_$$"
-  RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+RUN_ID_BASE="${RUN_TIMESTAMP}_${PREFIX}"
+if [[ -n "${SCAN_RUN_ID_SUFFIX}" ]]; then
+  RUN_ID_BASE="${RUN_ID_BASE}_$(sanitize_run_id_part "${SCAN_RUN_ID_SUFFIX}")"
 fi
+RUN_ID="${RUN_ID_BASE}"
+RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+mkdir -p "${SCAN_RUNS_DIR}"
+run_id_attempt=0
+while ! mkdir "${RUN_DIR}" 2>/dev/null; do
+  run_id_attempt=$((run_id_attempt + 1))
+  RUN_ID="${RUN_ID_BASE}_$$_${run_id_attempt}"
+  RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+done
 MACRO_DIR="${RUN_DIR}/macros"
 ROOT_DIR="${RUN_DIR}/outputs"
 LOG_DIR="${RUN_DIR}/logs"
@@ -1228,6 +1243,7 @@ COMMAND_ENV=(
   "PLOT_WITH_ROOT=${PLOT_WITH_ROOT}"
   "ROOT_COMMAND=${ROOT_COMMAND}"
   "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
+  "SCAN_RUN_ID_SUFFIX=${SCAN_RUN_ID_SUFFIX}"
 )
 COMMAND_SHELL="$(shell_join "${COMMAND_ENV[@]}" "${COMMAND_ARGV[@]}")"
 
@@ -1265,7 +1281,8 @@ write_run_config() {
     printf '      "SOURCE_MODE": "%s",\n' "$(json_string "${SOURCE_MODE}")"
     printf '      "PLOT_WITH_ROOT": "%s",\n' "$(json_string "${PLOT_WITH_ROOT}")"
     printf '      "ROOT_COMMAND": "%s",\n' "$(json_string "${ROOT_COMMAND}")"
-    printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s"\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s",\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '      "SCAN_RUN_ID_SUFFIX": "%s"\n' "$(json_string "${SCAN_RUN_ID_SUFFIX}")"
     printf '    }\n'
     printf '  },\n'
     printf '  "scan_name": "%s",\n' "$(json_string "${SCAN_NAME}")"
