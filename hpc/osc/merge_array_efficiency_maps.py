@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 RUN_DIR_RE = re.compile(r"^Run directory:\s*(?P<path>\S.*)$")
+SCAN_COMPLETE_RE = re.compile(r"^Scan complete\.$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,14 +45,18 @@ def task_id_from_slurm_file(path: Path, job_id: str) -> int:
     return int(match.group(1))
 
 
-def run_dirs_from_slurm_file(path: Path) -> list[str]:
+def slurm_file_info(path: Path) -> tuple[list[str], bool]:
     run_dirs: list[str] = []
+    scan_complete = False
     with path.open(encoding="utf-8", errors="replace") as handle:
         for line in handle:
-            match = RUN_DIR_RE.match(line.strip())
+            stripped = line.strip()
+            match = RUN_DIR_RE.match(stripped)
             if match:
                 run_dirs.append(match.group("path"))
-    return run_dirs
+            if SCAN_COMPLETE_RE.match(stripped):
+                scan_complete = True
+    return run_dirs, scan_complete
 
 
 def resolve_run_dir(project_root: Path, run_dir: str) -> Path:
@@ -61,6 +66,27 @@ def resolve_run_dir(project_root: Path, run_dir: str) -> Path:
     if run_dir.startswith("test/OpNovice2/"):
         return project_root / path
     return project_root / "test" / "OpNovice2" / path
+
+
+def find_existing_run_dir(project_root: Path, run_dir_text: str) -> Path | None:
+    resolved = resolve_run_dir(project_root, run_dir_text)
+    if resolved.is_dir():
+        return resolved
+
+    run_name = Path(run_dir_text).name
+    search_roots = [
+        project_root / "test" / "OpNovice2" / "scan_runs",
+        project_root / "scan_runs",
+    ]
+    for search_root in search_roots:
+        candidate = search_root / run_name
+        if candidate.is_dir():
+            return candidate
+
+    for candidate in (project_root / "test" / "OpNovice2").glob(f"**/{run_name}"):
+        if candidate.is_dir():
+            return candidate
+    return None
 
 
 def read_efficiency_rows(efficiency_map: Path) -> tuple[list[str], list[dict[str, str]]]:
@@ -102,16 +128,25 @@ def main() -> int:
 
     for slurm_file in slurm_files:
         task_id = task_id_from_slurm_file(slurm_file, args.job_id)
-        run_dirs = run_dirs_from_slurm_file(slurm_file)
+        run_dirs, scan_complete = slurm_file_info(slurm_file)
         if not run_dirs:
             missing.append(f"{slurm_file.name}: no Run directory line")
             continue
+        if not scan_complete:
+            missing.append(f"{slurm_file.name}: no Scan complete line; task may still be running or failed")
 
         for run_dir_text in run_dirs:
-            run_dir = resolve_run_dir(project_root, run_dir_text)
+            run_dir = find_existing_run_dir(project_root, run_dir_text)
+            if run_dir is None:
+                expected = resolve_run_dir(project_root, run_dir_text)
+                missing.append(f"{slurm_file.name}: missing run directory {expected}")
+                continue
             efficiency_map = run_dir / "efficiency_map.csv"
             if not efficiency_map.is_file():
-                missing.append(f"{slurm_file.name}: missing {efficiency_map}")
+                if scan_complete:
+                    missing.append(f"{slurm_file.name}: Scan complete but missing {efficiency_map}")
+                else:
+                    missing.append(f"{slurm_file.name}: incomplete task missing {efficiency_map}")
                 continue
 
             fields, rows = read_efficiency_rows(efficiency_map)

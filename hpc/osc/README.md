@@ -47,8 +47,11 @@ SCAN_ARGS_FILE=hpc/osc/scan_args_pilot_3x3_100events.txt \
 After the array finishes, merge the per-point `efficiency_map.csv` files:
 
 ```bash
+sacct -j JOBID --format=JobID,JobName,State,ExitCode,Elapsed
 python3 hpc/osc/merge_array_efficiency_maps.py --job-id JOBID
 ```
+
+If some tasks are still running or failed, the merge tool reports which Slurm output lacks `Scan complete`. To inspect only completed tasks, add `--allow-missing`.
 
 Generate a new point-level plan:
 
