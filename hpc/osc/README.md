@@ -32,6 +32,7 @@ SCAN_ARGS_FILE=hpc/osc/scan_args_week5_8_smoke.txt \
 Useful environment variables:
 
 - `G4_APPTAINER_IMAGE=/path/to/geant4.sif`
+- `G4_DATA_ROOT=/path/to/geant4-data`
 - `G4_BUILD_DIR=build-osc`
 - `G4_BUILD_JOBS=4`
 - `G4_FORCE_REBUILD=1`
@@ -42,14 +43,26 @@ The wrapper binds this repository into the container at `/work/g4optics`, builds
 
 ## Troubleshooting
 
-If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, pull the latest wrapper. It auto-detects common Geant4 data paths and exports Geant4 data environment variables inside the container. To inspect what the wrapper finds, run:
+If Geant4 aborts with `G4ENSDFSTATEDATA environment variable must be set`, the Apptainer image does not expose the Geant4 runtime datasets. Keep the datasets in a persistent OSC directory and pass it to the wrapper:
 
 ```bash
-G4_PRINT_DATA_ENV=1 hpc/osc/run_scan_apptainer.sh
+mkdir -p ~/geant4-data/11.4.2
+cd ~/geant4-data/11.4.2
+wget https://cern.ch/geant4-data/datasets/G4ENSDFSTATE.3.0.tar.gz
+tar -xzf G4ENSDFSTATE.3.0.tar.gz
+cd -
+
+G4_DATA_ROOT=~/geant4-data/11.4.2 G4_PRINT_DATA_ENV=1 hpc/osc/run_scan_apptainer.sh
+```
+
+The wrapper binds `G4_DATA_ROOT` into the container, auto-detects common Geant4 data paths, and exports Geant4 data environment variables. To inspect what the wrapper finds, run:
+
+```bash
+G4_DATA_ROOT=~/geant4-data/11.4.2 G4_PRINT_DATA_ENV=1 hpc/osc/run_scan_apptainer.sh
 ```
 
 If `G4ENSDFSTATEDATA` is still missing, inspect the image contents directly:
 
 ```bash
-apptainer exec geant4.sif find /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print
+apptainer exec geant4.sif find /opt/geant4-data /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print
 ```

@@ -7,6 +7,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 IMAGE="${G4_APPTAINER_IMAGE:-${PROJECT_ROOT}/geant4.sif}"
 CONTAINER_PROJECT_ROOT="${G4_CONTAINER_PROJECT_ROOT:-/work/g4optics}"
 CONTAINER_OPNOVICE2="${CONTAINER_PROJECT_ROOT}/test/OpNovice2"
+CONTAINER_G4_DATA_ROOT="${G4_CONTAINER_DATA_ROOT:-/opt/geant4-data}"
 BUILD_DIR="${G4_BUILD_DIR:-build-osc}"
 BUILD_JOBS="${G4_BUILD_JOBS:-${SLURM_CPUS_PER_TASK:-1}}"
 PLOT_WITH_ROOT_VALUE="${PLOT_WITH_ROOT:-0}"
@@ -18,6 +19,7 @@ Usage:
 
 Environment:
   G4_APPTAINER_IMAGE=/path/to/geant4.sif
+  G4_DATA_ROOT=/path/to/geant4-data
   G4_BUILD_DIR=build-osc
   G4_BUILD_JOBS=4
   G4_FORCE_REBUILD=0
@@ -46,6 +48,15 @@ if [[ ! -f "${IMAGE}" ]]; then
   exit 1
 fi
 
+APPTAINER_BIND_ARGS=(--bind "${PROJECT_ROOT}:${CONTAINER_PROJECT_ROOT}")
+if [[ -n "${G4_DATA_ROOT:-}" ]]; then
+  if [[ ! -d "${G4_DATA_ROOT}" ]]; then
+    echo "Missing Geant4 data root: ${G4_DATA_ROOT}" >&2
+    exit 1
+  fi
+  APPTAINER_BIND_ARGS+=(--bind "${G4_DATA_ROOT}:${CONTAINER_G4_DATA_ROOT}:ro")
+fi
+
 if [[ $# -eq 0 ]]; then
   set -- full custom --events "${N_EVENTS:-1}" --source-mode gps \
     --tank-size "100 100 5 mm" \
@@ -53,7 +64,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 apptainer exec \
-  --bind "${PROJECT_ROOT}:${CONTAINER_PROJECT_ROOT}" \
+  "${APPTAINER_BIND_ARGS[@]}" \
   "${IMAGE}" \
   bash -lc '
     set -euo pipefail
@@ -78,6 +89,7 @@ apptainer exec \
 
       local candidate
       for candidate in \
+        /opt/geant4-data/${dir_pattern} \
         /opt/geant4/data/${dir_pattern} \
         /opt/geant4/share/Geant4/data/${dir_pattern} \
         /opt/geant4/share/Geant4-*/data/${dir_pattern} \
@@ -92,7 +104,7 @@ apptainer exec \
       done
 
       local root
-      for root in /opt/geant4 /usr/local/share /usr/share; do
+      for root in /opt/geant4-data /opt/geant4 /usr/local/share /usr/share; do
         if [[ -d "${root}" ]]; then
           candidate="$(find "${root}" -type d -name "${dir_pattern}" -print -quit 2>/dev/null || true)"
           if [[ -n "${candidate}" ]]; then
@@ -122,7 +134,8 @@ apptainer exec \
 
     if [[ -z "${G4ENSDFSTATEDATA:-}" || ! -d "${G4ENSDFSTATEDATA}" ]]; then
       echo "Missing Geant4 data directory for G4ENSDFSTATEDATA inside the Apptainer image." >&2
-      echo "Check with: apptainer exec geant4.sif find /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print" >&2
+      echo "Set G4_DATA_ROOT to a host directory containing Geant4 datasets, or check the image with:" >&2
+      echo "  apptainer exec geant4.sif find /opt/geant4-data /opt/geant4 /usr/local/share /usr/share -type d -name 'G4ENSDFSTATE*' -print" >&2
       exit 1
     fi
 
