@@ -14,8 +14,15 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+if [[ -n "${G4_PROJECT_ROOT:-}" ]]; then
+  PROJECT_ROOT="$(cd "${G4_PROJECT_ROOT}" && pwd)"
+elif [[ -n "${SLURM_SUBMIT_DIR:-}" && -f "${SLURM_SUBMIT_DIR}/hpc/osc/run_scan_apptainer.sh" ]]; then
+  PROJECT_ROOT="$(cd "${SLURM_SUBMIT_DIR}" && pwd)"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+fi
+SCRIPT_DIR="${PROJECT_ROOT}/hpc/osc"
 
 cd "${PROJECT_ROOT}"
 
