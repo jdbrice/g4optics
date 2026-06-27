@@ -103,6 +103,21 @@ python3 hpc/osc/generate_scan_plan.py \
   --step 5 --grid-unit mm
 ```
 
+For side-mounted SiPM scans, add the existing scan-runner geometry overrides:
+
+```bash
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/side_x_center/week6_side_x_center_thickness_5mm_21x21_100events.txt \
+  --description "Week 6 side-mounted +X center SiPM, 5 mm thickness, 21x21, 100 events per point" \
+  --events 100 \
+  --tank-size "100 100 5 mm" \
+  --sipm-face +X \
+  --sipm-local-position "0 0 0 cm" \
+  --x-min -50 --x-max 50 \
+  --y-min -50 --y-max 50 \
+  --step 5 --grid-unit mm
+```
+
 Useful environment variables:
 
 - `G4_APPTAINER_IMAGE=/path/to/geant4.sif`

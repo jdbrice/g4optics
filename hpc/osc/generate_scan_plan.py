@@ -59,6 +59,8 @@ def build_scan_args(
     dimple_unit: str,
     dimple_sipm_mode: str,
     beam_z: str | None,
+    sipm_face: str | None,
+    sipm_local_position: str | None,
 ) -> list[str]:
     x_str = format_decimal(x)
     y_str = format_decimal(y)
@@ -89,6 +91,10 @@ def build_scan_args(
 
     if beam_z is not None:
         args.extend(["--beam-z", beam_z])
+    if sipm_face is not None:
+        args.extend(["--sipm-face", sipm_face])
+    if sipm_local_position is not None:
+        args.extend(["--sipm-local-position", sipm_local_position])
     if surface_preset is not None:
         args.extend(["--surface-preset", surface_preset])
     if dimple:
@@ -140,6 +146,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dimple-unit", default="mm", choices=["mm", "cm"])
     parser.add_argument("--dimple-sipm-mode", default="surface", choices=["surface", "opening"])
     parser.add_argument("--beam-z", help="Optional beam z value passed to each point.")
+    parser.add_argument(
+        "--sipm-face",
+        choices=["+X", "-X", "+Y", "-Y", "+Z", "-Z", "bottomCavity"],
+        help="Optional SiPM face override passed to each point.",
+    )
+    parser.add_argument(
+        "--sipm-local-position",
+        help='Optional SiPM local position override, e.g. "0 0 0 cm".',
+    )
     parser.add_argument("--description", help="Comment written at the top of the plan.")
     return parser.parse_args()
 
@@ -185,6 +200,8 @@ def main() -> int:
             dimple_unit=args.dimple_unit,
             dimple_sipm_mode=args.dimple_sipm_mode,
             beam_z=args.beam_z,
+            sipm_face=args.sipm_face,
+            sipm_local_position=args.sipm_local_position,
         )
         lines.append(shell_line(scan_args))
         task_count += 1
