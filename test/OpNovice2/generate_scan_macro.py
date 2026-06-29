@@ -31,6 +31,21 @@ def parse_set(value: str) -> tuple[str, str]:
     return command, arguments.strip()
 
 
+def parse_insert_location(value: str) -> tuple[str, str]:
+    if "=" not in value:
+        raise argparse.ArgumentTypeError(
+            f"Invalid --insert-missing-before {value!r}; expected COMMAND=ANCHOR"
+        )
+    command, anchor = value.split("=", 1)
+    command = command.strip()
+    anchor = anchor.strip()
+    if not command.startswith("/") or not anchor.startswith("/"):
+        raise argparse.ArgumentTypeError(
+            f"Invalid --insert-missing-before {value!r}; commands must start with /"
+        )
+    return command, anchor
+
+
 def split_active_and_comment(line: str) -> tuple[str, str, str]:
     newline = "\n" if line.endswith("\n") else ""
     body = line[:-1] if newline else line
@@ -80,7 +95,11 @@ def generate_macro(
     replacements: OrderedDict[str, str],
     required_commands: set[str],
     insert_before: str = DEFAULT_INSERT_BEFORE,
+    insert_before_by_command: dict[str, str] | None = None,
 ) -> list[str]:
+    if insert_before_by_command is None:
+        insert_before_by_command = {}
+
     command_locations: dict[str, list[int]] = {}
     for index, line in enumerate(template_lines):
         command = command_name(line)
@@ -108,17 +127,26 @@ def generate_macro(
             inserted.append((command, arguments))
 
     if inserted:
-        insert_index = None
-        for index, line in enumerate(output):
-            if command_name(line) == insert_before:
-                insert_index = index
-                break
-        if insert_index is None:
-            insert_index = len(output)
-            if output and output[-1].strip():
-                output.append("\n")
-        insert_lines = [format_command_line(command, arguments) for command, arguments in inserted]
-        output[insert_index:insert_index] = insert_lines
+        insert_groups: OrderedDict[str, list[tuple[str, str]]] = OrderedDict()
+        for command, arguments in inserted:
+            anchor = insert_before_by_command.get(command, insert_before)
+            insert_groups.setdefault(anchor, []).append((command, arguments))
+
+        for anchor, commands in insert_groups.items():
+            insert_index = None
+            for index, line in enumerate(output):
+                if command_name(line) == anchor:
+                    insert_index = index
+                    break
+            if insert_index is None:
+                insert_index = len(output)
+                if output and output[-1].strip():
+                    output.append("\n")
+                    insert_index = len(output)
+            insert_lines = [
+                format_command_line(command, arguments) for command, arguments in commands
+            ]
+            output[insert_index:insert_index] = insert_lines
 
     generated_commands = {
         command for line in output if (command := command_name(line)) is not None
@@ -154,6 +182,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_INSERT_BEFORE,
         help="Command before which missing --set commands are inserted.",
     )
+    parser.add_argument(
+        "--insert-missing-before",
+        action="append",
+        default=[],
+        type=parse_insert_location,
+        metavar="COMMAND=ANCHOR",
+        help=(
+            "For one missing --set command, insert before ANCHOR instead of "
+            "the default insertion point. Repeat as needed."
+        ),
+    )
     return parser
 
 
@@ -168,6 +207,7 @@ def main() -> int:
         replacements,
         required_commands,
         insert_before=args.insert_before,
+        insert_before_by_command=dict(args.insert_missing_before),
     )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

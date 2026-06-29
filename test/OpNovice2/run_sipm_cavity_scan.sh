@@ -43,7 +43,10 @@ CUSTOM_Y_MAX=""
 CUSTOM_STEP=""
 CUSTOM_GRID_UNIT=""
 CUSTOM_BEAM_Z=""
+CUSTOM_BEAM_SIGMA=""
 BEAM_Z_INFERRED="0"
+BEAM_PROFILE="point"
+BEAM_SIGMA=""
 
 BEAM_DIRECTION="0 0 -1"
 SCAN_RUNS_DIR="scan_runs"
@@ -92,6 +95,9 @@ Grid / beam options:
   --grid-unit UNIT                    mm or cm
   --beam-z VALUE                      beam z coordinate in --grid-unit units;
                                       custom defaults to thickness/2 + 1.5 mm
+  --beam-sigma VALUE                  circular Gaussian GPS beam sigma in
+                                      --grid-unit units; 0 or omitted keeps
+                                      the point-source GPS position
 
 Output / execution options:
   --events N                          events per scan point; overrides N_EVENTS
@@ -396,6 +402,18 @@ while [[ $# -gt 0 ]]; do
       CUSTOM_BEAM_Z="${1#*=}"
       shift
       ;;
+    --beam-sigma)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --beam-sigma" >&2
+        exit 1
+      fi
+      CUSTOM_BEAM_SIGMA="$2"
+      shift 2
+      ;;
+    --beam-sigma=*)
+      CUSTOM_BEAM_SIGMA="${1#*=}"
+      shift
+      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -508,6 +526,11 @@ case "${SOURCE_MODE}" in
     exit 1
     ;;
 esac
+
+if [[ -n "${CUSTOM_BEAM_SIGMA}" && "${SOURCE_MODE}" != "gps" ]]; then
+  echo "--beam-sigma requires --source-mode gps." >&2
+  exit 1
+fi
 
 if [[ -n "${TEMPLATE_MACRO_OVERRIDE}" ]]; then
   TEMPLATE_MACRO="${TEMPLATE_MACRO_OVERRIDE}"
@@ -772,6 +795,19 @@ require_number() {
   fi
 }
 
+require_nonnegative_number() {
+  local option="$1"
+  local value="$2"
+  require_number "${option}" "${value}"
+  awk -v option="${option}" -v value="${value}" '
+    BEGIN {
+      if (value < 0) {
+        printf "Invalid %s: %s. Expected a non-negative number.\n", option, value > "/dev/stderr"
+        exit 1
+      }
+    }'
+}
+
 require_number "ROOT_PLOT_FIDUCIAL_LIMIT_MM" "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
 
 axis_values() {
@@ -982,6 +1018,17 @@ case "${GRID}" in
     exit 1
     ;;
 esac
+
+if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then
+  require_nonnegative_number "--beam-sigma" "${CUSTOM_BEAM_SIGMA}"
+  if awk -v sigma="${CUSTOM_BEAM_SIGMA}" 'BEGIN { exit(sigma > 0 ? 0 : 1) }'; then
+    BEAM_PROFILE="gaussian"
+    BEAM_SIGMA="${CUSTOM_BEAM_SIGMA}"
+  else
+    BEAM_PROFILE="point"
+    BEAM_SIGMA=""
+  fi
+fi
 
 X_MIN_VALUE="${XS[0]}"
 X_MAX_VALUE="${XS[$((${#XS[@]} - 1))]}"
@@ -1302,6 +1349,7 @@ write_run_config() {
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
     printf '    "dimple": %s\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
@@ -1318,6 +1366,17 @@ write_run_config() {
     printf '    "beam_direction": "%s",\n' "$(json_string "${BEAM_DIRECTION}")"
     printf '    "beam_z": "%s %s",\n' "$(format_num "${Z0}")" "$(json_string "${GRID_UNIT}")"
     printf '    "beam_z_inferred": %s\n' "$(if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then echo true; else echo false; fi)"
+    printf '  },\n'
+    printf '  "beam": {\n'
+    printf '    "profile": "%s",\n' "$(json_string "${BEAM_PROFILE}")"
+    printf '    "sigma": '
+    if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+      printf '%s' "$(format_num "${BEAM_SIGMA}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "unit": "%s"\n' "$(json_string "${GRID_UNIT}")"
     printf '  },\n'
     printf '  "sipm": {\n'
     printf '    "face": "%s",\n' "$(json_string "${sipm_face}")"
@@ -1541,6 +1600,11 @@ if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then
 else
   echo "Beam z: $(format_num "${Z0}") ${GRID_UNIT}"
 fi
+if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+  echo "Beam profile: Gaussian sigma=$(format_num "${BEAM_SIGMA}") ${GRID_UNIT}"
+else
+  echo "Beam profile: point"
+fi
 echo "Events per point: ${N_EVENTS}"
 echo "Electron energy mode: ${electron_energy_mode}"
 if [[ -n "${tank_size}" ]]; then
@@ -1600,6 +1664,18 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       --require "/opnovice2/dimple/radius"
       --require "/opnovice2/dimple/mode"
       --require "/opnovice2/dimple/sipmMode"
+    )
+  fi
+  if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+    macro_args+=(
+      --set "/gps/pos/type=Beam"
+      --set "/gps/pos/sigma_x=$(format_num "${BEAM_SIGMA}") ${unit}"
+      --set "/gps/pos/sigma_y=$(format_num "${BEAM_SIGMA}") ${unit}"
+      --require "/gps/pos/type"
+      --require "/gps/pos/sigma_x"
+      --require "/gps/pos/sigma_y"
+      --insert-missing-before "/gps/pos/sigma_x=/gps/direction"
+      --insert-missing-before "/gps/pos/sigma_y=/gps/direction"
     )
   fi
   if [[ -n "${surface_preset}" ]]; then
