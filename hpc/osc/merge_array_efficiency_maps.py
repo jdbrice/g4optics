@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import sys
 from pathlib import Path
@@ -29,7 +30,21 @@ def parse_args() -> argparse.Namespace:
         default=".",
         help="Directory containing slurm-g4optics-scan-<job>_<task>.out files.",
     )
-    parser.add_argument("--out", help="Merged CSV path. Defaults under test/OpNovice2/scan_runs.")
+    parser.add_argument(
+        "--out",
+        help=(
+            "Merged output path. If it ends in .csv, write that file. Otherwise treat it "
+            "as a run directory and write efficiency_map.csv inside it. Defaults to an "
+            "auto-named directory under test/OpNovice2/scan_runs."
+        ),
+    )
+    parser.add_argument(
+        "--label",
+        help=(
+            "Run-directory label used when --out is omitted, e.g. "
+            "week9_2mm_thickness_1mm_beam_sigma."
+        ),
+    )
     parser.add_argument(
         "--allow-missing",
         action="store_true",
@@ -98,21 +113,100 @@ def read_efficiency_rows(efficiency_map: Path) -> tuple[list[str], list[dict[str
         return list(reader.fieldnames), rows
 
 
+def read_run_config(run_dir: Path) -> dict[str, object]:
+    run_config = run_dir / "run_config.json"
+    if not run_config.is_file():
+        return {}
+    try:
+        with run_config.open(encoding="utf-8") as handle:
+            loaded = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if isinstance(loaded, dict):
+        return loaded
+    return {}
+
+
+def number_token(value: object) -> str | None:
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number.is_integer():
+        return str(int(number))
+    text = f"{number:g}"
+    return text.replace(".", "p").replace("-", "m")
+
+
+def thickness_from_config(run_config: dict[str, object]) -> tuple[str, str] | None:
+    tank = run_config.get("tank")
+    if not isinstance(tank, dict):
+        return None
+    size = tank.get("size")
+    if not isinstance(size, str):
+        return None
+    parts = size.split()
+    if len(parts) < 4:
+        return None
+    thickness = number_token(parts[2])
+    unit = parts[3]
+    if thickness is None or not unit:
+        return None
+    return thickness, unit
+
+
+def beam_sigma_from_config(run_config: dict[str, object]) -> tuple[str, str] | None:
+    beam = run_config.get("beam")
+    if not isinstance(beam, dict):
+        return None
+    if beam.get("profile") != "gaussian":
+        return None
+    sigma = number_token(beam.get("sigma"))
+    unit = beam.get("unit")
+    if sigma is None or not isinstance(unit, str) or not unit:
+        return None
+    return sigma, unit
+
+
+def auto_output_label(job_id: str, run_configs: list[dict[str, object]]) -> str:
+    for run_config in run_configs:
+        thickness = thickness_from_config(run_config)
+        beam_sigma = beam_sigma_from_config(run_config)
+        if thickness and beam_sigma:
+            thickness_value, thickness_unit = thickness
+            sigma_value, sigma_unit = beam_sigma
+            return (
+                f"week9_{thickness_value}{thickness_unit}_thickness_"
+                f"{sigma_value}{sigma_unit}_beam_sigma"
+            )
+    return f"array_{job_id}"
+
+
+def output_path_from_args(args: argparse.Namespace, project_root: Path, label: str) -> Path:
+    if args.out:
+        out_path = Path(args.out)
+        if not out_path.is_absolute():
+            out_path = project_root / out_path
+        if out_path.suffix.lower() == ".csv":
+            return out_path
+        return out_path / "efficiency_map.csv"
+
+    return (
+        project_root
+        / "test"
+        / "OpNovice2"
+        / "scan_runs"
+        / label
+        / "efficiency_map.csv"
+    )
+
+
 def main() -> int:
     args = parse_args()
     project_root = Path(args.project_root).resolve()
     slurm_dir = Path(args.slurm_dir).resolve()
-    output_path = (
-        Path(args.out)
-        if args.out
-        else project_root
-        / "test"
-        / "OpNovice2"
-        / "scan_runs"
-        / f"array_{args.job_id}_efficiency_map.csv"
-    )
-    if not output_path.is_absolute():
-        output_path = project_root / output_path
 
     slurm_files = sorted(
         slurm_dir.glob(f"slurm-g4optics-scan-{args.job_id}_*.out"),
@@ -125,6 +219,7 @@ def main() -> int:
     merged_rows: list[dict[str, str]] = []
     original_fields: list[str] | None = None
     missing: list[str] = []
+    run_configs: list[dict[str, object]] = []
 
     for slurm_file in slurm_files:
         task_id = task_id_from_slurm_file(slurm_file, args.job_id)
@@ -148,6 +243,10 @@ def main() -> int:
                 else:
                     missing.append(f"{slurm_file.name}: incomplete task missing {efficiency_map}")
                 continue
+
+            run_config = read_run_config(run_dir)
+            if run_config:
+                run_configs.append(run_config)
 
             fields, rows = read_efficiency_rows(efficiency_map)
             if original_fields is None:
@@ -175,6 +274,8 @@ def main() -> int:
         print("No efficiency rows found.", file=sys.stderr)
         return 1
 
+    label = args.label or auto_output_label(args.job_id, run_configs)
+    output_path = output_path_from_args(args, project_root, label)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = ["array_job_id", "array_task_id", "source_run_dir"] + (original_fields or [])
     with output_path.open("w", newline="", encoding="utf-8") as handle:
@@ -183,6 +284,8 @@ def main() -> int:
         writer.writerows(merged_rows)
 
     print(f"Wrote {len(merged_rows)} rows to {output_path}")
+    if output_path.name == "efficiency_map.csv":
+        print(f"Run directory: {output_path.parent}")
     if missing:
         print(f"Warning: skipped {len(missing)} incomplete inputs", file=sys.stderr)
     return 0

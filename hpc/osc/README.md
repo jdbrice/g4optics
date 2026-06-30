@@ -51,6 +51,10 @@ sacct -j JOBID --format=JobID,JobName,State,ExitCode,Elapsed
 python3 hpc/osc/merge_array_efficiency_maps.py --job-id JOBID
 ```
 
+By default the merge writes a ROOT-compatible run directory under `test/OpNovice2/scan_runs`.
+For beam-size scans, the directory name is inferred from `run_config.json`, for example `test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv`.
+If auto-naming is not specific enough, pass `--label NAME`; if you need the old flat-file behavior, pass an explicit CSV path with `--out path/to/file.csv`.
+
 If some tasks are still running or failed, the merge tool reports which Slurm output lacks `Scan complete`. To inspect only completed tasks, add `--allow-missing`.
 
 Generate a new point-level plan:
@@ -117,6 +121,53 @@ python3 hpc/osc/generate_scan_plan.py \
   --y-min -50 --y-max 50 \
   --step 5 --grid-unit mm
 ```
+
+For beam-size scans, keep the same point-level workflow and add `--beam-sigma`.
+`--beam-sigma` requires `--source-mode gps`; omitted or `0` keeps the point-source GPS position, while a positive value uses a circular 2D Gaussian source spot around each scan center. The value is interpreted in `--grid-unit` units.
+
+Generate bottom-center beam-size plans for the first production pass:
+
+```bash
+mkdir -p hpc/osc/generated/beam_sigma_bottom_center
+
+for t in 2 4 5 8 10; do
+  for s in 1 2 3; do
+    python3 hpc/osc/generate_scan_plan.py \
+      --out "hpc/osc/generated/beam_sigma_bottom_center/week9_beam_sigma_${s}mm_thickness_${t}mm_21x21_100events.txt" \
+      --description "Beam sigma ${s} mm, bottom center, ${t} mm thickness, 21x21, 100 events per point" \
+      --events 100 \
+      --source-mode gps \
+      --tank-size "100 100 ${t} mm" \
+      --beam-sigma "${s}" \
+      --x-min -50 --x-max 50 \
+      --y-min -50 --y-max 50 \
+      --step 5 --grid-unit mm
+  done
+done
+```
+
+Submit one or two arrays at a time, using `-A` on the command line rather than storing the account in tracked files:
+
+```bash
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/generated/beam_sigma_bottom_center/week9_beam_sigma_1mm_thickness_5mm_21x21_100events.txt \
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441%20 hpc/osc/submit_scan.sbatch
+```
+
+Merge after completion:
+
+```bash
+sacct -j JOBID --format=JobID,JobName,State,ExitCode,Elapsed
+python3 hpc/osc/merge_array_efficiency_maps.py --job-id JOBID
+```
+
+The beam-size merge output defaults to a directory such as:
+
+```text
+test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv
+```
+
+For a quick physics QA of a Gaussian beam run, inspect the ROOT ntuple columns `shoot_x_mm` and `shoot_y_mm`; their mean should be near the scan center, and their RMS should be close to the requested `beam_sigma`.
 
 Useful environment variables:
 
