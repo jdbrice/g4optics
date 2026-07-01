@@ -170,6 +170,23 @@ def beam_sigma_from_config(run_config: dict[str, object]) -> tuple[str, str] | N
     return sigma, unit
 
 
+def primary_energy_from_config(run_config: dict[str, object]) -> tuple[str, str] | None:
+    simulation = run_config.get("simulation")
+    if not isinstance(simulation, dict):
+        return None
+    energy = simulation.get("primary_energy")
+    if not isinstance(energy, str):
+        return None
+    parts = energy.split()
+    if len(parts) != 2:
+        return None
+    value = number_token(parts[0])
+    unit = parts[1]
+    if value is None or not unit:
+        return None
+    return value, unit
+
+
 def auto_output_label(job_id: str, run_configs: list[dict[str, object]]) -> str:
     for run_config in run_configs:
         thickness = thickness_from_config(run_config)
@@ -180,6 +197,14 @@ def auto_output_label(job_id: str, run_configs: list[dict[str, object]]) -> str:
             return (
                 f"week9_{thickness_value}{thickness_unit}_thickness_"
                 f"{sigma_value}{sigma_unit}_beam_sigma"
+            )
+        primary_energy = primary_energy_from_config(run_config)
+        if thickness and primary_energy:
+            thickness_value, thickness_unit = thickness
+            energy_value, energy_unit = primary_energy
+            return (
+                f"week9_{thickness_value}{thickness_unit}_thickness_"
+                f"{energy_value}{energy_unit}_energy"
             )
     return f"array_{job_id}"
 

@@ -22,6 +22,7 @@ MODE="surface"
 GRID="near5"
 SOURCE_MODE="${SOURCE_MODE:-auto}"
 TEMPLATE_MACRO_OVERRIDE=""
+PRIMARY_ENERGY_OVERRIDE=""
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
@@ -69,6 +70,7 @@ Usage:
 Source options:
   --source-mode MODE                  auto, gun, or gps
   --template-macro FILE               override the selected template macro
+  --primary-energy "VALUE UNIT"       override primary energy, e.g. "0.5 MeV"
   --electron-energy-mode MODE         fixed or sr90Beta
 
 Surface options:
@@ -198,6 +200,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --template-macro=*)
       TEMPLATE_MACRO_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --primary-energy)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --primary-energy" >&2
+        exit 1
+      fi
+      PRIMARY_ENERGY_OVERRIDE="$2"
+      shift 2
+      ;;
+    --primary-energy=*)
+      PRIMARY_ENERGY_OVERRIDE="${1#*=}"
       shift
       ;;
     --sipm-cavity-mode)
@@ -608,6 +622,33 @@ if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
       ;;
     *)
       echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed or sr90Beta." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+  read -r primary_energy_value primary_energy_unit primary_energy_extra <<< "${PRIMARY_ENERGY_OVERRIDE}"
+  if [[ -z "${primary_energy_value:-}" || -z "${primary_energy_unit:-}" || -n "${primary_energy_extra:-}" ]]; then
+    echo "Invalid --primary-energy: ${PRIMARY_ENERGY_OVERRIDE}. Use quoted form like \"0.5 MeV\"." >&2
+    exit 1
+  fi
+  if [[ ! "${primary_energy_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --primary-energy value: ${primary_energy_value}. Expected a positive number." >&2
+    exit 1
+  fi
+  awk -v value="${primary_energy_value}" '
+    BEGIN {
+      if (value <= 0) {
+        printf "Invalid --primary-energy value: %s. Expected a positive number.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+  case "${primary_energy_unit}" in
+    eV|keV|MeV|GeV)
+      ;;
+    *)
+      echo "Invalid --primary-energy unit: ${primary_energy_unit}. Use eV, keV, MeV, or GeV." >&2
       exit 1
       ;;
   esac
@@ -1087,6 +1128,9 @@ if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
     electron_energy_mode="${ELECTRON_ENERGY_MODE_OVERRIDE}"
   fi
 fi
+if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+  primary_energy="${PRIMARY_ENERGY_OVERRIDE}"
+fi
 if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then
   sipm_face="${SIPM_FACE_OVERRIDE}"
 fi
@@ -1347,6 +1391,7 @@ write_run_config() {
     printf '    "sipm_local_position": %s,\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "primary_energy": %s,\n' "$(if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
@@ -1631,12 +1676,14 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     --set "/analysis/setFileName=${outfile}"
     --set "${position_cmd}=${x} ${y} ${z} ${unit}"
     --set "${direction_cmd}=${BEAM_DIRECTION}"
+    --set "${energy_cmd}=${primary_energy}"
     --set "/run/beamOn=${N_EVENTS}"
     --set "/opnovice2/sipm/face=${sipm_face}"
     --set "/opnovice2/sipm/localPosition=${sipm_local}"
     --require "/analysis/setFileName"
     --require "${position_cmd}"
     --require "${direction_cmd}"
+    --require "${energy_cmd}"
     --require "/run/beamOn"
     --require "/opnovice2/sipm/face"
     --require "/opnovice2/sipm/localPosition"

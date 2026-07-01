@@ -53,6 +53,7 @@ def build_scan_args(
     y: Decimal,
     step: Decimal,
     grid_unit: str,
+    primary_energy: str | None,
     surface_preset: str | None,
     dimple: bool,
     dimple_radius: str | None,
@@ -94,6 +95,8 @@ def build_scan_args(
         args.extend(["--beam-z", beam_z])
     if beam_sigma is not None:
         args.extend(["--beam-sigma", beam_sigma])
+    if primary_energy is not None:
+        args.extend(["--primary-energy", primary_energy])
     if sipm_face is not None:
         args.extend(["--sipm-face", sipm_face])
     if sipm_local_position is not None:
@@ -138,6 +141,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--y-max", type=decimal_arg, required=True)
     parser.add_argument("--step", type=decimal_arg, required=True)
     parser.add_argument("--grid-unit", default="mm", choices=["mm", "cm"])
+    parser.add_argument(
+        "--primary-energy",
+        help='Optional primary energy override passed to each point, e.g. "0.5 MeV".',
+    )
     parser.add_argument(
         "--surface-preset",
         action="append",
@@ -200,6 +207,7 @@ def main() -> int:
             y=y,
             step=args.step,
             grid_unit=args.grid_unit,
+            primary_energy=args.primary_energy,
             surface_preset=surface_preset,
             dimple=args.dimple,
             dimple_radius=args.dimple_radius,
