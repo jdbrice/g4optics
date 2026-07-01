@@ -4,11 +4,13 @@
 
 #include "G4AnalysisManager.hh"
 #include "G4Event.hh"
+#include "G4PrimaryParticle.hh"
 #include "G4PrimaryVertex.hh"
 #include "G4RunManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 
+#include <cmath>
 #include <limits>
 
 void EventAction::BeginOfEventAction(const G4Event*)
@@ -27,9 +29,18 @@ void EventAction::EndOfEventAction(const G4Event* event)
   }
 
   G4ThreeVector primaryPosition;
+  G4double primaryEnergy = std::numeric_limits<G4double>::quiet_NaN();
   if (event->GetNumberOfPrimaryVertex() > 0) {
-    primaryPosition = event->GetPrimaryVertex(0)->GetPosition();
+    auto primaryVertex = event->GetPrimaryVertex(0);
+    primaryPosition = primaryVertex->GetPosition();
     run->AddShootPosition(primaryPosition);
+    auto primaryParticle = primaryVertex->GetPrimary();
+    if (primaryParticle) {
+      primaryEnergy = primaryParticle->GetKineticEnergy();
+      if (std::isfinite(primaryEnergy)) {
+        run->AddPrimaryKineticEnergy(primaryEnergy);
+      }
+    }
   }
 
   const G4bool hitValid = run->HasEventHitPosition();
@@ -64,5 +75,6 @@ void EventAction::EndOfEventAction(const G4Event* event)
   analysisMan->FillNtupleIColumn(13, scintillation);
   analysisMan->FillNtupleIColumn(14, sipmDetected);
   analysisMan->FillNtupleDColumn(15, collectionEfficiency);
+  analysisMan->FillNtupleDColumn(16, primaryEnergy / MeV);
   analysisMan->AddNtupleRow();
 }

@@ -23,6 +23,7 @@ GRID="near5"
 SOURCE_MODE="${SOURCE_MODE:-auto}"
 TEMPLATE_MACRO_OVERRIDE=""
 PRIMARY_ENERGY_OVERRIDE=""
+SOURCE_MODEL_OVERRIDE=""
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
@@ -56,6 +57,16 @@ LATEST_POINTS_CSV="points.csv"
 LATEST_RUN_CONFIG="run_config.json"
 LATEST_EFFICIENCY_MAP="efficiency_map.csv"
 
+SR90_SPECTRUM_MODEL="sr90_allowed_beta_v1"
+SR90_SPECTRUM_TABLE="spectra/sr90_allowed_beta_v1.csv"
+SR90_SPECTRUM_GPS_MACRO="spectra/sr90_allowed_beta_v1_gps.mac"
+SR90_ENDPOINT_MEV="0.546"
+Y90_ENDPOINT_MEV="2.28"
+SR90_ACTIVITY_WEIGHT="1.0"
+Y90_ACTIVITY_WEIGHT="1.0"
+SR90_FERMI_CORRECTION="true"
+SR90_INCIDENT_MODEL="bare_sr90_y90_beta_emission_no_encapsulation_air_or_collimator"
+
 usage() {
   cat <<'USAGE'
 Usage:
@@ -69,9 +80,10 @@ Usage:
 
 Source options:
   --source-mode MODE                  auto, gun, or gps
+  --source-model MODEL                fixed-electron, sr90-spectrum, or sr90-empirical
   --template-macro FILE               override the selected template macro
   --primary-energy "VALUE UNIT"       override primary energy, e.g. "0.5 MeV"
-  --electron-energy-mode MODE         fixed or sr90Beta
+  --electron-energy-mode MODE         fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical
 
 Surface options:
   --surface-preset PRESET             polished, ground, or wrapped
@@ -188,6 +200,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --source-mode=*)
       SOURCE_MODE="${1#*=}"
+      shift
+      ;;
+    --source-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --source-model" >&2
+        exit 1
+      fi
+      SOURCE_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --source-model=*)
+      SOURCE_MODEL_OVERRIDE="${1#*=}"
       shift
       ;;
     --template-macro)
@@ -541,6 +565,17 @@ case "${SOURCE_MODE}" in
     ;;
 esac
 
+if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
+  case "${SOURCE_MODEL_OVERRIDE}" in
+    fixed-electron|sr90-spectrum|sr90-empirical)
+      ;;
+    *)
+      echo "Invalid --source-model: ${SOURCE_MODEL_OVERRIDE}. Use fixed-electron, sr90-spectrum, or sr90-empirical." >&2
+      exit 1
+      ;;
+  esac
+fi
+
 if [[ -n "${CUSTOM_BEAM_SIGMA}" && "${SOURCE_MODE}" != "gps" ]]; then
   echo "--beam-sigma requires --source-mode gps." >&2
   exit 1
@@ -618,10 +653,10 @@ fi
 
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
   case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
-    fixed|sr90Beta|sr90)
+    fixed|sr90Spectrum|sr90Beta|sr90|sr90Empirical)
       ;;
     *)
-      echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed or sr90Beta." >&2
+      echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical." >&2
       exit 1
       ;;
   esac
@@ -1115,12 +1150,73 @@ if [[ "${SOURCE_MODE}" == "gps" ]]; then
 elif [[ -z "${electron_energy_mode}" ]]; then
   electron_energy_mode="fixed"
 fi
+source_model="fixed-electron"
+if [[ "${electron_energy_mode}" == "sr90Beta" ]]; then
+  source_model="sr90-empirical"
+fi
+if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
+  source_model="${SOURCE_MODEL_OVERRIDE}"
+  case "${source_model}" in
+    fixed-electron|sr90-spectrum)
+      electron_energy_mode="fixed"
+      ;;
+    sr90-empirical)
+      electron_energy_mode="sr90Beta"
+      ;;
+  esac
+fi
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
-  if [[ "${ELECTRON_ENERGY_MODE_OVERRIDE}" == "sr90" ]]; then
-    electron_energy_mode="sr90Beta"
-  else
-    electron_energy_mode="${ELECTRON_ENERGY_MODE_OVERRIDE}"
+  case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
+    fixed)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" == "sr90-empirical" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode fixed." >&2
+        exit 1
+      fi
+      if [[ -z "${SOURCE_MODEL_OVERRIDE}" ]]; then
+        source_model="fixed-electron"
+      fi
+      electron_energy_mode="fixed"
+      ;;
+    sr90Spectrum)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" != "sr90-spectrum" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode sr90Spectrum." >&2
+        exit 1
+      fi
+      source_model="sr90-spectrum"
+      electron_energy_mode="fixed"
+      ;;
+    sr90Beta|sr90|sr90Empirical)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" != "sr90-empirical" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode ${ELECTRON_ENERGY_MODE_OVERRIDE}." >&2
+        exit 1
+      fi
+      source_model="sr90-empirical"
+      electron_energy_mode="sr90Beta"
+      ;;
+  esac
+fi
+if [[ "${source_model}" == "sr90-spectrum" ]]; then
+  if [[ "${SOURCE_MODE}" != "gps" ]]; then
+    echo "--source-model sr90-spectrum requires --source-mode gps." >&2
+    exit 1
   fi
+  if [[ "${primary_particle}" != "e-" ]]; then
+    echo "--source-model sr90-spectrum requires primary particle e-, but template resolves ${primary_particle}." >&2
+    exit 1
+  fi
+  if [[ ! -f "${SR90_SPECTRUM_TABLE}" ]]; then
+    echo "Missing Sr-90 spectrum table: ${SR90_SPECTRUM_TABLE}. Run python3 generate_sr90_spectrum.py first." >&2
+    exit 1
+  fi
+  if [[ ! -f "${SR90_SPECTRUM_GPS_MACRO}" ]]; then
+    echo "Missing Sr-90 GPS histogram fragment: ${SR90_SPECTRUM_GPS_MACRO}. Run python3 generate_sr90_spectrum.py first." >&2
+    exit 1
+  fi
+  if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+    echo "--primary-energy is incompatible with --source-model sr90-spectrum; the GPS histogram defines the energy spectrum." >&2
+    exit 1
+  fi
+  primary_energy="${SR90_SPECTRUM_MODEL} spectrum"
 fi
 if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
   primary_energy="${PRIMARY_ENERGY_OVERRIDE}"
@@ -1328,6 +1424,7 @@ COMMAND_ENV=(
   "PLOT_WITH_ROOT=${PLOT_WITH_ROOT}"
   "ROOT_COMMAND=${ROOT_COMMAND}"
   "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
+  "G4RUN_MANAGER_TYPE=${G4RUN_MANAGER_TYPE:-}"
   "SCAN_RUN_ID_SUFFIX=${SCAN_RUN_ID_SUFFIX}"
 )
 COMMAND_SHELL="$(shell_join "${COMMAND_ENV[@]}" "${COMMAND_ARGV[@]}")"
@@ -1367,6 +1464,7 @@ write_run_config() {
     printf '      "PLOT_WITH_ROOT": "%s",\n' "$(json_string "${PLOT_WITH_ROOT}")"
     printf '      "ROOT_COMMAND": "%s",\n' "$(json_string "${ROOT_COMMAND}")"
     printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s",\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '      "G4RUN_MANAGER_TYPE": "%s",\n' "$(json_string "${G4RUN_MANAGER_TYPE:-}")"
     printf '      "SCAN_RUN_ID_SUFFIX": "%s"\n' "$(json_string "${SCAN_RUN_ID_SUFFIX}")"
     printf '    }\n'
     printf '  },\n'
@@ -1386,6 +1484,7 @@ write_run_config() {
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "primary_energy": %s,\n' "$(if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "source_model": %s,\n' "$(if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
@@ -1399,6 +1498,70 @@ write_run_config() {
     printf '  "simulation": {\n'
     printf '    "events_per_point": %s,\n' "${N_EVENTS}"
     printf '    "scintillation_yield_per_mev": %s,\n' "${scint_yield}"
+    printf '    "source_model": "%s",\n' "$(json_string "${source_model}")"
+    printf '    "spectrum_model": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "spectrum_table_path": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_TABLE}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "spectrum_gps_fragment_path": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_GPS_MACRO}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "sr90_endpoint_mev": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_ENDPOINT_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "y90_endpoint_mev": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${Y90_ENDPOINT_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "sr90_activity_weight": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_ACTIVITY_WEIGHT}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "y90_activity_weight": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${Y90_ACTIVITY_WEIGHT}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "fermi_correction": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_FERMI_CORRECTION}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "incident_transport_model": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_INCIDENT_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
     printf '    "primary_particle": "%s",\n' "$(json_string "${primary_particle}")"
     printf '    "primary_energy": "%s",\n' "$(json_string "${primary_energy}")"
     printf '    "electron_energy_mode": "%s",\n' "$(json_string "${electron_energy_mode}")"
@@ -1562,7 +1725,7 @@ write_run_config() {
 
 write_efficiency_map() {
   {
-    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,summary_csv,root,log\n'
+    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,primary_energy_min_mev,primary_energy_max_mev,summary_csv,root,log\n'
     read -r _points_header
     while IFS=, read -r tag x y z unit macro root log; do
       summary="${root%.root}_summary.csv"
@@ -1576,21 +1739,22 @@ write_efficiency_map() {
         exit 1
       fi
       read -r _summary_header < "${summary}"
-      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z < <(
+      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z primary_energy_events primary_energy_mean primary_energy_rms primary_energy_min primary_energy_max < <(
         awk -F, 'NR == 2 {
-          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
         }' "${summary}"
       )
       if [[ -z "${events:-}" || -z "${generated:-}" || -z "${scint:-}" || -z "${detected:-}" || -z "${efficiency:-}" ]]; then
         echo "Could not parse scan summary CSV: ${summary}" >&2
         exit 1
       fi
-      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
         "${tag}" "${x}" "${y}" "${z}" "${unit}" \
         "${events}" "${generated}" "${scint}" "${detected}" "${efficiency}" \
         "${shoot_events}" "${shoot_x}" "${shoot_y}" "${shoot_z}" \
         "${hit_events}" "${hit_x}" "${hit_y}" "${hit_z}" \
         "${scint_centroid_events}" "${scint_centroid_x}" "${scint_centroid_y}" "${scint_centroid_z}" \
+        "${primary_energy_events}" "${primary_energy_mean}" "${primary_energy_rms}" "${primary_energy_min}" "${primary_energy_max}" \
         "${summary}" "${root}" "${log}"
     done
   } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
@@ -1634,6 +1798,10 @@ fi
 echo "Scan: ${SCAN_NAME}"
 echo "Template: ${TEMPLATE_MACRO}"
 echo "Source mode: ${SOURCE_MODE}"
+echo "Source model: ${source_model}"
+if [[ "${source_model}" == "sr90-spectrum" ]]; then
+  echo "Spectrum model: ${SR90_SPECTRUM_MODEL} (${SR90_SPECTRUM_TABLE})"
+fi
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
 if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then
@@ -1672,18 +1840,33 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     --set "/analysis/setFileName=${outfile}"
     --set "${position_cmd}=${x} ${y} ${z} ${unit}"
     --set "${direction_cmd}=${BEAM_DIRECTION}"
-    --set "${energy_cmd}=${primary_energy}"
     --set "/run/beamOn=${N_EVENTS}"
     --set "/opnovice2/sipm/face=${sipm_face}"
     --set "/opnovice2/sipm/localPosition=${sipm_local}"
     --require "/analysis/setFileName"
     --require "${position_cmd}"
     --require "${direction_cmd}"
-    --require "${energy_cmd}"
     --require "/run/beamOn"
     --require "/opnovice2/sipm/face"
     --require "/opnovice2/sipm/localPosition"
   )
+
+  if [[ "${source_model}" == "sr90-spectrum" ]]; then
+    macro_args+=(
+      --remove "${energy_cmd}"
+      --remove "/opnovice2/gun/electronEnergyMode"
+      --insert-file-before "${SR90_SPECTRUM_GPS_MACRO}=/run/beamOn"
+      --require "/gps/ene/type"
+      --require "/gps/hist/type"
+      --require "/gps/hist/point"
+      --require "/gps/hist/inter"
+    )
+  else
+    macro_args+=(
+      --set "${energy_cmd}=${primary_energy}"
+      --require "${energy_cmd}"
+    )
+  fi
 
   if [[ -n "${sipm_cavity_mode}" ]]; then
     macro_args+=(--set "/opnovice2/sipm/cavityMode=${sipm_cavity_mode}")

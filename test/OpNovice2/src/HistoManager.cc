@@ -149,6 +149,7 @@ void HistoManager::Book()
   analysisMan->CreateNtupleIColumn("scintillation_photons");
   analysisMan->CreateNtupleIColumn("sipm_detected_photons");
   analysisMan->CreateNtupleDColumn("collection_efficiency");
+  analysisMan->CreateNtupleDColumn("primary_kinetic_energy_mev");
   // When all ntuple columns are created, the ntuple has to be closed using `FinishNtuple()` function.
   analysisMan->FinishNtuple();
 

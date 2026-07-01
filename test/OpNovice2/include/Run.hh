@@ -36,6 +36,8 @@
 #include "G4Run.hh"
 #include "G4ThreeVector.hh"
 
+#include <limits>
+
 class G4ParticleDefinition;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -146,6 +148,7 @@ class Run : public G4Run
 
     // Per-event bookkeeping for scan ntuples.
     void BeginEvent();
+    void AddPrimaryKineticEnergy(G4double energy);
     void AddShootPosition(const G4ThreeVector& pos);
     void SetPrimaryHitPosition(const G4ThreeVector& pos);
     void AddScintillationCentroid(const G4ThreeVector& pos);
@@ -170,6 +173,11 @@ class Run : public G4Run
     G4ThreeVector GetMeanHitPosition() const;
     G4int GetScintillationCentroidCount() const { return fScintCentroidCount; }
     G4ThreeVector GetMeanScintillationCentroid() const;
+    G4int GetPrimaryKineticEnergyCount() const { return fPrimaryEnergyCount; }
+    G4double GetPrimaryKineticEnergyMean() const;
+    G4double GetPrimaryKineticEnergyRms() const;
+    G4double GetPrimaryKineticEnergyMin() const { return fPrimaryEnergyMin; }
+    G4double GetPrimaryKineticEnergyMax() const { return fPrimaryEnergyMax; }
 
     // SiPM Detection
     void AddSiPMDetection()
@@ -232,6 +240,13 @@ class Run : public G4Run
     G4ThreeVector fHitPositionSum;
     G4int fScintCentroidCount = 0;
     G4ThreeVector fScintCentroidSum;
+
+    // Per-run primary kinetic-energy statistics for Sr-90 spectrum QA.
+    G4int fPrimaryEnergyCount = 0;
+    G4double fPrimaryEnergySum = 0.;
+    G4double fPrimaryEnergySum2 = 0.;
+    G4double fPrimaryEnergyMin = std::numeric_limits<G4double>::infinity();
+    G4double fPrimaryEnergyMax = -std::numeric_limits<G4double>::infinity();
 };
 
 #endif /* Run_h */

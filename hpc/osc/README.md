@@ -170,19 +170,21 @@ test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv
 For a quick physics QA of a Gaussian beam run, inspect the ROOT ntuple columns `shoot_x_mm` and `shoot_y_mm`; their mean should be near the scan center, and their RMS should be close to the requested `beam_sigma`.
 
 For Week 10 Sr-90 source-model scans, keep the GPS point-level workflow and add
-`--electron-energy-mode sr90Beta`. This uses the OpNovice2 empirical Sr-90/Y-90
-beta sampler rather than a full radioactive-decay chain.
+`--source-model sr90-spectrum`. This is the Week 10.1 production default: GPS
+samples the checked-in `sr90_allowed_beta_v1` Sr-90/Y-90 beta spectrum table.
+The older `--electron-energy-mode sr90Beta` path remains available as
+`--source-model sr90-empirical` for historical comparison only.
 
 ```bash
 mkdir -p hpc/osc/generated/week10_sr90
 
 python3 hpc/osc/generate_scan_plan.py \
   --out hpc/osc/generated/week10_sr90/week10_sr90_thickness_5mm_21x21_100events.txt \
-  --description "Week 10 Sr-90 beta source, 5 mm thickness, 21x21, 100 events per point" \
+  --description "Week 10 Sr-90 spectrum source, 5 mm thickness, 21x21, 100 events per point" \
   --events 100 \
   --source-mode gps \
+  --source-model sr90-spectrum \
   --tank-size "100 100 5 mm" \
-  --electron-energy-mode sr90Beta \
   --x-min -50 --x-max 50 \
   --y-min -50 --y-max 50 \
   --step 5 --grid-unit mm
@@ -193,7 +195,14 @@ SCAN_ARGS_FILE=hpc/osc/generated/week10_sr90/week10_sr90_thickness_5mm_21x21_100
 ```
 
 The default merge label for this source mode is inferred from `run_config.json`,
-for example `test/OpNovice2/scan_runs/week10_5mm_thickness_sr90Beta_source/efficiency_map.csv`.
+for example `test/OpNovice2/scan_runs/week10_5mm_thickness_sr90_spectrum_source/efficiency_map.csv`.
+
+For spectrum QA after merge, run:
+
+```bash
+cd test/OpNovice2
+root -b -q 'plot_sr90_spectrum_qa.C("scan_runs/week10_5mm_thickness_sr90_spectrum_source")'
+```
 
 Useful environment variables:
 

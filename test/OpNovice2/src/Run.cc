@@ -39,6 +39,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4UnitsTable.hh"
 
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -56,6 +58,16 @@ void Run::BeginEvent()
   fEventHitValid = false;
   fEventHitPosition = G4ThreeVector();
   fEventScintPositionSum = G4ThreeVector();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryKineticEnergy(G4double energy)
+{
+  fPrimaryEnergyCount += 1;
+  fPrimaryEnergySum += energy;
+  fPrimaryEnergySum2 += energy * energy;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, energy);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, energy);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -121,6 +133,26 @@ G4ThreeVector Run::GetMeanScintillationCentroid() const
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyMean() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  return fPrimaryEnergySum / G4double(fPrimaryEnergyCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyRms() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  const G4double mean = GetPrimaryKineticEnergyMean();
+  const G4double mean2 = fPrimaryEnergySum2 / G4double(fPrimaryEnergyCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void Run::SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
                      G4double polarization, const G4String& electronEnergyMode)
 {
@@ -176,6 +208,11 @@ void Run::Merge(const G4Run* run)
   fHitPositionSum += localRun->fHitPositionSum;
   fScintCentroidCount += localRun->fScintCentroidCount;
   fScintCentroidSum += localRun->fScintCentroidSum;
+  fPrimaryEnergyCount += localRun->fPrimaryEnergyCount;
+  fPrimaryEnergySum += localRun->fPrimaryEnergySum;
+  fPrimaryEnergySum2 += localRun->fPrimaryEnergySum2;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, localRun->fPrimaryEnergyMin);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, localRun->fPrimaryEnergyMax);
 
   G4Run::Merge(run);
 }

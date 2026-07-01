@@ -197,10 +197,33 @@ def electron_energy_mode_from_config(run_config: dict[str, object]) -> str | Non
     return re.sub(r"[^A-Za-z0-9]+", "_", mode).strip("_")
 
 
+def source_model_from_config(run_config: dict[str, object]) -> str | None:
+    simulation = run_config.get("simulation")
+    if not isinstance(simulation, dict):
+        return None
+    model = simulation.get("source_model")
+    if not isinstance(model, str) or not model or model == "fixed-electron":
+        return None
+    return re.sub(r"[^A-Za-z0-9]+", "_", model).strip("_")
+
+
 def auto_output_label(job_id: str, run_configs: list[dict[str, object]]) -> str:
     for run_config in run_configs:
         thickness = thickness_from_config(run_config)
         beam_sigma = beam_sigma_from_config(run_config)
+        source_model = source_model_from_config(run_config)
+        if thickness and source_model:
+            thickness_value, thickness_unit = thickness
+            if beam_sigma:
+                sigma_value, sigma_unit = beam_sigma
+                return (
+                    f"week10_{thickness_value}{thickness_unit}_thickness_"
+                    f"{sigma_value}{sigma_unit}_beam_sigma_{source_model}_source"
+                )
+            return (
+                f"week10_{thickness_value}{thickness_unit}_thickness_"
+                f"{source_model}_source"
+            )
         electron_energy_mode = electron_energy_mode_from_config(run_config)
         if thickness and electron_energy_mode:
             thickness_value, thickness_unit = thickness

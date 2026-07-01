@@ -48,6 +48,7 @@ def build_scan_args(
     mode: str,
     events: int,
     source_mode: str,
+    source_model: str | None,
     tank_size: str,
     x: Decimal,
     y: Decimal,
@@ -96,6 +97,8 @@ def build_scan_args(
         args.extend(["--beam-z", beam_z])
     if beam_sigma is not None:
         args.extend(["--beam-sigma", beam_sigma])
+    if source_model is not None:
+        args.extend(["--source-model", source_model])
     if primary_energy is not None:
         args.extend(["--primary-energy", primary_energy])
     if electron_energy_mode is not None:
@@ -133,6 +136,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--events", type=int, required=True, help="Events per grid point.")
     parser.add_argument("--source-mode", default="gps", choices=["auto", "gun", "gps"])
     parser.add_argument(
+        "--source-model",
+        choices=["fixed-electron", "sr90-spectrum", "sr90-empirical"],
+        help="Canonical source model override passed to each point.",
+    )
+    parser.add_argument(
         "--tank-size",
         action="append",
         required=True,
@@ -162,7 +170,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--beam-sigma", help="Optional circular GPS beam sigma passed to each point.")
     parser.add_argument(
         "--electron-energy-mode",
-        choices=["fixed", "sr90Beta", "sr90"],
+        choices=["fixed", "sr90Spectrum", "sr90Beta", "sr90", "sr90Empirical"],
         help="Optional electron energy mode override passed to each point.",
     )
     parser.add_argument(
@@ -210,6 +218,7 @@ def main() -> int:
             mode=args.mode,
             events=args.events,
             source_mode=args.source_mode,
+            source_model=args.source_model,
             tank_size=tank_size,
             x=x,
             y=y,

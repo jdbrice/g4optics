@@ -46,6 +46,25 @@ def parse_insert_location(value: str) -> tuple[str, str]:
     return command, anchor
 
 
+def parse_file_insert(value: str) -> tuple[Path, str]:
+    if "=" not in value:
+        raise argparse.ArgumentTypeError(
+            f"Invalid --insert-file-before {value!r}; expected FILE=ANCHOR"
+        )
+    file_path, anchor = value.split("=", 1)
+    file_path = file_path.strip()
+    anchor = anchor.strip()
+    if not file_path:
+        raise argparse.ArgumentTypeError(
+            f"Invalid --insert-file-before {value!r}; file path is empty"
+        )
+    if not anchor.startswith("/"):
+        raise argparse.ArgumentTypeError(
+            f"Invalid anchor in --insert-file-before {value!r}; anchor must start with /"
+        )
+    return Path(file_path), anchor
+
+
 def split_active_and_comment(line: str) -> tuple[str, str, str]:
     newline = "\n" if line.endswith("\n") else ""
     body = line[:-1] if newline else line
@@ -94,14 +113,25 @@ def generate_macro(
     template_lines: list[str],
     replacements: OrderedDict[str, str],
     required_commands: set[str],
+    removed_commands: set[str] | None = None,
+    file_insertions: list[tuple[Path, str]] | None = None,
     insert_before: str = DEFAULT_INSERT_BEFORE,
     insert_before_by_command: dict[str, str] | None = None,
 ) -> list[str]:
     if insert_before_by_command is None:
         insert_before_by_command = {}
+    if removed_commands is None:
+        removed_commands = set()
+    if file_insertions is None:
+        file_insertions = []
+
+    output = [
+        line for line in template_lines
+        if (command_name(line) not in removed_commands)
+    ]
 
     command_locations: dict[str, list[int]] = {}
-    for index, line in enumerate(template_lines):
+    for index, line in enumerate(output):
         command = command_name(line)
         if command is None:
             continue
@@ -115,7 +145,6 @@ def generate_macro(
                 "refusing ambiguous replacement"
             )
 
-    output = list(template_lines)
     inserted: list[tuple[str, str]] = []
     for command, arguments in replacements.items():
         locations = command_locations.get(command, [])
@@ -147,6 +176,26 @@ def generate_macro(
                 format_command_line(command, arguments) for command, arguments in commands
             ]
             output[insert_index:insert_index] = insert_lines
+
+    for file_path, anchor in file_insertions:
+        try:
+            insert_lines = file_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        except OSError as exc:
+            raise ValueError(f"Cannot read inserted macro fragment {file_path}: {exc}") from exc
+        if insert_lines and not insert_lines[-1].endswith("\n"):
+            insert_lines[-1] += "\n"
+
+        insert_index = None
+        for index, line in enumerate(output):
+            if command_name(line) == anchor:
+                insert_index = index
+                break
+        if insert_index is None:
+            insert_index = len(output)
+            if output and output[-1].strip():
+                output.append("\n")
+                insert_index = len(output)
+        output[insert_index:insert_index] = insert_lines
 
     generated_commands = {
         command for line in output if (command := command_name(line)) is not None
@@ -193,6 +242,21 @@ def build_parser() -> argparse.ArgumentParser:
             "the default insertion point. Repeat as needed."
         ),
     )
+    parser.add_argument(
+        "--remove",
+        action="append",
+        default=[],
+        metavar="COMMAND",
+        help="Remove every active occurrence of a Geant4 macro command.",
+    )
+    parser.add_argument(
+        "--insert-file-before",
+        action="append",
+        default=[],
+        type=parse_file_insert,
+        metavar="FILE=ANCHOR",
+        help="Insert a macro fragment file before ANCHOR. Repeat as needed.",
+    )
     return parser
 
 
@@ -206,6 +270,8 @@ def main() -> int:
         template_lines,
         replacements,
         required_commands,
+        removed_commands=set(args.remove),
+        file_insertions=args.insert_file_before,
         insert_before=args.insert_before,
         insert_before_by_command=dict(args.insert_missing_before),
     )

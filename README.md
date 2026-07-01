@@ -289,18 +289,18 @@ Now match the actual experimental driver. Sr-90 is a β⁻ emitter widely used a
 ### 10.1 The Sr-90 Beta Spectrum
 Sr-90 decays to Y-90 (β⁻, endpoint ≈ 0.546 MeV), and Y-90 in turn decays β⁻ with a much higher endpoint (≈ 2.28 MeV). The electrons hitting your tile are therefore **not monoenergetic** — they follow a continuous beta spectrum dominated by the Y-90 high-energy tail. Modeling this correctly is important because low-energy betas barely penetrate the tile while the energetic Y-90 betas behave like minimum-ionizing particles.
 
-Two options, in increasing realism:
-1. **Decay-based:** Use the radioactive decay physics. Place a `Sr90` ion as the primary (`/gps/particle ion` with `/gps/ion 38 90`) and let `G4RadioactiveDecay` produce the betas, enabling the full Sr-90 → Y-90 → Zr-90 chain. This is the most faithful but requires care that the decay chain and the `G4RadioactiveDecayPhysics` constructor are registered in your physics list.
-2. **Spectrum-based:** Supply the combined beta energy spectrum directly to GPS as a histogram:
+There are two useful implementations with different tradeoffs:
+1. **Spectrum-based:** Supply the combined beta energy spectrum directly to GPS as a histogram:
    ```
    /gps/ene/type Arb
-   /gps/hist/type energy
+   /gps/hist/type arb
    # ... /gps/hist/point E prob   pairs defining the spectrum ...
    /gps/hist/inter Lin
    ```
-   This is simpler and faster, and decouples the source spectrum from decay-physics bookkeeping.
+   This is the Week 10.1 production default in this repository (`--source-model sr90-spectrum`). It is simple, fast, reproducible, and decouples the source spectrum from decay-physics bookkeeping.
+2. **Decay-based:** Use the radioactive decay physics. Place a `Sr90` ion as the primary (`/gps/particle ion` with `/gps/ion 38 90`) and let `G4RadioactiveDecay` produce the betas, enabling the full Sr-90 -> Y-90 -> Zr-90 chain. This is the most faithful representation of the decay process, but it requires care that the decay chain and the `G4RadioactiveDecayPhysics` constructor are registered in your physics list.
 
-Either way, **document which approach you chose and why**, and verify the sampled spectrum by histogramming the primary electron energies.
+The older `sr90Beta` sampler is retained only as `--source-model sr90-empirical` / `--electron-energy-mode sr90Beta` for historical comparison. Whichever production approach is used, **document which approach you chose and why**, and verify the sampled spectrum by histogramming the primary electron energies.
 
 ### 10.2 Beam Divergence
 A real collimated source has angular spread. Use GPS to give the beam a finite divergence of a specified number of milliradians:
