@@ -966,12 +966,6 @@ if [[ "${SOURCE_MODE}" == "auto" ]]; then
   fi
 fi
 
-if [[ "${SOURCE_MODE}" == "gps" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" &&
-      "${ELECTRON_ENERGY_MODE_OVERRIDE}" != "fixed" ]]; then
-  echo "GPS scan mode currently supports fixed energy only; Sr-90 GPS is a Week 10 task." >&2
-  exit 1
-fi
-
 case "${SOURCE_MODE}" in
   gps)
     position_cmd="/gps/pos/centre"
@@ -1733,10 +1727,11 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       --require "/opnovice2/surfacePreset"
     )
   fi
-  if [[ "${SOURCE_MODE}" == "gun" ]]; then
+  if [[ "${SOURCE_MODE}" == "gun" || "${electron_energy_mode}" != "fixed" ]]; then
     macro_args+=(
       --set "/opnovice2/gun/electronEnergyMode=${electron_energy_mode}"
       --require "/opnovice2/gun/electronEnergyMode"
+      --insert-missing-before "/opnovice2/gun/electronEnergyMode=/run/beamOn"
     )
   fi
 

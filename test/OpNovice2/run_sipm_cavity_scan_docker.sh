@@ -6,6 +6,9 @@ cd "${SCRIPT_DIR}"
 
 CONTAINER="${G4_DOCKER_CONTAINER:-g4dev}"
 CONTAINER_WORKDIR="${G4_DOCKER_WORKDIR:-/work/g4optics/test/OpNovice2}"
+CONTAINER_BUILD_DIR="${G4_DOCKER_BUILD_DIR:-build}"
+CONTAINER_BUILD_JOBS="${G4_DOCKER_BUILD_JOBS:-4}"
+FORCE_REBUILD_VALUE="${G4_FORCE_REBUILD:-0}"
 
 N_EVENTS_VALUE="${N_EVENTS:-100}"
 DRY_RUN_VALUE="${DRY_RUN:-0}"
@@ -38,6 +41,9 @@ All scan options are passed through, including --surface-preset and --dimple.
 Environment:
   G4_DOCKER_CONTAINER=g4dev
   G4_DOCKER_WORKDIR=/work/g4optics/test/OpNovice2
+  G4_DOCKER_BUILD_DIR=build
+  G4_DOCKER_BUILD_JOBS=4
+  G4_FORCE_REBUILD=0
   N_EVENTS=100
   DRY_RUN=0
   SOURCE_MODE=auto
@@ -103,10 +109,39 @@ case "${PLOT_WITH_ROOT_VALUE}" in
     ;;
 esac
 
+case "${FORCE_REBUILD_VALUE}" in
+  1|true|TRUE|yes|YES|on|ON)
+    FORCE_REBUILD_VALUE="1"
+    ;;
+  0|false|FALSE|no|NO|off|OFF)
+    FORCE_REBUILD_VALUE="0"
+    ;;
+  *)
+    echo "Invalid G4_FORCE_REBUILD: ${FORCE_REBUILD_VALUE}. Use 1 or 0." >&2
+    exit 1
+    ;;
+esac
+
+docker exec \
+  "${CONTAINER}" \
+  bash -lc '
+    set -euo pipefail
+    cd "$1"
+    build_dir="$2"
+    build_jobs="$3"
+    force_rebuild="$4"
+    if [[ "${force_rebuild}" == "1" || ! -x "${build_dir}/OpNovice2" ]]; then
+      cmake -S . -B "${build_dir}"
+      cmake --build "${build_dir}" -j"${build_jobs}"
+    fi
+  ' \
+  bash "${CONTAINER_WORKDIR}" "${CONTAINER_BUILD_DIR}" "${CONTAINER_BUILD_JOBS}" "${FORCE_REBUILD_VALUE}"
+
 docker exec \
   -e "N_EVENTS=${N_EVENTS_VALUE}" \
   -e "DRY_RUN=${DRY_RUN_VALUE}" \
   -e "SOURCE_MODE=${SOURCE_MODE_VALUE}" \
+  -e "OPNOVICE2_EXECUTABLE=./${CONTAINER_BUILD_DIR}/OpNovice2" \
   -e "PLOT_WITH_ROOT=${PLOT_WITH_ROOT_VALUE}" \
   -e "ROOT_COMMAND=${ROOT_COMMAND_VALUE}" \
   -e "ROOT_PLOT_SKIP_LOCAL=1" \

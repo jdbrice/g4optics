@@ -108,7 +108,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     auto particle = fGeneralParticleSource->GetParticleDefinition();
     if (!particle || particle->GetParticleName() != "e-") {
       G4ExceptionDescription msg;
-      msg << "Electron energy mode sr90Beta requires /gun/particle e-.";
+      msg << "Electron energy mode sr90Beta requires primary particle e-.";
       G4Exception("PrimaryGeneratorAction::GeneratePrimaries",
                   "OpNovice2_Gun_001",
                   FatalException,

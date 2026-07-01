@@ -151,7 +151,7 @@ Submit one or two arrays at a time, using `-A` on the command line rather than s
 ```bash
 G4_DATA_ROOT=~/geant4-data/11.4.2 \
 SCAN_ARGS_FILE=hpc/osc/generated/beam_sigma_bottom_center/week9_beam_sigma_1mm_thickness_5mm_21x21_100events.txt \
-  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441%20 hpc/osc/submit_scan.sbatch
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441 hpc/osc/submit_scan.sbatch
 ```
 
 Merge after completion:
@@ -168,6 +168,32 @@ test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv
 ```
 
 For a quick physics QA of a Gaussian beam run, inspect the ROOT ntuple columns `shoot_x_mm` and `shoot_y_mm`; their mean should be near the scan center, and their RMS should be close to the requested `beam_sigma`.
+
+For Week 10 Sr-90 source-model scans, keep the GPS point-level workflow and add
+`--electron-energy-mode sr90Beta`. This uses the OpNovice2 empirical Sr-90/Y-90
+beta sampler rather than a full radioactive-decay chain.
+
+```bash
+mkdir -p hpc/osc/generated/week10_sr90
+
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week10_sr90/week10_sr90_thickness_5mm_21x21_100events.txt \
+  --description "Week 10 Sr-90 beta source, 5 mm thickness, 21x21, 100 events per point" \
+  --events 100 \
+  --source-mode gps \
+  --tank-size "100 100 5 mm" \
+  --electron-energy-mode sr90Beta \
+  --x-min -50 --x-max 50 \
+  --y-min -50 --y-max 50 \
+  --step 5 --grid-unit mm
+
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/generated/week10_sr90/week10_sr90_thickness_5mm_21x21_100events.txt \
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441 hpc/osc/submit_scan.sbatch
+```
+
+The default merge label for this source mode is inferred from `run_config.json`,
+for example `test/OpNovice2/scan_runs/week10_5mm_thickness_sr90Beta_source/efficiency_map.csv`.
 
 Useful environment variables:
 
