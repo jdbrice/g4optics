@@ -10,7 +10,7 @@
 **Status:** Weeks 1–12 below are complete (working environment, tuned geometry/surface model, Sr-90 spectrum, validated position-scan framework). This phase uses that machinery to match real lab measurements and then make predictions for a new tile design.
 
 ### Step 0: Verify Actual Tile Dimensions
-Before building any geometry, measure the actual lab tiles with calipers rather than trusting the nominal labels. Some tiles nominally called "10×10 mm" are rough-cut and are actually closer to 11.5×11.5 mm. Measure each tile used in this comparison (nominal 5×5×16mm and 10×10×16mm) and use the **measured** dimensions in the Geant4 geometry — a few percent size mismatch is enough to bias the uniformity comparison. Record the measured dimensions in the analysis notes.
+Before building any geometry, measure the actual lab tiles with calipers rather than trusting the nominal labels. Some tiles nominally called "10cm×10cm" are rough-cut and are actually closer to 11.5×11.5 cm. Measure each tile used in this comparison (nominal 5cm×5cm×16mm and 10cm×10×16mm) and use the **measured** dimensions in the Geant4 geometry — a few percent size mismatch is enough to bias the uniformity comparison. Record the measured dimensions in the analysis notes.
 
 ### Step 1: Simulate the Matching Geometries
 Build Geant4 geometries for the two lab test tiles using their measured (not nominal) dimensions. Use the realistic beta energy spectrum (Week 10 approach — decay-based or spectrum-based) rather than a monoenergetic beam; this is essential for the light yield comparison to be meaningful.
@@ -24,13 +24,13 @@ The lab beam has some finite transverse (x–y) spot size at the tile face that 
 This scan does double duty: it validates the simulation against data, and it produces an estimate of the actual beam spot size in the lab, which is not otherwise directly measured.
 
 ### Step 3: Validation Deliverables
-1. **Comparison plots** of light-yield uniformity vs. position, data vs. simulation, for both the 5×5×16mm and 10×10×16mm tiles, at the best-fit beam spot size.
+1. **Comparison plots** of light-yield uniformity vs. position, data vs. simulation, for both the 5cm×5cm×16mm and 10cm×10cm×16mm tiles, at the best-fit beam spot size.
 2. **Beam spot size estimate** (best-fit transverse profile parameter, with an uncertainty), derived from the Step 2 scan.
 
 Do not proceed to Step 4 until both of the above are validated — i.e., the simulation reproduces the shape of the data's uniformity curve within uncertainties.
 
 ### Step 4: Predictions for the 10×10×24mm Tile
-Using the validated model (geometry, surface finish, spectrum, beam spot size) from Steps 1–3, simulate the new 10×10×24mm tile and predict light uniformity and yield for different SiPM placements, at minimum:
+Using the validated model (geometry, surface finish, spectrum, beam spot size) from Steps 1–3, simulate the new 10cm×10cm×24mm tile and predict light uniformity and yield for different SiPM placements, at minimum:
 - Center-back
 - Center-side
 - Center-back + dimple

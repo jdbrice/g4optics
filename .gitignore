@@ -4,3 +4,4 @@ __pycache__/
 *.sif
 slurm-*.out
 test/OpNovice2/LOCAL_USAGE_GUIDE.zh.md
+.vscode/
