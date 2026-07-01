@@ -1630,7 +1630,9 @@ write_run_config
 cp "${RUN_CONFIG}" "${LATEST_RUN_CONFIG}"
 cp "${POINTS_CSV}" "${LATEST_POINTS_CSV}"
 if [[ -L "${LATEST_RUN_LINK}" || ! -e "${LATEST_RUN_LINK}" ]]; then
-  ln -sfn "${RUN_DIR}" "${LATEST_RUN_LINK}"
+  if ! ln -sfn "${RUN_DIR}" "${LATEST_RUN_LINK}"; then
+    echo "Warning: not updating ${LATEST_RUN_LINK}; another scan task likely updated it concurrently." >&2
+  fi
 else
   echo "Not updating ${LATEST_RUN_LINK}: it exists and is not a symlink." >&2
 fi
