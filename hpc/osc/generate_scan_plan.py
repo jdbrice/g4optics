@@ -137,7 +137,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-mode", default="gps", choices=["auto", "gun", "gps"])
     parser.add_argument(
         "--source-model",
-        choices=["fixed-electron", "sr90-spectrum", "sr90-empirical"],
+        choices=["fixed-electron", "sr90-spectrum", "sr90-empirical", "sr90-decay"],
         help="Canonical source model override passed to each point.",
     )
     parser.add_argument(

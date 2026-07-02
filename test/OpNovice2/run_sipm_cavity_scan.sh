@@ -66,6 +66,11 @@ SR90_ACTIVITY_WEIGHT="1.0"
 Y90_ACTIVITY_WEIGHT="1.0"
 SR90_FERMI_CORRECTION="true"
 SR90_INCIDENT_MODEL="bare_sr90_y90_beta_emission_no_encapsulation_air_or_collimator"
+SR90_DECAY_MODEL="geant4_radioactive_decay_sr90_chain_v1"
+SR90_DECAY_PRIMARY_ION="Sr-90"
+SR90_DECAY_GPS_ION="38 90 0 0"
+SR90_DECAY_RDM_TIME_THRESHOLD="1000 year"
+SR90_DECAY_EXPECTED_CHAIN="Sr-90 -> Y-90 -> Zr-90"
 
 usage() {
   cat <<'USAGE'
@@ -80,7 +85,8 @@ Usage:
 
 Source options:
   --source-mode MODE                  auto, gun, or gps
-  --source-model MODEL                fixed-electron, sr90-spectrum, or sr90-empirical
+  --source-model MODEL                fixed-electron, sr90-spectrum,
+                                      sr90-empirical, or sr90-decay
   --template-macro FILE               override the selected template macro
   --primary-energy "VALUE UNIT"       override primary energy, e.g. "0.5 MeV"
   --electron-energy-mode MODE         fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical
@@ -567,10 +573,10 @@ esac
 
 if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
   case "${SOURCE_MODEL_OVERRIDE}" in
-    fixed-electron|sr90-spectrum|sr90-empirical)
+    fixed-electron|sr90-spectrum|sr90-empirical|sr90-decay)
       ;;
     *)
-      echo "Invalid --source-model: ${SOURCE_MODEL_OVERRIDE}. Use fixed-electron, sr90-spectrum, or sr90-empirical." >&2
+      echo "Invalid --source-model: ${SOURCE_MODEL_OVERRIDE}. Use fixed-electron, sr90-spectrum, sr90-empirical, or sr90-decay." >&2
       exit 1
       ;;
   esac
@@ -1157,13 +1163,17 @@ fi
 if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
   source_model="${SOURCE_MODEL_OVERRIDE}"
   case "${source_model}" in
-    fixed-electron|sr90-spectrum)
+    fixed-electron|sr90-spectrum|sr90-decay)
       electron_energy_mode="fixed"
       ;;
     sr90-empirical)
       electron_energy_mode="sr90Beta"
       ;;
   esac
+fi
+if [[ "${source_model}" == "sr90-decay" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
+  echo "--electron-energy-mode is incompatible with --source-model sr90-decay; decay mode uses a Sr-90 ion primary." >&2
+  exit 1
 fi
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
   case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
@@ -1217,6 +1227,18 @@ if [[ "${source_model}" == "sr90-spectrum" ]]; then
     exit 1
   fi
   primary_energy="${SR90_SPECTRUM_MODEL} spectrum"
+fi
+if [[ "${source_model}" == "sr90-decay" ]]; then
+  if [[ "${SOURCE_MODE}" != "gps" ]]; then
+    echo "--source-model sr90-decay requires --source-mode gps." >&2
+    exit 1
+  fi
+  if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+    echo "--primary-energy is incompatible with --source-model sr90-decay; the GPS ion is created at rest." >&2
+    exit 1
+  fi
+  primary_particle="ion"
+  primary_energy="${SR90_DECAY_PRIMARY_ION} ion at rest"
 fi
 if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
   primary_energy="${PRIMARY_ENERGY_OVERRIDE}"
@@ -1562,6 +1584,41 @@ write_run_config() {
       printf 'null'
     fi
     printf ',\n'
+    printf '    "decay_model": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_primary_ion": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_PRIMARY_ION}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_gps_ion": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_GPS_ION}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_rdm_threshold_for_very_long_decay_time": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_RDM_TIME_THRESHOLD}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_expected_chain": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_EXPECTED_CHAIN}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
     printf '    "primary_particle": "%s",\n' "$(json_string "${primary_particle}")"
     printf '    "primary_energy": "%s",\n' "$(json_string "${primary_energy}")"
     printf '    "electron_energy_mode": "%s",\n' "$(json_string "${electron_energy_mode}")"
@@ -1725,7 +1782,7 @@ write_run_config() {
 
 write_efficiency_map() {
   {
-    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,primary_energy_min_mev,primary_energy_max_mev,summary_csv,root,log\n'
+    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,primary_energy_min_mev,primary_energy_max_mev,decay_beta_count,decay_beta_energy_mean_mev,decay_beta_energy_rms_mev,decay_beta_energy_min_mev,decay_beta_energy_max_mev,summary_csv,root,log\n'
     read -r _points_header
     while IFS=, read -r tag x y z unit macro root log; do
       summary="${root%.root}_summary.csv"
@@ -1739,22 +1796,23 @@ write_efficiency_map() {
         exit 1
       fi
       read -r _summary_header < "${summary}"
-      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z primary_energy_events primary_energy_mean primary_energy_rms primary_energy_min primary_energy_max < <(
+      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z primary_energy_events primary_energy_mean primary_energy_rms primary_energy_min primary_energy_max decay_beta_count decay_beta_mean decay_beta_rms decay_beta_min decay_beta_max < <(
         awk -F, 'NR == 2 {
-          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
         }' "${summary}"
       )
       if [[ -z "${events:-}" || -z "${generated:-}" || -z "${scint:-}" || -z "${detected:-}" || -z "${efficiency:-}" ]]; then
         echo "Could not parse scan summary CSV: ${summary}" >&2
         exit 1
       fi
-      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
         "${tag}" "${x}" "${y}" "${z}" "${unit}" \
         "${events}" "${generated}" "${scint}" "${detected}" "${efficiency}" \
         "${shoot_events}" "${shoot_x}" "${shoot_y}" "${shoot_z}" \
         "${hit_events}" "${hit_x}" "${hit_y}" "${hit_z}" \
         "${scint_centroid_events}" "${scint_centroid_x}" "${scint_centroid_y}" "${scint_centroid_z}" \
         "${primary_energy_events}" "${primary_energy_mean}" "${primary_energy_rms}" "${primary_energy_min}" "${primary_energy_max}" \
+        "${decay_beta_count}" "${decay_beta_mean}" "${decay_beta_rms}" "${decay_beta_min}" "${decay_beta_max}" \
         "${summary}" "${root}" "${log}"
     done
   } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
@@ -1801,6 +1859,9 @@ echo "Source mode: ${SOURCE_MODE}"
 echo "Source model: ${source_model}"
 if [[ "${source_model}" == "sr90-spectrum" ]]; then
   echo "Spectrum model: ${SR90_SPECTRUM_MODEL} (${SR90_SPECTRUM_TABLE})"
+fi
+if [[ "${source_model}" == "sr90-decay" ]]; then
+  echo "Decay model: ${SR90_DECAY_MODEL}; GPS ion ${SR90_DECAY_GPS_ION}; RDM threshold ${SR90_DECAY_RDM_TIME_THRESHOLD}"
 fi
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
@@ -1851,7 +1912,24 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     --require "/opnovice2/sipm/localPosition"
   )
 
-  if [[ "${source_model}" == "sr90-spectrum" ]]; then
+  if [[ "${source_model}" == "sr90-decay" ]]; then
+    macro_args+=(
+      --set "${particle_cmd}=ion"
+      --set "${energy_cmd}=0 eV"
+      --set "/gps/ion=${SR90_DECAY_GPS_ION}"
+      --set "/process/had/rdm/analogueMC=true"
+      --set "/process/had/rdm/thresholdForVeryLongDecayTime=${SR90_DECAY_RDM_TIME_THRESHOLD}"
+      --remove "/opnovice2/gun/electronEnergyMode"
+      --require "${particle_cmd}"
+      --require "/gps/ion"
+      --require "${energy_cmd}"
+      --require "/process/had/rdm/analogueMC"
+      --require "/process/had/rdm/thresholdForVeryLongDecayTime"
+      --insert-missing-before "/gps/ion=/gps/pos/type"
+      --insert-missing-before "/process/had/rdm/analogueMC=/analysis/setFileName"
+      --insert-missing-before "/process/had/rdm/thresholdForVeryLongDecayTime=/analysis/setFileName"
+    )
+  elif [[ "${source_model}" == "sr90-spectrum" ]]; then
     macro_args+=(
       --remove "${energy_cmd}"
       --remove "/opnovice2/gun/electronEnergyMode"

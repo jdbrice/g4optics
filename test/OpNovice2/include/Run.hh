@@ -147,8 +147,9 @@ class Run : public G4Run
     void EndOfRun();
 
     // Per-event bookkeeping for scan ntuples.
-    void BeginEvent();
+    void BeginEvent(G4int eventID = -1);
     void AddPrimaryKineticEnergy(G4double energy);
+    void AddDecayBetaEnergy(G4double energy);
     void AddShootPosition(const G4ThreeVector& pos);
     void SetPrimaryHitPosition(const G4ThreeVector& pos);
     void AddScintillationCentroid(const G4ThreeVector& pos);
@@ -178,6 +179,12 @@ class Run : public G4Run
     G4double GetPrimaryKineticEnergyRms() const;
     G4double GetPrimaryKineticEnergyMin() const { return fPrimaryEnergyMin; }
     G4double GetPrimaryKineticEnergyMax() const { return fPrimaryEnergyMax; }
+    G4int GetCurrentEventID() const { return fCurrentEventID; }
+    G4int GetDecayBetaCount() const { return fDecayBetaCount; }
+    G4double GetDecayBetaEnergyMean() const;
+    G4double GetDecayBetaEnergyRms() const;
+    G4double GetDecayBetaEnergyMin() const { return fDecayBetaEnergyMin; }
+    G4double GetDecayBetaEnergyMax() const { return fDecayBetaEnergyMax; }
 
     // SiPM Detection
     void AddSiPMDetection()
@@ -226,6 +233,7 @@ class Run : public G4Run
     G4int fSiPMDetectionCount = 0;
 
     // Current event counts used for the Week 5.3 scan ntuple.
+    G4int fCurrentEventID = -1;
     G4int fEventGeneratedOpticalCount = 0;
     G4int fEventScintCount = 0;
     G4int fEventSiPMDetectionCount = 0;
@@ -247,6 +255,13 @@ class Run : public G4Run
     G4double fPrimaryEnergySum2 = 0.;
     G4double fPrimaryEnergyMin = std::numeric_limits<G4double>::infinity();
     G4double fPrimaryEnergyMax = -std::numeric_limits<G4double>::infinity();
+
+    // Per-run beta-electron statistics from radioactive decay tracks.
+    G4int fDecayBetaCount = 0;
+    G4double fDecayBetaEnergySum = 0.;
+    G4double fDecayBetaEnergySum2 = 0.;
+    G4double fDecayBetaEnergyMin = std::numeric_limits<G4double>::infinity();
+    G4double fDecayBetaEnergyMax = -std::numeric_limits<G4double>::infinity();
 };
 
 #endif /* Run_h */

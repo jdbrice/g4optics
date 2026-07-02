@@ -204,6 +204,45 @@ cd test/OpNovice2
 root -b -q 'plot_sr90_spectrum_qa.C("scan_runs/week10_5mm_thickness_sr90_spectrum_source")'
 ```
 
+Week 10.1b also provides a validation-first decay source model:
+`--source-model sr90-decay`. It uses a GPS Sr-90 ion primary at rest and
+`G4RadioactiveDecayPhysics`; this is not the Week 10 default plan until the
+decay beta spectrum has been checked. Use a new build directory or force a
+rebuild for the first OSC smoke so the executable includes the decay physics
+registration:
+
+```bash
+mkdir -p hpc/osc/generated/week10_sr90_decay
+
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week10_sr90_decay/week10_sr90_decay_5mm_center_100events.txt \
+  --description "Week 10.1b Sr-90 decay source smoke, 5 mm thickness, center point" \
+  --events 100 \
+  --source-mode gps \
+  --source-model sr90-decay \
+  --tank-size "100 100 5 mm" \
+  --x-min 0 --x-max 0 \
+  --y-min 0 --y-max 0 \
+  --step 5 --grid-unit mm
+
+G4_FORCE_REBUILD=1 G4_BUILD_DIR=build-osc-sr90-decay \
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/generated/week10_sr90_decay/week10_sr90_decay_5mm_center_100events.txt \
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-1 hpc/osc/submit_scan.sbatch
+```
+
+After copying the ROOT outputs locally, validate with:
+
+```bash
+cd test/OpNovice2
+root -b -q 'plot_sr90_decay_spectrum_qa.C("scan_runs/week10_5mm_thickness_sr90_decay_source","scan_runs/week10_5mm_thickness_sr90_spectrum_source")'
+```
+
+Acceptance is spectrum-first: the `decay_betas` ntuple should include both the
+Sr-90 endpoint near `0.546 MeV` and the Y-90 high-energy tail near `2.28 MeV`.
+If the decay run only reaches the Sr-90 endpoint, the chain is not yet suitable
+for production scans; use the already validated `sr90-spectrum` plan instead.
+
 Useful environment variables:
 
 - `G4_APPTAINER_IMAGE=/path/to/geant4.sif`

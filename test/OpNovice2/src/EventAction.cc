@@ -13,11 +13,11 @@
 #include <cmath>
 #include <limits>
 
-void EventAction::BeginOfEventAction(const G4Event*)
+void EventAction::BeginOfEventAction(const G4Event* event)
 {
   auto run = static_cast<Run*>(G4RunManager::GetRunManager()->GetNonConstCurrentRun());
   if (run) {
-    run->BeginEvent();
+    run->BeginEvent(event ? event->GetEventID() : -1);
   }
 }
 
