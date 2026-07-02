@@ -46,9 +46,12 @@ CUSTOM_STEP=""
 CUSTOM_GRID_UNIT=""
 CUSTOM_BEAM_Z=""
 CUSTOM_BEAM_SIGMA=""
+CUSTOM_BEAM_DIVERGENCE_MRAD=""
 BEAM_Z_INFERRED="0"
 BEAM_PROFILE="point"
 BEAM_SIGMA=""
+BEAM_ANGULAR_MODEL="pencil"
+BEAM_DIVERGENCE_MRAD=""
 
 BEAM_DIRECTION="0 0 -1"
 SCAN_RUNS_DIR="scan_runs"
@@ -118,6 +121,8 @@ Grid / beam options:
   --beam-sigma VALUE                  circular Gaussian GPS beam sigma in
                                       --grid-unit units; 0 or omitted keeps
                                       the point-source GPS position
+  --beam-divergence-mrad VALUE        GPS beam angular sigma_r in mrad;
+                                      0 or omitted keeps the pencil beam
 
 Output / execution options:
   --events N                          events per scan point; overrides N_EVENTS
@@ -458,6 +463,18 @@ while [[ $# -gt 0 ]]; do
       CUSTOM_BEAM_SIGMA="${1#*=}"
       shift
       ;;
+    --beam-divergence-mrad)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --beam-divergence-mrad" >&2
+        exit 1
+      fi
+      CUSTOM_BEAM_DIVERGENCE_MRAD="$2"
+      shift 2
+      ;;
+    --beam-divergence-mrad=*)
+      CUSTOM_BEAM_DIVERGENCE_MRAD="${1#*=}"
+      shift
+      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -584,6 +601,11 @@ fi
 
 if [[ -n "${CUSTOM_BEAM_SIGMA}" && "${SOURCE_MODE}" != "gps" ]]; then
   echo "--beam-sigma requires --source-mode gps." >&2
+  exit 1
+fi
+
+if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" && "${SOURCE_MODE}" != "gps" ]]; then
+  echo "--beam-divergence-mrad requires --source-mode gps." >&2
   exit 1
 fi
 
@@ -1106,6 +1128,17 @@ if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then
   fi
 fi
 
+if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]]; then
+  require_nonnegative_number "--beam-divergence-mrad" "${CUSTOM_BEAM_DIVERGENCE_MRAD}"
+  if awk -v sigma="${CUSTOM_BEAM_DIVERGENCE_MRAD}" 'BEGIN { exit(sigma > 0 ? 0 : 1) }'; then
+    BEAM_ANGULAR_MODEL="beam2d"
+    BEAM_DIVERGENCE_MRAD="${CUSTOM_BEAM_DIVERGENCE_MRAD}"
+  else
+    BEAM_ANGULAR_MODEL="pencil"
+    BEAM_DIVERGENCE_MRAD=""
+  fi
+fi
+
 X_MIN_VALUE="${XS[0]}"
 X_MAX_VALUE="${XS[$((${#XS[@]} - 1))]}"
 Y_MIN_VALUE="${YS[0]}"
@@ -1173,6 +1206,10 @@ if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
 fi
 if [[ "${source_model}" == "sr90-decay" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
   echo "--electron-energy-mode is incompatible with --source-model sr90-decay; decay mode uses a Sr-90 ion primary." >&2
+  exit 1
+fi
+if [[ "${source_model}" == "sr90-decay" && "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+  echo "--beam-divergence-mrad is incompatible with --source-model sr90-decay; decay beta directions come from radioactive decay physics." >&2
   exit 1
 fi
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
@@ -1510,6 +1547,7 @@ write_run_config() {
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
+    printf '    "beam_divergence_mrad": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]]; then echo true; else echo false; fi)"
     printf '    "dimple": %s\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
@@ -1635,7 +1673,16 @@ write_run_config() {
       printf 'null'
     fi
     printf ',\n'
-    printf '    "unit": "%s"\n' "$(json_string "${GRID_UNIT}")"
+    printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
+    printf '    "angular_model": "%s",\n' "$(json_string "${BEAM_ANGULAR_MODEL}")"
+    printf '    "divergence_mrad": '
+    if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+      printf '%s' "$(format_num "${BEAM_DIVERGENCE_MRAD}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "direction": "%s"\n' "$(json_string "${BEAM_DIRECTION}")"
     printf '  },\n'
     printf '  "sipm": {\n'
     printf '    "face": "%s",\n' "$(json_string "${sipm_face}")"
@@ -1875,6 +1922,11 @@ if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
 else
   echo "Beam profile: point"
 fi
+if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+  echo "Beam angular divergence: beam2d sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+else
+  echo "Beam angular divergence: pencil"
+fi
 echo "Events per point: ${N_EVENTS}"
 echo "Electron energy mode: ${electron_energy_mode}"
 if [[ -n "${tank_size}" ]]; then
@@ -1980,6 +2032,16 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       --require "/gps/pos/sigma_y"
       --insert-missing-before "/gps/pos/sigma_x=/gps/direction"
       --insert-missing-before "/gps/pos/sigma_y=/gps/direction"
+    )
+  fi
+  if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+    macro_args+=(
+      --set "/gps/ang/type=beam2d"
+      --set "/gps/ang/sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --require "/gps/ang/type"
+      --require "/gps/ang/sigma_r"
+      --insert-missing-before "/gps/ang/type=/gps/direction"
+      --insert-missing-before "/gps/ang/sigma_r=/gps/direction"
     )
   fi
   if [[ -n "${surface_preset}" ]]; then

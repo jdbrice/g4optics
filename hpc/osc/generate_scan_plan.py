@@ -62,6 +62,7 @@ def build_scan_args(
     dimple_sipm_mode: str,
     beam_z: str | None,
     beam_sigma: str | None,
+    beam_divergence_mrad: str | None,
     electron_energy_mode: str | None,
     sipm_face: str | None,
     sipm_local_position: str | None,
@@ -97,6 +98,8 @@ def build_scan_args(
         args.extend(["--beam-z", beam_z])
     if beam_sigma is not None:
         args.extend(["--beam-sigma", beam_sigma])
+    if beam_divergence_mrad is not None:
+        args.extend(["--beam-divergence-mrad", beam_divergence_mrad])
     if source_model is not None:
         args.extend(["--source-model", source_model])
     if primary_energy is not None:
@@ -169,6 +172,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--beam-z", help="Optional beam z value passed to each point.")
     parser.add_argument("--beam-sigma", help="Optional circular GPS beam sigma passed to each point.")
     parser.add_argument(
+        "--beam-divergence-mrad",
+        help="Optional GPS beam angular sigma_r in milliradians passed to each point.",
+    )
+    parser.add_argument(
         "--electron-energy-mode",
         choices=["fixed", "sr90Spectrum", "sr90Beta", "sr90", "sr90Empirical"],
         help="Optional electron energy mode override passed to each point.",
@@ -192,6 +199,10 @@ def main() -> int:
         raise SystemExit("--events must be greater than 0")
     if args.beam_sigma is not None and args.source_mode != "gps":
         raise SystemExit("--beam-sigma requires --source-mode gps.")
+    if args.beam_divergence_mrad is not None and args.source_mode != "gps":
+        raise SystemExit("--beam-divergence-mrad requires --source-mode gps.")
+    if args.beam_divergence_mrad is not None and args.source_model == "sr90-decay":
+        raise SystemExit("--beam-divergence-mrad is not supported with --source-model sr90-decay.")
 
     xs = inclusive_axis(args.x_min, args.x_max, args.step)
     ys = inclusive_axis(args.y_min, args.y_max, args.step)
@@ -232,6 +243,7 @@ def main() -> int:
             dimple_sipm_mode=args.dimple_sipm_mode,
             beam_z=args.beam_z,
             beam_sigma=args.beam_sigma,
+            beam_divergence_mrad=args.beam_divergence_mrad,
             electron_energy_mode=args.electron_energy_mode,
             sipm_face=args.sipm_face,
             sipm_local_position=args.sipm_local_position,

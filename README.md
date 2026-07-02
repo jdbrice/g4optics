@@ -307,12 +307,23 @@ Whichever production approach is used, **document which approach you chose and w
 Week 10.1b does not replace Week 10.2. The next named study remains beam divergence; decay validation is part of source-model realism in Week 10.1.
 
 ### 10.2 Beam Divergence
-A real collimated source has angular spread. Use GPS to give the beam a finite divergence of a specified number of milliradians:
+A real collimated source has angular spread. The scan runner exposes this as
+`--beam-divergence-mrad VALUE`, independent of `--beam-sigma`:
 ```
 /gps/ang/type beam2d
-/gps/ang/sigma_r 5 mrad   # set to your measured/assumed divergence
+/gps/ang/sigma_r VALUE mrad
+/gps/direction 0 0 -1
 ```
-(Alternatively `/gps/ang/type iso` confined to a cone, depending on your collimator model.) Confirm that the divergence is small enough that the spot on the tile is consistent with the collimator geometry in the lab.
+Omitted or `0` keeps the previous pencil beam. A positive value requires
+`--source-mode gps` and records `beam.angular_model`, `beam.divergence_mrad`,
+and `beam.direction` in `run_config.json`.
+
+The first Week 10.2 pass is a small decision scan, not a full sensitivity
+sweep: compare `1 MeV fixed` and `Sr-90/Y-90 spectrum` at `0 mrad` and
+`10 mrad`. Reuse the existing no-divergence baselines when possible; only move
+to a `0, 5, 10, 20 mrad` sweep if the `0 -> 10 mrad` effect size is visible.
+`sr90-decay` remains a Week 10.1b cross-check tool and is not part of the
+Week 10.2 production matrix.
 
 ### 10.3 The Study
 Repeat the key scans (position, and your best thickness/finish/dimple combination) using the Sr-90 source model instead of a monoenergetic beam. This is the simulation configuration you will actually compare against lab data.

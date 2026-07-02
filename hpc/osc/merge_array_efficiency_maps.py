@@ -170,6 +170,18 @@ def beam_sigma_from_config(run_config: dict[str, object]) -> tuple[str, str] | N
     return sigma, unit
 
 
+def beam_divergence_from_config(run_config: dict[str, object]) -> tuple[str, str] | None:
+    beam = run_config.get("beam")
+    if not isinstance(beam, dict):
+        return None
+    if beam.get("angular_model") != "beam2d":
+        return None
+    divergence = number_token(beam.get("divergence_mrad"))
+    if divergence is None:
+        return None
+    return divergence, "mrad"
+
+
 def primary_energy_from_config(run_config: dict[str, object]) -> tuple[str, str] | None:
     simulation = run_config.get("simulation")
     if not isinstance(simulation, dict):
@@ -211,40 +223,64 @@ def auto_output_label(job_id: str, run_configs: list[dict[str, object]]) -> str:
     for run_config in run_configs:
         thickness = thickness_from_config(run_config)
         beam_sigma = beam_sigma_from_config(run_config)
+        beam_divergence = beam_divergence_from_config(run_config)
         source_model = source_model_from_config(run_config)
         if thickness and source_model:
             thickness_value, thickness_unit = thickness
+            parts = [f"week10_{thickness_value}{thickness_unit}_thickness"]
             if beam_sigma:
                 sigma_value, sigma_unit = beam_sigma
-                return (
-                    f"week10_{thickness_value}{thickness_unit}_thickness_"
-                    f"{sigma_value}{sigma_unit}_beam_sigma_{source_model}_source"
-                )
-            return (
-                f"week10_{thickness_value}{thickness_unit}_thickness_"
-                f"{source_model}_source"
-            )
+                parts.append(f"{sigma_value}{sigma_unit}_beam_sigma")
+            if beam_divergence:
+                divergence_value, divergence_unit = beam_divergence
+                parts.append(f"{divergence_value}{divergence_unit}_beam_divergence")
+            parts.append(f"{source_model}_source")
+            return "_".join(parts)
         electron_energy_mode = electron_energy_mode_from_config(run_config)
         if thickness and electron_energy_mode:
             thickness_value, thickness_unit = thickness
+            parts = [f"week10_{thickness_value}{thickness_unit}_thickness"]
             if beam_sigma:
                 sigma_value, sigma_unit = beam_sigma
-                return (
-                    f"week10_{thickness_value}{thickness_unit}_thickness_"
-                    f"{sigma_value}{sigma_unit}_beam_sigma_{electron_energy_mode}_source"
-                )
-            return (
-                f"week10_{thickness_value}{thickness_unit}_thickness_"
-                f"{electron_energy_mode}_source"
-            )
+                parts.append(f"{sigma_value}{sigma_unit}_beam_sigma")
+            if beam_divergence:
+                divergence_value, divergence_unit = beam_divergence
+                parts.append(f"{divergence_value}{divergence_unit}_beam_divergence")
+            parts.append(f"{electron_energy_mode}_source")
+            return "_".join(parts)
+        primary_energy = primary_energy_from_config(run_config)
+        if thickness and primary_energy and beam_divergence:
+            thickness_value, thickness_unit = thickness
+            energy_value, energy_unit = primary_energy
+            divergence_value, divergence_unit = beam_divergence
+            parts = [
+                f"week10_{thickness_value}{thickness_unit}_thickness",
+                f"{energy_value}{energy_unit}_energy",
+            ]
+            if beam_sigma:
+                sigma_value, sigma_unit = beam_sigma
+                parts.append(f"{sigma_value}{sigma_unit}_beam_sigma")
+            parts.append(f"{divergence_value}{divergence_unit}_beam_divergence")
+            return "_".join(parts)
         if thickness and beam_sigma:
             thickness_value, thickness_unit = thickness
             sigma_value, sigma_unit = beam_sigma
+            parts = [
+                f"week9_{thickness_value}{thickness_unit}_thickness",
+                f"{sigma_value}{sigma_unit}_beam_sigma",
+            ]
+            if beam_divergence:
+                divergence_value, divergence_unit = beam_divergence
+                parts.append(f"{divergence_value}{divergence_unit}_beam_divergence")
+                parts[0] = parts[0].replace("week9_", "week10_", 1)
+            return "_".join(parts)
+        if thickness and beam_divergence:
+            thickness_value, thickness_unit = thickness
+            divergence_value, divergence_unit = beam_divergence
             return (
-                f"week9_{thickness_value}{thickness_unit}_thickness_"
-                f"{sigma_value}{sigma_unit}_beam_sigma"
+                f"week10_{thickness_value}{thickness_unit}_thickness_"
+                f"{divergence_value}{divergence_unit}_beam_divergence"
             )
-        primary_energy = primary_energy_from_config(run_config)
         if thickness and primary_energy:
             thickness_value, thickness_unit = thickness
             energy_value, energy_unit = primary_energy

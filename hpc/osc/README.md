@@ -204,6 +204,59 @@ cd test/OpNovice2
 root -b -q 'plot_sr90_spectrum_qa.C("scan_runs/week10_5mm_thickness_sr90_spectrum_source")'
 ```
 
+Week 10.2 adds angular divergence as a separate GPS beam property, not as part
+of the beam spot size. The first production decision scan is the `2x2`
+comparison `1 MeV fixed` / `Sr-90 spectrum` times `0 mrad` / `10 mrad`. Reuse
+the no-divergence baselines when they are already available; generate and run
+only the two `10 mrad` plans first:
+
+```bash
+mkdir -p hpc/osc/generated/week10_beam_divergence
+
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week10_beam_divergence/week10_1mev_10mrad_divergence_5mm_21x21_100events.txt \
+  --description "Week 10.2 fixed 1 MeV, 10 mrad beam divergence, 5 mm thickness, 21x21, 100 events per point" \
+  --events 100 \
+  --source-mode gps \
+  --primary-energy "1 MeV" \
+  --beam-divergence-mrad 10 \
+  --tank-size "100 100 5 mm" \
+  --x-min -50 --x-max 50 \
+  --y-min -50 --y-max 50 \
+  --step 5 --grid-unit mm
+
+python3 hpc/osc/generate_scan_plan.py \
+  --out hpc/osc/generated/week10_beam_divergence/week10_sr90_spectrum_10mrad_divergence_5mm_21x21_100events.txt \
+  --description "Week 10.2 Sr-90 spectrum, 10 mrad beam divergence, 5 mm thickness, 21x21, 100 events per point" \
+  --events 100 \
+  --source-mode gps \
+  --source-model sr90-spectrum \
+  --beam-divergence-mrad 10 \
+  --tank-size "100 100 5 mm" \
+  --x-min -50 --x-max 50 \
+  --y-min -50 --y-max 50 \
+  --step 5 --grid-unit mm
+```
+
+Submit the two new divergence plans:
+
+```bash
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/generated/week10_beam_divergence/week10_1mev_10mrad_divergence_5mm_21x21_100events.txt \
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441 hpc/osc/submit_scan.sbatch
+
+G4_DATA_ROOT=~/geant4-data/11.4.2 \
+SCAN_ARGS_FILE=hpc/osc/generated/week10_beam_divergence/week10_sr90_spectrum_10mrad_divergence_5mm_21x21_100events.txt \
+  sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441 hpc/osc/submit_scan.sbatch
+```
+
+The auto-merge labels include the divergence token, for example
+`week10_5mm_thickness_1MeV_energy_10mrad_beam_divergence` and
+`week10_5mm_thickness_10mrad_beam_divergence_sr90_spectrum_source`. For a quick
+QA, inspect `run_config.json` for `beam.angular_model = "beam2d"` and compare
+`hit_x/y/z` or `scint_centroid_x/y/z` against the corresponding no-divergence
+baseline.
+
 Week 10.1b also provides a validation-first decay source model:
 `--source-model sr90-decay`. It uses a GPS Sr-90 ion primary at rest and
 `G4RadioactiveDecayPhysics`; this is not the Week 10 default plan until the
