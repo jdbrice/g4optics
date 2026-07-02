@@ -4,11 +4,13 @@ __pycache__/
 *.pyc
 build/
 build-osc/
+build-osc-sr90/
 build-gui/
 build-wsl/
 output/
 .venv-analysis/
 week6_analysis/
+week10_run/
 scan_runs/
 scan_runs_june_30/
 scan_runs_june_30_2026.tar.gz
