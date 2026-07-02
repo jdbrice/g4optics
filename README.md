@@ -310,9 +310,9 @@ Week 10.1b does not replace Week 10.2. The next named study remains beam diverge
 A real collimated source has angular spread. The scan runner exposes this as
 `--beam-divergence-mrad VALUE`, independent of `--beam-sigma`:
 ```
+/gps/direction 0 0 -1
 /gps/ang/type beam2d
 /gps/ang/sigma_r VALUE mrad
-/gps/direction 0 0 -1
 ```
 Omitted or `0` keeps the previous pencil beam. A positive value requires
 `--source-mode gps` and records `beam.angular_model`, `beam.divergence_mrad`,

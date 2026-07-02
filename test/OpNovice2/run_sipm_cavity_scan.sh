@@ -2035,13 +2035,17 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     )
   fi
   if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+    angular_insert_anchor="${energy_cmd}"
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      angular_insert_anchor="/run/beamOn"
+    fi
     macro_args+=(
       --set "/gps/ang/type=beam2d"
       --set "/gps/ang/sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
       --require "/gps/ang/type"
       --require "/gps/ang/sigma_r"
-      --insert-missing-before "/gps/ang/type=/gps/direction"
-      --insert-missing-before "/gps/ang/sigma_r=/gps/direction"
+      --insert-missing-before "/gps/ang/type=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_r=${angular_insert_anchor}"
     )
   fi
   if [[ -n "${surface_preset}" ]]; then
