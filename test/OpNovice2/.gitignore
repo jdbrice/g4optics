@@ -5,6 +5,7 @@ __pycache__/
 build/
 build-osc/
 build-osc-sr90/
+build-osc-week10-divergence/
 build-gui/
 build-wsl/
 output/
