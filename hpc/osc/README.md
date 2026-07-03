@@ -250,14 +250,12 @@ SCAN_ARGS_FILE=hpc/osc/generated/week10_beam_divergence/week10_sr90_spectrum_10m
   sbatch -A YOUR_ACCOUNT --time=01:00:00 --array=1-441 hpc/osc/submit_scan.sbatch
 ```
 
-The runner emits GPS `beam2d` angular spread as symmetric
-`/gps/ang/sigma_x VALUE mrad` and `/gps/ang/sigma_y VALUE mrad`. For a quick QA,
-inspect `run_config.json` for `beam.angular_model = "beam2d"`, inspect the
-generated macro for the expected `sigma_x/sigma_y` values, and compare
+The auto-merge labels include the divergence token, for example
+`week10_5mm_thickness_1MeV_energy_10mrad_beam_divergence` and
+`week10_5mm_thickness_10mrad_beam_divergence_sr90_spectrum_source`. For a quick
+QA, inspect `run_config.json` for `beam.angular_model = "beam2d"` and compare
 `hit_x/y/z` or `scint_centroid_x/y/z` against the corresponding no-divergence
-baseline. For Week 10.2 sensitivity scans around the lab estimate of roughly 5
-degrees, use values such as `75, 100, 125 mrad` and pass an explicit `--out` to
-the merge script so results cannot fall back to legacy Week 9 auto-labels.
+baseline.
 
 Week 10.1b also provides a validation-first decay source model:
 `--source-model sr90-decay`. It uses a GPS Sr-90 ion primary at rest and

@@ -121,7 +121,7 @@ Grid / beam options:
   --beam-sigma VALUE                  circular Gaussian GPS beam sigma in
                                       --grid-unit units; 0 or omitted keeps
                                       the point-source GPS position
-  --beam-divergence-mrad VALUE        GPS beam2d angular sigma_x/y in mrad;
+  --beam-divergence-mrad VALUE        GPS beam angular sigma_r in mrad;
                                       0 or omitted keeps the pencil beam
 
 Output / execution options:
@@ -1923,7 +1923,7 @@ else
   echo "Beam profile: point"
 fi
 if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
-  echo "Beam angular divergence: beam2d sigma_x=sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+  echo "Beam angular divergence: beam2d sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
 else
   echo "Beam angular divergence: pencil"
 fi
@@ -2041,14 +2041,11 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     fi
     macro_args+=(
       --set "/gps/ang/type=beam2d"
-      --set "/gps/ang/sigma_x=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
-      --set "/gps/ang/sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --set "/gps/ang/sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
       --require "/gps/ang/type"
-      --require "/gps/ang/sigma_x"
-      --require "/gps/ang/sigma_y"
+      --require "/gps/ang/sigma_r"
       --insert-missing-before "/gps/ang/type=${angular_insert_anchor}"
-      --insert-missing-before "/gps/ang/sigma_x=${angular_insert_anchor}"
-      --insert-missing-before "/gps/ang/sigma_y=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_r=${angular_insert_anchor}"
     )
   fi
   if [[ -n "${surface_preset}" ]]; then
