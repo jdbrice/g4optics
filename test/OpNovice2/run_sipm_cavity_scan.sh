@@ -121,8 +121,9 @@ Grid / beam options:
   --beam-sigma VALUE                  circular Gaussian GPS beam sigma in
                                       --grid-unit units; 0 or omitted keeps
                                       the point-source GPS position
-  --beam-divergence-mrad VALUE        GPS beam angular sigma_r in mrad;
-                                      0 or omitted keeps the pencil beam
+  --beam-divergence-mrad VALUE        GPS beam2d angular sigma_x=sigma_y
+                                      in mrad; 0 or omitted keeps the
+                                      pencil beam
 
 Output / execution options:
   --events N                          events per scan point; overrides N_EVENTS
@@ -1675,6 +1676,13 @@ write_run_config() {
     printf ',\n'
     printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
     printf '    "angular_model": "%s",\n' "$(json_string "${BEAM_ANGULAR_MODEL}")"
+    printf '    "divergence_parameter": '
+    if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+      printf '"sigma_x=sigma_y"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
     printf '    "divergence_mrad": '
     if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
       printf '%s' "$(format_num "${BEAM_DIVERGENCE_MRAD}")"
@@ -1923,7 +1931,7 @@ else
   echo "Beam profile: point"
 fi
 if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
-  echo "Beam angular divergence: beam2d sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+  echo "Beam angular divergence: beam2d sigma_x=sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
 else
   echo "Beam angular divergence: pencil"
 fi
@@ -2041,11 +2049,14 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     fi
     macro_args+=(
       --set "/gps/ang/type=beam2d"
-      --set "/gps/ang/sigma_r=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --set "/gps/ang/sigma_x=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --set "/gps/ang/sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
       --require "/gps/ang/type"
-      --require "/gps/ang/sigma_r"
+      --require "/gps/ang/sigma_x"
+      --require "/gps/ang/sigma_y"
       --insert-missing-before "/gps/ang/type=${angular_insert_anchor}"
-      --insert-missing-before "/gps/ang/sigma_r=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_x=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_y=${angular_insert_anchor}"
     )
   fi
   if [[ -n "${surface_preset}" ]]; then

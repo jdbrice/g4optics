@@ -173,7 +173,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--beam-sigma", help="Optional circular GPS beam sigma passed to each point.")
     parser.add_argument(
         "--beam-divergence-mrad",
-        help="Optional GPS beam angular sigma_r in milliradians passed to each point.",
+        help=(
+            "Optional GPS beam2d angular sigma_x=sigma_y in milliradians "
+            "passed to each point."
+        ),
     )
     parser.add_argument(
         "--electron-energy-mode",

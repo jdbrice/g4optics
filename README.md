@@ -312,16 +312,21 @@ A real collimated source has angular spread. The scan runner exposes this as
 ```
 /gps/direction 0 0 -1
 /gps/ang/type beam2d
-/gps/ang/sigma_r VALUE mrad
+/gps/ang/sigma_x VALUE mrad
+/gps/ang/sigma_y VALUE mrad
 ```
 Omitted or `0` keeps the previous pencil beam. A positive value requires
-`--source-mode gps` and records `beam.angular_model`, `beam.divergence_mrad`,
+`--source-mode gps` and records `beam.angular_model`,
+`beam.divergence_parameter = "sigma_x=sigma_y"`, `beam.divergence_mrad`,
 and `beam.direction` in `run_config.json`.
 
-The first Week 10.2 pass is a small decision scan, not a full sensitivity
-sweep: compare `1 MeV fixed` and `Sr-90/Y-90 spectrum` at `0 mrad` and
-`10 mrad`. Reuse the existing no-divergence baselines when possible; only move
-to a `0, 5, 10, 20 mrad` sweep if the `0 -> 10 mrad` effect size is visible.
+`VALUE` is a 2D Gaussian angular sigma, not a hard cone half-angle. The mean
+beam direction remains `/gps/direction 0 0 -1`; setting equal x/y sigmas gives
+an axisymmetric angular spread around that direction. The early `10 mrad`
+decision scan was a small smoke pass. After the lab estimate of roughly
+`5 deg` (about `100 mrad`), the current Week 10.2 sensitivity target is around
+`75, 100, 125 mrad`, while reusing or rerunning the corresponding `0 mrad`
+baselines.
 `sr90-decay` remains a Week 10.1b cross-check tool and is not part of the
 Week 10.2 production matrix.
 
