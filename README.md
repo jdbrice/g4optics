@@ -307,28 +307,20 @@ Whichever production approach is used, **document which approach you chose and w
 Week 10.1b does not replace Week 10.2. The next named study remains beam divergence; decay validation is part of source-model realism in Week 10.1.
 
 ### 10.2 Beam Divergence
-A real collimated source has angular spread. The scan runner exposes this as
-`--beam-divergence-mrad VALUE`, independent of `--beam-sigma`:
+A real collimated source has angular spread. The scan runner exposes this as `--beam-divergence-mrad VALUE`, independent of `--beam-sigma`:
+
 ```
 /gps/direction 0 0 -1
 /gps/ang/type beam2d
 /gps/ang/sigma_x VALUE mrad
 /gps/ang/sigma_y VALUE mrad
 ```
-Omitted or `0` keeps the previous pencil beam. A positive value requires
-`--source-mode gps` and records `beam.angular_model`,
-`beam.divergence_parameter = "sigma_x=sigma_y"`, `beam.divergence_mrad`,
-and `beam.direction` in `run_config.json`.
 
-`VALUE` is a 2D Gaussian angular sigma, not a hard cone half-angle. The mean
-beam direction remains `/gps/direction 0 0 -1`; setting equal x/y sigmas gives
-an axisymmetric angular spread around that direction. The early `10 mrad`
-decision scan was a small smoke pass. After the lab estimate of roughly
-`5 deg` (about `100 mrad`), the current Week 10.2 sensitivity target is around
-`75, 100, 125 mrad`, while reusing or rerunning the corresponding `0 mrad`
-baselines.
-`sr90-decay` remains a Week 10.1b cross-check tool and is not part of the
-Week 10.2 production matrix.
+Omitted or `0` keeps the previous pencil beam. A positive value requires `--source-mode gps` and records `beam.angular_model`, `beam.divergence_parameter = "sigma_x=sigma_y"`, `beam.divergence_mrad`, and `beam.direction` in `run_config.json`.
+
+`VALUE` is a 2D Gaussian angular sigma, not a hard cone half-angle. The mean beam direction remains `/gps/direction 0 0 -1`; setting equal x/y sigmas gives an axisymmetric angular spread around that direction. The early `10 mrad` decision scan was a small smoke pass. After the lab estimate of roughly `5 deg` (about `100 mrad`), the current Week 10.2 sensitivity target is around `75, 100, 125 mrad`, while reusing or rerunning the corresponding `0 mrad` baselines.
+
+`sr90-decay` remains a Week 10.1b cross-check tool and is not part of the Week 10.2 production matrix.
 
 ### 10.3 The Study
 Repeat the key scans (position, and your best thickness/finish/dimple combination) using the Sr-90 source model instead of a monoenergetic beam. This is the simulation configuration you will actually compare against lab data.
