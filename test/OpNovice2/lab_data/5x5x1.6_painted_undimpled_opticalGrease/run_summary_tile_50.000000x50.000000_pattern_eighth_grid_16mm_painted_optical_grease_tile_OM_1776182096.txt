@@ -1,0 +1,18 @@
+Run#	X	Y	Comment
+8360	440	0	Initial dark current sample
+8361	0	0	Measurement# 1 at this position
+8362	10	0	Measurement# 1 at this position
+8363	20	0	Measurement# 1 at this position
+8364	30	0	Measurement# 1 at this position
+8365	40	0	Measurement# 1 at this position
+8366	10	10	Measurement# 1 at this position
+8367	20	10	Measurement# 1 at this position
+8368	30	10	Measurement# 1 at this position
+8369	40	10	Measurement# 1 at this position
+8370	20	20	Measurement# 1 at this position
+8371	30	20	Measurement# 1 at this position
+8372	40	20	Measurement# 1 at this position
+8373	30	30	Measurement# 1 at this position
+8374	40	30	Measurement# 1 at this position
+8375	40	40	Measurement# 1 at this position
+8376	440	0	Dark current sample

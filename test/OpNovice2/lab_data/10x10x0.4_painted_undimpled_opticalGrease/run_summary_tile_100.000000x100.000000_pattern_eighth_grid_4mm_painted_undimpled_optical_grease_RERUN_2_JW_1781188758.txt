@@ -1,0 +1,31 @@
+Run#	X	Y	Comment
+8733	465	0	Initial dark current sample
+8734	5	5	Measurement# 1 at this position
+8735	15	5	Measurement# 1 at this position
+8736	25	5	Measurement# 1 at this position
+8737	35	5	Measurement# 1 at this position
+8738	45	5	Measurement# 1 at this position
+8739	55	5	Measurement# 1 at this position
+8740	65	5	Measurement# 1 at this position
+8741	15	15	Measurement# 1 at this position
+8742	25	15	Measurement# 1 at this position
+8743	35	15	Measurement# 1 at this position
+8744	45	15	Measurement# 1 at this position
+8745	55	15	Measurement# 1 at this position
+8746	65	15	Measurement# 1 at this position
+8747	25	25	Measurement# 1 at this position
+8748	35	25	Measurement# 1 at this position
+8749	45	25	Measurement# 1 at this position
+8750	55	25	Measurement# 1 at this position
+8751	65	25	Measurement# 1 at this position
+8752	35	35	Measurement# 1 at this position
+8753	45	35	Measurement# 1 at this position
+8754	55	35	Measurement# 1 at this position
+8755	65	35	Measurement# 1 at this position
+8756	45	45	Measurement# 1 at this position
+8757	55	45	Measurement# 1 at this position
+8758	65	45	Measurement# 1 at this position
+8759	55	55	Measurement# 1 at this position
+8760	65	55	Measurement# 1 at this position
+8761	65	65	Measurement# 1 at this position
+8762	465	0	Dark current sample
