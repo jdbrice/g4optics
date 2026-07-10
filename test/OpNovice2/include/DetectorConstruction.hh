@@ -160,7 +160,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* fSiPMMaterial = nullptr;
     G4MaterialPropertiesTable* fSiPMMPT = nullptr;
 
-    // Optional EJ-550 optical grease pad for lab-style bottom coupling.
+    // Optional EJ-550 coupling: flat pad or curved dimple-to-SiPM gap.
     G4VPhysicalVolume* fGrease = nullptr;
     G4LogicalVolume* fGrease_LV = nullptr;
     G4Material* fGreaseMaterial = nullptr;

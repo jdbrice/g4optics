@@ -139,9 +139,10 @@ Geometry options:
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
   --sipm-size "u v t unit"            override /opnovice2/sipm/size
   --optical-coupling MODEL            none or ej550-grease
-  --grease-thickness "VALUE UNIT"     EJ-550 grease thickness; required with
-                                      --optical-coupling ej550-grease
-  --grease-size "u v unit"            grease active pad size; defaults to SiPM
+  --grease-thickness "VALUE UNIT"     EJ-550 flat-pad thickness; required for
+                                      grease without --dimple, omitted for the
+                                      curved dimple-to-SiPM gap
+  --grease-size "u v unit"            grease footprint; defaults to SiPM area
   --grease-rindex VALUE               override official EJ-550 RINDEX=1.46
   --grease-rindex-csv FILE            wavelength_nm,rindex CSV for EJ-550
   --grease-absorption-model MODEL     transparent, constant, or
@@ -1062,7 +1063,11 @@ if [[ "${OPTICAL_COUPLING}" == "none" ]]; then
     exit 1
   fi
 else
-  if [[ -z "${GREASE_THICKNESS_OVERRIDE}" ]]; then
+  if [[ "${DIMPLE_ENABLED}" == "1" && -n "${GREASE_THICKNESS_OVERRIDE}" ]]; then
+    echo "--grease-thickness is not used with --dimple; the curved gap determines the grease depth." >&2
+    exit 1
+  fi
+  if [[ "${DIMPLE_ENABLED}" != "1" && -z "${GREASE_THICKNESS_OVERRIDE}" ]]; then
     echo "--optical-coupling ej550-grease requires --grease-thickness \"VALUE UNIT\"." >&2
     exit 1
   fi
@@ -1117,30 +1122,32 @@ else
       fi
       ;;
   esac
-  read -r grease_thickness_value grease_thickness_unit grease_thickness_extra <<< "${GREASE_THICKNESS_OVERRIDE}"
-  if [[ -z "${grease_thickness_value:-}" || -z "${grease_thickness_unit:-}" || -n "${grease_thickness_extra:-}" ]]; then
-    echo "Invalid --grease-thickness: ${GREASE_THICKNESS_OVERRIDE}. Use quoted form like \"0.1 mm\"." >&2
-    exit 1
-  fi
-  if [[ ! "${grease_thickness_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
-    echo "Invalid --grease-thickness value: ${grease_thickness_value}. Expected a positive number." >&2
-    exit 1
-  fi
-  awk -v value="${grease_thickness_value}" '
-    BEGIN {
-      if (value <= 0) {
-        printf "Invalid --grease-thickness value: %s. Expected a positive number.\n", value > "/dev/stderr"
-        exit 1
-      }
-    }'
-  case "${grease_thickness_unit}" in
-    mm|cm)
-      ;;
-    *)
-      echo "Invalid --grease-thickness unit: ${grease_thickness_unit}. Use mm or cm." >&2
+  if [[ "${DIMPLE_ENABLED}" != "1" ]]; then
+    read -r grease_thickness_value grease_thickness_unit grease_thickness_extra <<< "${GREASE_THICKNESS_OVERRIDE}"
+    if [[ -z "${grease_thickness_value:-}" || -z "${grease_thickness_unit:-}" || -n "${grease_thickness_extra:-}" ]]; then
+      echo "Invalid --grease-thickness: ${GREASE_THICKNESS_OVERRIDE}. Use quoted form like \"0.1 mm\"." >&2
       exit 1
-      ;;
-  esac
+    fi
+    if [[ ! "${grease_thickness_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-thickness value: ${grease_thickness_value}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${grease_thickness_value}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-thickness value: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_thickness_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-thickness unit: ${grease_thickness_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
 
   if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
     read -r grease_size_u grease_size_v grease_size_unit grease_size_extra <<< "${GREASE_SIZE_OVERRIDE}"
@@ -2046,6 +2053,8 @@ case "${surface_finish}" in
     ;;
 esac
 grease_enabled=false
+grease_geometry_model="none"
+grease_geometry_caveat=""
 grease_thickness=""
 grease_size=""
 grease_size_macro=""
@@ -2066,12 +2075,15 @@ if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
   grease_enabled=true
   grease_absorption_model_resolved="${grease_absorption_model}"
   if [[ "${MODE}" != "full" ]]; then
-    echo "--optical-coupling ej550-grease is supported only with MODE=full flat-tile geometry." >&2
+    echo "--optical-coupling ej550-grease is supported only with MODE=full geometry." >&2
     exit 1
   fi
   if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
-    echo "--optical-coupling ej550-grease cannot be combined with --dimple." >&2
-    exit 1
+    grease_geometry_model="dimple-gap"
+    grease_geometry_caveat="curved_spherical_gap_clipped_to_sipm_active_footprint"
+  else
+    grease_geometry_model="flat-pad"
+    grease_geometry_caveat="uniform_thickness_pad_between_flat_tile_and_sipm"
   fi
   if [[ "${sipm_face}" != "-Z" ]]; then
     echo "--optical-coupling ej550-grease supports only bottom-center --sipm-face -Z; resolved face is ${sipm_face}." >&2
@@ -2101,7 +2113,9 @@ if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
       }
     }'
 
-  grease_thickness="${GREASE_THICKNESS_OVERRIDE}"
+  if [[ "${grease_geometry_model}" == "flat-pad" ]]; then
+    grease_thickness="${GREASE_THICKNESS_OVERRIDE}"
+  fi
   if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
     grease_size="${grease_size_u} ${grease_size_v} ${grease_size_unit}"
     grease_size_macro="${grease_size_u} ${grease_size_v} 0 ${grease_size_unit}"
@@ -2532,6 +2546,14 @@ write_run_config() {
     printf '  },\n'
     printf '  "optical_coupling": {\n'
     printf '    "model": "%s",\n' "$(json_string "${OPTICAL_COUPLING}")"
+    printf '    "geometry_model": "%s",\n' "$(json_string "${grease_geometry_model}")"
+    printf '    "geometry_caveat": '
+    if [[ -n "${grease_geometry_caveat}" ]]; then
+      printf '"%s"' "$(json_string "${grease_geometry_caveat}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
     printf '    "grease_enabled": %s,\n' "$(if [[ "${grease_enabled}" == "true" ]]; then echo true; else echo false; fi)"
     printf '    "grease_material": '
     if [[ "${grease_enabled}" == "true" ]]; then
@@ -3008,7 +3030,7 @@ if [[ "${surface_layer_rindex_model}" != "none" ]]; then
 fi
 echo "Optical coupling: ${OPTICAL_COUPLING}"
 if [[ "${grease_enabled}" == "true" ]]; then
-  echo "Grease: thickness=${grease_thickness}, size=${grease_size:-follow_sipm_active_area}, rindex_model=${grease_rindex_model}, absorption_model=${grease_absorption_model_resolved}, abs_length=${grease_abs_length:-derived_from_transmission}"
+  echo "Grease: geometry=${grease_geometry_model}, thickness=${grease_thickness:-derived_from_geometry}, size=${grease_size:-follow_sipm_active_area}, rindex_model=${grease_rindex_model}, absorption_model=${grease_absorption_model_resolved}, abs_length=${grease_abs_length:-derived_from_transmission}"
 fi
 if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
   echo "Dimple: hemisphere radius=$(format_num "${DIMPLE_RADIUS}") ${DIMPLE_UNIT} (${DIMPLE_SIPM_MODE}, radius_mm=$(format_num "${DIMPLE_RADIUS_MM}"))"
@@ -3143,12 +3165,16 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     macro_args+=(
       --remove "/opnovice2/greaseProperty"
       --set "/opnovice2/grease/enabled=true"
-      --set "/opnovice2/grease/thickness=${grease_thickness}"
       --insert-file-before "${GREASE_PROPERTIES_FRAGMENT}=/run/initialize"
       --require "/opnovice2/grease/enabled"
-      --require "/opnovice2/grease/thickness"
       --require "/opnovice2/greaseProperty"
     )
+    if [[ -n "${grease_thickness}" ]]; then
+      macro_args+=(
+        --set "/opnovice2/grease/thickness=${grease_thickness}"
+        --require "/opnovice2/grease/thickness"
+      )
+    fi
     if [[ -n "${grease_size_macro}" ]]; then
       macro_args+=(
         --set "/opnovice2/grease/size=${grease_size_macro}"

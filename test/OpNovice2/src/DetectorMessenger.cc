@@ -212,14 +212,16 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fSiPMSizeCmd->SetToBeBroadcasted(false);
 
   fGreaseEnabledCmd = new G4UIcmdWithABool("/opnovice2/grease/enabled", this);
-  fGreaseEnabledCmd->SetGuidance("Enable an EJ-550 optical grease pad between tile and SiPM.");
+  fGreaseEnabledCmd->SetGuidance(
+    "Enable EJ-550 coupling between tile and SiPM (flat pad or curved dimple gap).");
   fGreaseEnabledCmd->SetDefaultValue(false);
   fGreaseEnabledCmd->AvailableForStates(G4State_PreInit);
   fGreaseEnabledCmd->SetToBeBroadcasted(false);
 
   fGreaseThicknessCmd =
     new G4UIcmdWithADoubleAndUnit("/opnovice2/grease/thickness", this);
-  fGreaseThicknessCmd->SetGuidance("Set EJ-550 grease pad thickness.");
+  fGreaseThicknessCmd->SetGuidance(
+    "Set EJ-550 flat-pad thickness; omit for curved dimple-gap coupling.");
   fGreaseThicknessCmd->SetParameterName("thickness", false);
   fGreaseThicknessCmd->SetUnitCategory("Length");
   fGreaseThicknessCmd->SetDefaultUnit("mm");

@@ -37,6 +37,7 @@
 
 #include "G4Box.hh"
 #include "G4Element.hh"
+#include "G4IntersectionSolid.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4LogicalVolume.hh"
@@ -196,15 +197,47 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (fGreaseEnabled) {
     ValidateGreaseConfiguration();
 
-    G4double greaseHx = 0.0;
-    G4double greaseHy = 0.0;
-    G4double greaseHz = 0.0;
+    G4VSolid* greaseSolid = nullptr;
     G4ThreeVector greasePos;
 
-    ComputeGreasePlacement(greaseHx, greaseHy, greaseHz, greasePos);
+    if (fDimpleEnabled) {
+      G4double sipmHx = 0.0;
+      G4double sipmHy = 0.0;
+      G4double sipmHz = 0.0;
+      G4ThreeVector sipmPos;
+      ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
 
-    auto grease_box = new G4Box("Grease_Box", greaseHx, greaseHy, greaseHz);
-    fGrease_LV = new G4LogicalVolume(grease_box, fGreaseMaterial, "Grease");
+      const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+      const G4double clipHz = 0.5 * (fDimpleRadius - localBottom);
+      const G4double clipCenterZ = localBottom + clipHz;
+
+      auto greaseSphere = new G4Sphere("Grease_DimpleSphere",
+                                        0.,
+                                        fDimpleRadius,
+                                        0.,
+                                        360. * deg,
+                                        0.,
+                                        180. * deg);
+      auto greaseClip = new G4Box("Grease_DimpleClip",
+                                   0.5 * GetGreaseActiveU(),
+                                   0.5 * GetGreaseActiveV(),
+                                   clipHz);
+      greaseSolid = new G4IntersectionSolid("Grease_DimpleGap",
+                                             greaseSphere,
+                                             greaseClip,
+                                             nullptr,
+                                             G4ThreeVector(0., 0., clipCenterZ));
+      greasePos = G4ThreeVector(0., 0., -fTank_z);
+    }
+    else {
+      G4double greaseHx = 0.0;
+      G4double greaseHy = 0.0;
+      G4double greaseHz = 0.0;
+      ComputeGreasePlacement(greaseHx, greaseHy, greaseHz, greasePos);
+      greaseSolid = new G4Box("Grease_Box", greaseHx, greaseHy, greaseHz);
+    }
+
+    fGrease_LV = new G4LogicalVolume(greaseSolid, fGreaseMaterial, "Grease");
 
     auto greaseVis = new G4VisAttributes(G4Colour(0.0, 0.8, 1.0, 0.35));
     greaseVis->SetForceSolid(true);
@@ -753,7 +786,7 @@ void DetectorConstruction::ValidateGreaseConfiguration() const
 
   if (fSiPMFace != "-Z" && fSiPMFace != "bottom") {
     G4ExceptionDescription msg;
-    msg << "EJ-550 grease coupling currently supports only flat -Z SiPM placement. "
+    msg << "EJ-550 grease coupling currently supports only -Z SiPM placement. "
         << "Current /opnovice2/sipm/face is " << fSiPMFace << ".";
     G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
                 "OpNovice2_Grease_001",
@@ -761,9 +794,9 @@ void DetectorConstruction::ValidateGreaseConfiguration() const
                 msg);
   }
 
-  if (fBottomCavityEnabled || fDimpleEnabled) {
+  if (fBottomCavityEnabled) {
     G4ExceptionDescription msg;
-    msg << "EJ-550 grease coupling cannot be combined with bottom cavity or dimple geometry.";
+    msg << "EJ-550 grease coupling cannot be combined with bottom cavity geometry.";
     G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
                 "OpNovice2_Grease_002",
                 FatalException,
@@ -783,9 +816,9 @@ void DetectorConstruction::ValidateGreaseConfiguration() const
                 msg);
   }
 
-  if (fGreaseThickness <= 0.0) {
+  if (!fDimpleEnabled && fGreaseThickness <= 0.0) {
     G4ExceptionDescription msg;
-    msg << "EJ-550 grease thickness must be positive when grease coupling is enabled.";
+    msg << "EJ-550 flat-pad thickness must be positive when grease coupling is enabled.";
     G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
                 "OpNovice2_Grease_004",
                 FatalException,
@@ -814,6 +847,60 @@ void DetectorConstruction::ValidateGreaseConfiguration() const
                 "OpNovice2_Grease_006",
                 FatalException,
                 msg);
+  }
+
+  if (fDimpleEnabled) {
+    if (fGreaseThickness > safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap coupling derives its thickness from the curved "
+          << "dimple-to-SiPM gap; do not set /opnovice2/grease/thickness.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_007",
+                  FatalException,
+                  msg);
+    }
+
+    if (greaseU > fSiPMActiveU + safety || greaseV > fSiPMActiveV + safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint cannot exceed the SiPM active face. "
+          << "grease=" << greaseU / mm << " x " << greaseV / mm
+          << " mm, SiPM=" << fSiPMActiveU / mm << " x "
+          << fSiPMActiveV / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_008",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double greaseCornerRadius =
+      std::sqrt(0.25 * greaseU * greaseU + 0.25 * greaseV * greaseV);
+    if (greaseCornerRadius >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint does not fit inside the dimple. "
+          << "corner radius=" << greaseCornerRadius / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_009",
+                  FatalException,
+                  msg);
+    }
+
+    G4double sipmHx = 0.0;
+    G4double sipmHy = 0.0;
+    G4double sipmHz = 0.0;
+    G4ThreeVector sipmPos;
+    ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+    const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+    if (localBottom >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap has no positive clearance above the SiPM. "
+          << "SiPM top relative to dimple center=" << localBottom / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_010",
+                  FatalException,
+                  msg);
+    }
   }
 }
 

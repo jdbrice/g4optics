@@ -13,6 +13,7 @@ SURFACE_REFLECTIVITY_CSV="${SURFACE_REFLECTIVITY_CSV:-optical_data/ej510_reflect
 CALIBRATION_SURFACE="${CALIBRATION_SURFACE:-polishedfrontpainted}"
 BACKPAINTED_AIR_RINDEX="${BACKPAINTED_AIR_RINDEX:-1.0003}"
 BEST_DIVERGENCE_MRAD="${BEST_DIVERGENCE_MRAD:-55}"
+OPTICAL_COUPLING="${OPTICAL_COUPLING:-none}"
 GREASE_ABSORPTION_MODEL="${GREASE_ABSORPTION_MODEL:-transparent}"
 GREASE_TRANSMISSION_CSV="${GREASE_TRANSMISSION_CSV:-optical_data/ej550_transmission_empirical.csv}"
 
@@ -48,7 +49,6 @@ csv_data_rows() {
   ' "$1"
 }
 
-: "${GREASE_THICKNESS:?Set GREASE_THICKNESS, e.g. \"0.1 mm\", after the lab setup is confirmed.}"
 if [[ ! -f "${SURFACE_REFLECTIVITY_CSV_HOST}" ]]; then
   echo "Missing EJ-510 reflectivity CSV: ${SURFACE_REFLECTIVITY_CSV_HOST}" >&2
   exit 1
@@ -57,7 +57,18 @@ if [[ "$(csv_data_rows "${SURFACE_REFLECTIVITY_CSV_HOST}")" -lt 2 ]]; then
   echo "EJ-510 reflectivity CSV needs at least two official data rows before plan generation: ${SURFACE_REFLECTIVITY_CSV_HOST}" >&2
   exit 1
 fi
-if [[ -n "${GREASE_RINDEX_CSV:-}" ]]; then
+case "${OPTICAL_COUPLING}" in
+  none|ej550-grease)
+    ;;
+  *)
+    echo "Invalid OPTICAL_COUPLING: ${OPTICAL_COUPLING}. Use none or ej550-grease." >&2
+    exit 1
+    ;;
+esac
+if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
+  : "${GREASE_THICKNESS:?Set GREASE_THICKNESS for flat EJ-550 coupling.}"
+fi
+if [[ "${OPTICAL_COUPLING}" == "ej550-grease" && -n "${GREASE_RINDEX_CSV:-}" ]]; then
   if [[ ! -f "${GREASE_RINDEX_CSV_HOST}" ]]; then
     echo "Missing EJ-550 RINDEX CSV: ${GREASE_RINDEX_CSV_HOST}" >&2
     exit 1
@@ -67,35 +78,37 @@ if [[ -n "${GREASE_RINDEX_CSV:-}" ]]; then
     exit 1
   fi
 fi
-case "${GREASE_ABSORPTION_MODEL}" in
-  transparent)
-    if [[ -n "${GREASE_ABS_LENGTH:-}" ]]; then
-      echo "GREASE_ABS_LENGTH requires GREASE_ABSORPTION_MODEL=constant." >&2
+if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
+  case "${GREASE_ABSORPTION_MODEL}" in
+    transparent)
+      if [[ -n "${GREASE_ABS_LENGTH:-}" ]]; then
+        echo "GREASE_ABS_LENGTH requires GREASE_ABSORPTION_MODEL=constant." >&2
+        exit 1
+      fi
+      ;;
+    constant)
+      : "${GREASE_ABS_LENGTH:?Set GREASE_ABS_LENGTH for the constant grease absorption model.}"
+      ;;
+    ej550-transmission-derived)
+      if [[ -n "${GREASE_ABS_LENGTH:-}" ]]; then
+        echo "GREASE_ABS_LENGTH cannot be used with GREASE_ABSORPTION_MODEL=ej550-transmission-derived." >&2
+        exit 1
+      fi
+      if [[ ! -f "${GREASE_TRANSMISSION_CSV_HOST}" ]]; then
+        echo "Missing EJ-550 transmission CSV: ${GREASE_TRANSMISSION_CSV_HOST}" >&2
+        exit 1
+      fi
+      if [[ "$(csv_data_rows "${GREASE_TRANSMISSION_CSV_HOST}")" -lt 2 ]]; then
+        echo "EJ-550 transmission CSV needs at least two data rows: ${GREASE_TRANSMISSION_CSV_HOST}" >&2
+        exit 1
+      fi
+      ;;
+    *)
+      echo "Invalid GREASE_ABSORPTION_MODEL: ${GREASE_ABSORPTION_MODEL}" >&2
       exit 1
-    fi
-    ;;
-  constant)
-    : "${GREASE_ABS_LENGTH:?Set GREASE_ABS_LENGTH for the constant grease absorption model.}"
-    ;;
-  ej550-transmission-derived)
-    if [[ -n "${GREASE_ABS_LENGTH:-}" ]]; then
-      echo "GREASE_ABS_LENGTH cannot be used with GREASE_ABSORPTION_MODEL=ej550-transmission-derived." >&2
-      exit 1
-    fi
-    if [[ ! -f "${GREASE_TRANSMISSION_CSV_HOST}" ]]; then
-      echo "Missing EJ-550 transmission CSV: ${GREASE_TRANSMISSION_CSV_HOST}" >&2
-      exit 1
-    fi
-    if [[ "$(csv_data_rows "${GREASE_TRANSMISSION_CSV_HOST}")" -lt 2 ]]; then
-      echo "EJ-550 transmission CSV needs at least two data rows: ${GREASE_TRANSMISSION_CSV_HOST}" >&2
-      exit 1
-    fi
-    ;;
-  *)
-    echo "Invalid GREASE_ABSORPTION_MODEL: ${GREASE_ABSORPTION_MODEL}" >&2
-    exit 1
-    ;;
-esac
+      ;;
+  esac
+fi
 
 DIVERGENCES=(25 35 45 55 65 75)
 SURFACES=(polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted)
@@ -125,9 +138,7 @@ generate_one() {
     --surface-preset "${surface}"
     --surface-reflectivity-model ej510-empirical
     --surface-reflectivity-csv "${SURFACE_REFLECTIVITY_CSV}"
-    --optical-coupling ej550-grease
-    --grease-thickness "${GREASE_THICKNESS}"
-    --grease-absorption-model "${GREASE_ABSORPTION_MODEL}"
+    --optical-coupling "${OPTICAL_COUPLING}"
     --tank-size "${tank_size}"
     --beam-z "${beam_z}"
     --beam-sigma "${BEAM_SIGMA}"
@@ -135,23 +146,29 @@ generate_one() {
     --sipm-local-position "0 0 0 cm"
     --sipm-size "${SIPM_SIZE}"
     --divergence-mrad "${divergence}"
-    --description "lab v2 real setup scaffold: EJ-200, EJ-510, EJ-550, SiPM ${SIPM_SIZE}; stage=${stage}; backpainted uses air-gap RINDEX=${BACKPAINTED_AIR_RINDEX} caveat"
+    --description "lab v2 real setup scaffold: EJ-200, EJ-510, SiPM ${SIPM_SIZE}; optical coupling=${OPTICAL_COUPLING}; none means zero-gap proxy for experimental EJ-550; stage=${stage}; backpainted uses air-gap RINDEX=${BACKPAINTED_AIR_RINDEX} caveat"
   )
-  if [[ -n "${GREASE_RINDEX:-}" ]]; then
-    command+=(--grease-rindex "${GREASE_RINDEX}")
-  elif [[ -n "${GREASE_RINDEX_CSV:-}" ]]; then
-    command+=(--grease-rindex-csv "${GREASE_RINDEX_CSV}")
+  if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
+    command+=(
+      --grease-thickness "${GREASE_THICKNESS}"
+      --grease-absorption-model "${GREASE_ABSORPTION_MODEL}"
+    )
+    if [[ -n "${GREASE_RINDEX:-}" ]]; then
+      command+=(--grease-rindex "${GREASE_RINDEX}")
+    elif [[ -n "${GREASE_RINDEX_CSV:-}" ]]; then
+      command+=(--grease-rindex-csv "${GREASE_RINDEX_CSV}")
+    fi
+    if [[ "${GREASE_ABSORPTION_MODEL}" == "constant" ]]; then
+      command+=(--grease-abs-length "${GREASE_ABS_LENGTH}")
+    elif [[ "${GREASE_ABSORPTION_MODEL}" == "ej550-transmission-derived" ]]; then
+      command+=(--grease-transmission-csv "${GREASE_TRANSMISSION_CSV}")
+    fi
   fi
   case "${surface}" in
     polishedbackpainted|groundbackpainted)
       command+=(--surface-rindex "${BACKPAINTED_AIR_RINDEX}")
       ;;
   esac
-  if [[ "${GREASE_ABSORPTION_MODEL}" == "constant" ]]; then
-    command+=(--grease-abs-length "${GREASE_ABS_LENGTH}")
-  elif [[ "${GREASE_ABSORPTION_MODEL}" == "ej550-transmission-derived" ]]; then
-    command+=(--grease-transmission-csv "${GREASE_TRANSMISSION_CSV}")
-  fi
   "${command[@]}"
 }
 
