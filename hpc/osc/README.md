@@ -85,7 +85,15 @@ hpc/osc/submit-lab-v2-validation.sh PAS2524 /path/to/geant4-data
 Use the same command with a final `--check-only` before submission to validate
 the plan count, task count, and Geant4 dataset path without calling `sbatch`.
 
-After completion, the generic finalizer can audit and merge the validation set:
+After completion, finalize, audit, merge, and package the validation set with:
+
+```bash
+hpc/osc/finalize-lab-v2-validation.sh
+```
+
+The wrapper checks all 172 task logs, writes the combined maps, and packages
+the merged outputs, plans, and submission manifest under
+`test/OpNovice2/lab_run_v2/`. The equivalent generic finalizer invocation is:
 
 ```bash
 python3 hpc/osc/finalize_lab_v2_calibration.py \
