@@ -51,6 +51,18 @@ sacct -j JOBID --format=JobID,JobName,State,ExitCode,Elapsed
 python3 hpc/osc/merge_array_efficiency_maps.py --job-id JOBID
 ```
 
+For the 24-array lab v2 divergence calibration, finalize only the most recent
+submission attempt after `squeue` is empty:
+
+```bash
+python3 hpc/osc/finalize_lab_v2_calibration.py
+```
+
+The finalizer verifies all 516 numbered task logs and their `Scan complete`
+markers before merging. It writes one uniquely named map per plan plus
+`finalization_summary.tsv` and `all_efficiency_maps.csv` under
+`test/OpNovice2/scan_runs/lab_v2_realsetup/divergence_calibration/`.
+
 By default the merge writes a ROOT-compatible run directory under `test/OpNovice2/scan_runs`.
 For beam-size scans, the directory name is inferred from `run_config.json`, for example `test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv`.
 If auto-naming is not specific enough, pass `--label NAME`; if you need the old flat-file behavior, pass an explicit CSV path with `--out path/to/file.csv`.
