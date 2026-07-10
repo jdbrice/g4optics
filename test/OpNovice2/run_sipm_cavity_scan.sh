@@ -27,10 +27,36 @@ SOURCE_MODEL_OVERRIDE=""
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
+SIPM_SIZE_OVERRIDE=""
 TANK_SIZE_OVERRIDE=""
 TANK_SIZE_PRESET_OVERRIDE=""
 ELECTRON_ENERGY_MODE_OVERRIDE=""
 SURFACE_PRESET_OVERRIDE=""
+SURFACE_REFLECTIVITY_MODEL_OVERRIDE=""
+SURFACE_REFLECTIVITY_VALUE_OVERRIDE=""
+SURFACE_REFLECTIVITY_CSV_OVERRIDE=""
+SURFACE_RINDEX_OVERRIDE=""
+SURFACE_RINDEX_CSV_OVERRIDE=""
+EJ510_REFLECTIVITY_CSV="optical_data/ej510_reflectivity_empirical.csv"
+EJ510_REFLECTIVITY_SOURCE_URL="https://eljentechnology.com/images/products/spectra/EJ-510_ref.png"
+EJ510_COATING_REFERENCE_THICKNESS_MM="0.11"
+BACKPAINTED_AIR_RINDEX="1.0003"
+BACKPAINTED_AIR_GAP_CAVEAT="Backpainted is an air-gap sensitivity proxy with RINDEX=1.0003; observed lab EJ-510 appears directly applied, so frontpainted is more physically representative."
+BACKPAINTED_MODEL_CAVEAT="Backpainted is a sensitivity model; observed lab EJ-510 appears directly applied, so frontpainted is more physically representative."
+OPTICAL_COUPLING="none"
+GREASE_THICKNESS_OVERRIDE=""
+GREASE_SIZE_OVERRIDE=""
+GREASE_RINDEX_OVERRIDE=""
+GREASE_RINDEX_CSV_OVERRIDE=""
+GREASE_ABSORPTION_MODEL_OVERRIDE=""
+GREASE_TRANSMISSION_CSV_OVERRIDE=""
+GREASE_ABS_LENGTH_OVERRIDE="1000 mm"
+GREASE_ABS_LENGTH_SET="0"
+EJ550_OFFICIAL_RINDEX="1.46"
+EJ550_DENSITY_G_CM3="1.06"
+EJ550_TRANSMISSION_CSV="optical_data/ej550_transmission_empirical.csv"
+EJ550_TRANSMISSION_SOURCE_URL="https://eljentechnology.com/images/products/spectra/EJ-550_trans.png"
+EJ550_TRANSMISSION_REFERENCE_THICKNESS_MM="0.1"
 DIMPLE_ENABLED="0"
 DIMPLE_RADIUS=""
 DIMPLE_UNIT="mm"
@@ -95,12 +121,35 @@ Source options:
   --electron-energy-mode MODE         fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical
 
 Surface options:
-  --surface-preset PRESET             polished, ground, or wrapped
+  --surface-preset PRESET             polished, ground, wrapped,
+                                      polishedfrontpainted, groundfrontpainted,
+                                      polishedbackpainted, or groundbackpainted
+  --surface-reflectivity-model MODEL  ej510-empirical, constant, or none
+  --surface-reflectivity VALUE        constant reflectivity value, e.g. 0.95
+  --surface-reflectivity-csv FILE     wavelength_nm,reflectivity CSV for
+                                      ej510-empirical
+  --surface-rindex VALUE              override backpainted surface-layer RINDEX;
+                                      default air-gap proxy is 1.0003
+  --surface-rindex-csv FILE           wavelength_nm,rindex CSV for backpainted
+                                      surface-layer sensitivity studies
 
 Geometry options:
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
   --sipm-cavity-mode MODE             surface or opening
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
+  --sipm-size "u v t unit"            override /opnovice2/sipm/size
+  --optical-coupling MODEL            none or ej550-grease
+  --grease-thickness "VALUE UNIT"     EJ-550 grease thickness; required with
+                                      --optical-coupling ej550-grease
+  --grease-size "u v unit"            grease active pad size; defaults to SiPM
+  --grease-rindex VALUE               override official EJ-550 RINDEX=1.46
+  --grease-rindex-csv FILE            wavelength_nm,rindex CSV for EJ-550
+  --grease-absorption-model MODEL     transparent, constant, or
+                                      ej550-transmission-derived
+  --grease-transmission-csv FILE      wavelength_nm,transmission CSV for the
+                                      derived effective absorption model
+  --grease-abs-length "VALUE UNIT"    constant grease absorption length;
+                                      alone infers the constant model
   --tank-size "x y z unit"            override full tank size, e.g. "10 10 0.8 cm"
   --tank-size-preset PRESET           5x5x0p4, 5x5x0p8, 5x5x1p6,
                                       10x10x0p4, 10x10x0p8, or 10x10x1p6
@@ -274,6 +323,18 @@ while [[ $# -gt 0 ]]; do
       SIPM_LOCAL_POSITION_OVERRIDE="${1#*=}"
       shift
       ;;
+    --sipm-size)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --sipm-size" >&2
+        exit 1
+      fi
+      SIPM_SIZE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --sipm-size=*)
+      SIPM_SIZE_OVERRIDE="${1#*=}"
+      shift
+      ;;
     --tank-size)
       if [[ $# -lt 2 ]]; then
         echo "Missing value for --tank-size" >&2
@@ -320,6 +381,164 @@ while [[ $# -gt 0 ]]; do
       ;;
     --surface-preset=*)
       SURFACE_PRESET_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity-model" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity-model=*)
+      SURFACE_REFLECTIVITY_MODEL_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_VALUE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity=*)
+      SURFACE_REFLECTIVITY_VALUE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity-csv" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity-csv=*)
+      SURFACE_REFLECTIVITY_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-rindex)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-rindex" >&2
+        exit 1
+      fi
+      SURFACE_RINDEX_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-rindex=*)
+      SURFACE_RINDEX_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-rindex-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-rindex-csv" >&2
+        exit 1
+      fi
+      SURFACE_RINDEX_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-rindex-csv=*)
+      SURFACE_RINDEX_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --optical-coupling)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --optical-coupling" >&2
+        exit 1
+      fi
+      OPTICAL_COUPLING="$2"
+      shift 2
+      ;;
+    --optical-coupling=*)
+      OPTICAL_COUPLING="${1#*=}"
+      shift
+      ;;
+    --grease-thickness)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-thickness" >&2
+        exit 1
+      fi
+      GREASE_THICKNESS_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-thickness=*)
+      GREASE_THICKNESS_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-size)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-size" >&2
+        exit 1
+      fi
+      GREASE_SIZE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-size=*)
+      GREASE_SIZE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-rindex)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-rindex" >&2
+        exit 1
+      fi
+      GREASE_RINDEX_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-rindex=*)
+      GREASE_RINDEX_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-rindex-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-rindex-csv" >&2
+        exit 1
+      fi
+      GREASE_RINDEX_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-rindex-csv=*)
+      GREASE_RINDEX_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-absorption-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-absorption-model" >&2
+        exit 1
+      fi
+      GREASE_ABSORPTION_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-absorption-model=*)
+      GREASE_ABSORPTION_MODEL_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-transmission-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-transmission-csv" >&2
+        exit 1
+      fi
+      GREASE_TRANSMISSION_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-transmission-csv=*)
+      GREASE_TRANSMISSION_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-abs-length)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-abs-length" >&2
+        exit 1
+      fi
+      GREASE_ABS_LENGTH_OVERRIDE="$2"
+      GREASE_ABS_LENGTH_SET="1"
+      shift 2
+      ;;
+    --grease-abs-length=*)
+      GREASE_ABS_LENGTH_OVERRIDE="${1#*=}"
+      GREASE_ABS_LENGTH_SET="1"
       shift
       ;;
     --dimple)
@@ -655,6 +874,35 @@ if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then
   fi
 fi
 
+if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then
+  read -r sipm_size_u sipm_size_v sipm_size_t sipm_size_unit sipm_size_extra <<< "${SIPM_SIZE_OVERRIDE}"
+  if [[ -z "${sipm_size_u:-}" || -z "${sipm_size_v:-}" || -z "${sipm_size_t:-}" || -z "${sipm_size_unit:-}" || -n "${sipm_size_extra:-}" ]]; then
+    echo "Invalid --sipm-size: ${SIPM_SIZE_OVERRIDE}. Use quoted form like \"2.4 2.4 0.5 mm\"." >&2
+    exit 1
+  fi
+  for sipm_size_value in "${sipm_size_u}" "${sipm_size_v}" "${sipm_size_t}"; do
+    if [[ ! "${sipm_size_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --sipm-size value: ${sipm_size_value}. Expected a positive number." >&2
+      exit 1
+    fi
+  done
+  awk -v u="${sipm_size_u}" -v v="${sipm_size_v}" -v t="${sipm_size_t}" '
+    BEGIN {
+      if (u <= 0 || v <= 0 || t <= 0) {
+        printf "Invalid --sipm-size dimensions: %s %s %s. Expected positive values.\n", u, v, t > "/dev/stderr"
+        exit 1
+      }
+    }'
+  case "${sipm_size_unit}" in
+    mm|cm)
+      ;;
+    *)
+      echo "Invalid --sipm-size unit: ${sipm_size_unit}. Use mm or cm." >&2
+      exit 1
+      ;;
+  esac
+fi
+
 if [[ -n "${TANK_SIZE_OVERRIDE}" && -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
   echo "Use either --tank-size or --tank-size-preset, not both." >&2
   exit 1
@@ -720,13 +968,235 @@ fi
 
 if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then
   case "${SURFACE_PRESET_OVERRIDE}" in
-    polished|ground|wrapped)
+    polished|ground|wrapped|polishedfrontpainted|groundfrontpainted|polishedbackpainted|groundbackpainted)
       ;;
     *)
-      echo "Invalid --surface-preset: ${SURFACE_PRESET_OVERRIDE}. Use polished, ground, or wrapped." >&2
+      echo "Invalid --surface-preset: ${SURFACE_PRESET_OVERRIDE}. Use polished, ground, wrapped, polishedfrontpainted, groundfrontpainted, polishedbackpainted, or groundbackpainted." >&2
       exit 1
       ;;
   esac
+fi
+
+if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" ]]; then
+  case "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" in
+    ej510-empirical|constant|none)
+      ;;
+    *)
+      echo "Invalid --surface-reflectivity-model: ${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}. Use ej510-empirical, constant, or none." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+  if [[ ! "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --surface-reflectivity: ${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}. Expected a number between 0 and 1." >&2
+    exit 1
+  fi
+  awk -v value="${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" '
+    BEGIN {
+      if (value < 0 || value > 1) {
+        printf "Invalid --surface-reflectivity: %s. Expected a number between 0 and 1.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+fi
+
+if [[ -n "${SURFACE_RINDEX_OVERRIDE}" && -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+  echo "Use either --surface-rindex or --surface-rindex-csv, not both." >&2
+  exit 1
+fi
+if [[ -n "${SURFACE_RINDEX_OVERRIDE}" ]]; then
+  if [[ ! "${SURFACE_RINDEX_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --surface-rindex: ${SURFACE_RINDEX_OVERRIDE}. Expected a positive number." >&2
+    exit 1
+  fi
+  awk -v value="${SURFACE_RINDEX_OVERRIDE}" '
+    BEGIN {
+      if (value <= 0) {
+        printf "Invalid --surface-rindex: %s. Expected a positive number.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+fi
+if [[ -n "${SURFACE_RINDEX_CSV_OVERRIDE}" && ! -f "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+  echo "Missing --surface-rindex-csv file: ${SURFACE_RINDEX_CSV_OVERRIDE}" >&2
+  exit 1
+fi
+
+case "${OPTICAL_COUPLING}" in
+  none|ej550-grease)
+    ;;
+  *)
+    echo "Invalid --optical-coupling: ${OPTICAL_COUPLING}. Use none or ej550-grease." >&2
+    exit 1
+    ;;
+esac
+
+grease_absorption_model="${GREASE_ABSORPTION_MODEL_OVERRIDE}"
+if [[ -z "${grease_absorption_model}" ]]; then
+  if [[ -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+    grease_absorption_model="ej550-transmission-derived"
+  elif [[ "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+    grease_absorption_model="constant"
+  else
+    grease_absorption_model="transparent"
+  fi
+fi
+case "${grease_absorption_model}" in
+  transparent|constant|ej550-transmission-derived)
+    ;;
+  *)
+    echo "Invalid --grease-absorption-model: ${grease_absorption_model}. Use transparent, constant, or ej550-transmission-derived." >&2
+    exit 1
+    ;;
+esac
+
+if [[ "${OPTICAL_COUPLING}" == "none" ]]; then
+  if [[ -n "${GREASE_THICKNESS_OVERRIDE}" || -n "${GREASE_SIZE_OVERRIDE}" ||
+        -n "${GREASE_RINDEX_OVERRIDE}" || -n "${GREASE_RINDEX_CSV_OVERRIDE}" ||
+        -n "${GREASE_ABSORPTION_MODEL_OVERRIDE}" ||
+        -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ||
+        "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+    echo "Grease options require --optical-coupling ej550-grease." >&2
+    exit 1
+  fi
+else
+  if [[ -z "${GREASE_THICKNESS_OVERRIDE}" ]]; then
+    echo "--optical-coupling ej550-grease requires --grease-thickness \"VALUE UNIT\"." >&2
+    exit 1
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" && -n "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    echo "Use either --grease-rindex or --grease-rindex-csv, not both." >&2
+    exit 1
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" ]]; then
+    if [[ ! "${GREASE_RINDEX_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-rindex: ${GREASE_RINDEX_OVERRIDE}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${GREASE_RINDEX_OVERRIDE}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-rindex: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+  fi
+  if [[ -n "${GREASE_RINDEX_CSV_OVERRIDE}" && ! -f "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    echo "Missing --grease-rindex-csv file: ${GREASE_RINDEX_CSV_OVERRIDE}" >&2
+    exit 1
+  fi
+
+  case "${grease_absorption_model}" in
+    transparent)
+      if [[ "${GREASE_ABS_LENGTH_SET}" == "1" || -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+        echo "--grease-absorption-model transparent cannot be combined with --grease-abs-length or --grease-transmission-csv." >&2
+        exit 1
+      fi
+      ;;
+    constant)
+      if [[ "${GREASE_ABS_LENGTH_SET}" != "1" ]]; then
+        echo "--grease-absorption-model constant requires --grease-abs-length \"VALUE UNIT\"." >&2
+        exit 1
+      fi
+      if [[ -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+        echo "--grease-absorption-model constant cannot be combined with --grease-transmission-csv." >&2
+        exit 1
+      fi
+      ;;
+    ej550-transmission-derived)
+      if [[ "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+        echo "--grease-absorption-model ej550-transmission-derived cannot be combined with --grease-abs-length." >&2
+        exit 1
+      fi
+      grease_transmission_csv_for_validation="${GREASE_TRANSMISSION_CSV_OVERRIDE:-${EJ550_TRANSMISSION_CSV}}"
+      if [[ ! -f "${grease_transmission_csv_for_validation}" ]]; then
+        echo "Missing EJ-550 transmission CSV: ${grease_transmission_csv_for_validation}." >&2
+        exit 1
+      fi
+      ;;
+  esac
+  read -r grease_thickness_value grease_thickness_unit grease_thickness_extra <<< "${GREASE_THICKNESS_OVERRIDE}"
+  if [[ -z "${grease_thickness_value:-}" || -z "${grease_thickness_unit:-}" || -n "${grease_thickness_extra:-}" ]]; then
+    echo "Invalid --grease-thickness: ${GREASE_THICKNESS_OVERRIDE}. Use quoted form like \"0.1 mm\"." >&2
+    exit 1
+  fi
+  if [[ ! "${grease_thickness_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --grease-thickness value: ${grease_thickness_value}. Expected a positive number." >&2
+    exit 1
+  fi
+  awk -v value="${grease_thickness_value}" '
+    BEGIN {
+      if (value <= 0) {
+        printf "Invalid --grease-thickness value: %s. Expected a positive number.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+  case "${grease_thickness_unit}" in
+    mm|cm)
+      ;;
+    *)
+      echo "Invalid --grease-thickness unit: ${grease_thickness_unit}. Use mm or cm." >&2
+      exit 1
+      ;;
+  esac
+
+  if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
+    read -r grease_size_u grease_size_v grease_size_unit grease_size_extra <<< "${GREASE_SIZE_OVERRIDE}"
+    if [[ -z "${grease_size_u:-}" || -z "${grease_size_v:-}" || -z "${grease_size_unit:-}" || -n "${grease_size_extra:-}" ]]; then
+      echo "Invalid --grease-size: ${GREASE_SIZE_OVERRIDE}. Use quoted form like \"2.4 2.4 mm\"." >&2
+      exit 1
+    fi
+    for grease_size_value in "${grease_size_u}" "${grease_size_v}"; do
+      if [[ ! "${grease_size_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+        echo "Invalid --grease-size value: ${grease_size_value}. Expected a positive number." >&2
+        exit 1
+      fi
+    done
+    awk -v u="${grease_size_u}" -v v="${grease_size_v}" '
+      BEGIN {
+        if (u <= 0 || v <= 0) {
+          printf "Invalid --grease-size dimensions: %s %s. Expected positive values.\n", u, v > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_size_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-size unit: ${grease_size_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  if [[ "${grease_absorption_model}" != "ej550-transmission-derived" ]]; then
+    read -r grease_abs_length_value grease_abs_length_unit grease_abs_length_extra <<< "${GREASE_ABS_LENGTH_OVERRIDE}"
+    if [[ -z "${grease_abs_length_value:-}" || -z "${grease_abs_length_unit:-}" || -n "${grease_abs_length_extra:-}" ]]; then
+      echo "Invalid --grease-abs-length: ${GREASE_ABS_LENGTH_OVERRIDE}. Use quoted form like \"1000 mm\"." >&2
+      exit 1
+    fi
+    if [[ ! "${grease_abs_length_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-abs-length value: ${grease_abs_length_value}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${grease_abs_length_value}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-abs-length value: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_abs_length_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-abs-length unit: ${grease_abs_length_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
 fi
 
 if [[ "${DIMPLE_ENABLED}" != "1" &&
@@ -985,6 +1455,116 @@ length_to_unit() {
     }'
 }
 
+property_vector_from_wavelength_csv() {
+  local path="$1"
+  local value_column="$2"
+  local property_name="$3"
+  python3 - "$path" "$value_column" "$property_name" <<'PY'
+import csv
+import math
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+value_column = sys.argv[2]
+property_name = sys.argv[3]
+rows = []
+seen_wavelengths = set()
+with path.open(newline="", encoding="utf-8") as handle:
+    reader = csv.DictReader(row for row in handle if not row.lstrip().startswith("#"))
+    if reader.fieldnames is None:
+        raise SystemExit(f"{path} is missing a CSV header")
+    required = {"wavelength_nm", value_column}
+    missing = required.difference(reader.fieldnames)
+    if missing:
+        raise SystemExit(f"{path} is missing columns: {', '.join(sorted(missing))}")
+    for row in reader:
+        wavelength_text = (row.get("wavelength_nm") or "").strip()
+        value_text = (row.get(value_column) or "").strip()
+        if not wavelength_text and not value_text:
+            continue
+        wavelength_nm = float(wavelength_text)
+        value = float(value_text)
+        if wavelength_nm <= 0:
+            raise SystemExit(f"{path}: wavelength_nm must be positive")
+        if wavelength_nm in seen_wavelengths:
+            raise SystemExit(f"{path}: duplicate wavelength_nm {wavelength_nm:g}")
+        seen_wavelengths.add(wavelength_nm)
+        if not math.isfinite(value):
+            raise SystemExit(f"{path}: {value_column} must be finite")
+        if value_column == "reflectivity" and not (0.0 <= value <= 1.0):
+            raise SystemExit(f"{path}: reflectivity must be between 0 and 1")
+        if value_column == "rindex" and value <= 0.0:
+            raise SystemExit(f"{path}: rindex must be positive")
+        energy_mev = 1.239841984e-3 / wavelength_nm
+        rows.append((energy_mev, value))
+if len(rows) < 2:
+    raise SystemExit(f"{path}: expected at least two data rows")
+rows.sort(key=lambda item: item[0])
+parts = [property_name]
+for energy_mev, value in rows:
+    parts.extend((f"{energy_mev:.10g}", f"{value:.10g}"))
+print(" ".join(parts))
+PY
+}
+
+effective_abs_length_vector_from_transmission_csv() {
+  local path="$1"
+  local reference_thickness_mm="$2"
+  python3 - "$path" "$reference_thickness_mm" <<'PY'
+import csv
+import math
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+reference_thickness_mm = float(sys.argv[2])
+if not math.isfinite(reference_thickness_mm) or reference_thickness_mm <= 0.0:
+    raise SystemExit("reference transmission thickness must be positive")
+
+rows = []
+seen_wavelengths = set()
+with path.open(newline="", encoding="utf-8") as handle:
+    reader = csv.DictReader(row for row in handle if not row.lstrip().startswith("#"))
+    if reader.fieldnames is None:
+        raise SystemExit(f"{path} is missing a CSV header")
+    required = {"wavelength_nm", "transmission"}
+    missing = required.difference(reader.fieldnames)
+    if missing:
+        raise SystemExit(f"{path} is missing columns: {', '.join(sorted(missing))}")
+    for row in reader:
+        wavelength_text = (row.get("wavelength_nm") or "").strip()
+        transmission_text = (row.get("transmission") or "").strip()
+        if not wavelength_text and not transmission_text:
+            continue
+        wavelength_nm = float(wavelength_text)
+        transmission = float(transmission_text)
+        if wavelength_nm <= 0.0:
+            raise SystemExit(f"{path}: wavelength_nm must be positive")
+        if wavelength_nm in seen_wavelengths:
+            raise SystemExit(f"{path}: duplicate wavelength_nm {wavelength_nm:g}")
+        seen_wavelengths.add(wavelength_nm)
+        if not math.isfinite(transmission) or not (0.0 < transmission < 1.0):
+            raise SystemExit(f"{path}: transmission must be strictly between 0 and 1")
+        energy_mev = 1.239841984e-3 / wavelength_nm
+        abs_length_mm = -reference_thickness_mm / math.log(transmission)
+        rows.append((energy_mev, abs_length_mm))
+if len(rows) < 2:
+    raise SystemExit(f"{path}: expected at least two data rows")
+rows.sort(key=lambda item: item[0])
+parts = ["ABSLENGTH"]
+for energy_mev, abs_length_mm in rows:
+    parts.extend((f"{energy_mev:.10g}", f"{abs_length_mm:.10g}"))
+print(" ".join(parts))
+PY
+}
+
+constant_property_vector() {
+  local property_name="$1"
+  local value="$2"
+  printf '%s 0.0000020 %s 0.0000033 %s' "${property_name}" "${value}" "${value}"
+}
+
 infer_custom_beam_z() {
   local thickness_value thickness_unit thickness_grid offset_grid
 
@@ -1046,6 +1626,9 @@ case "${SOURCE_MODE}" in
 esac
 
 sipm_size="$(macro_value_after "/opnovice2/sipm/size")"
+if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then
+  sipm_size="${SIPM_SIZE_OVERRIDE}"
+fi
 read -r sipm_active_u sipm_active_v sipm_thickness sipm_unit _ <<< "${sipm_size}"
 
 if [[ -z "${sipm_active_u:-}" || -z "${sipm_active_v:-}" || -z "${sipm_unit:-}" ]]; then
@@ -1308,6 +1891,17 @@ surface_sigma_alpha="${template_surface_sigma_alpha}"
 surface_reflectivity=""
 surface_reflectivity_energy_min=""
 surface_reflectivity_energy_max=""
+surface_reflectivity_model="none"
+surface_reflectivity_csv=""
+surface_reflectivity_vector=""
+surface_reflectivity_source=""
+surface_reflectivity_digitization=""
+surface_layer_rindex_model="none"
+surface_layer_rindex_source=""
+surface_layer_rindex=""
+surface_layer_rindex_csv=""
+surface_layer_rindex_vector=""
+surface_layer_rindex_caveat=""
 if [[ -n "${surface_preset}" ]]; then
   surface_model="unified"
   surface_type="dielectric_dielectric"
@@ -1326,6 +1920,230 @@ if [[ -n "${surface_preset}" ]]; then
       surface_reflectivity="0.95"
       surface_reflectivity_energy_min="0.0000020 MeV"
       surface_reflectivity_energy_max="0.0000033 MeV"
+      ;;
+    polishedfrontpainted)
+      surface_finish="polishedfrontpainted"
+      surface_sigma_alpha="0.0"
+      ;;
+    groundfrontpainted)
+      surface_finish="groundfrontpainted"
+      surface_sigma_alpha="0.2"
+      ;;
+    polishedbackpainted)
+      surface_finish="polishedbackpainted"
+      surface_sigma_alpha="0.0"
+      ;;
+    groundbackpainted)
+      surface_finish="groundbackpainted"
+      surface_sigma_alpha="0.2"
+      ;;
+  esac
+fi
+if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" ]]; then
+  surface_reflectivity_model="${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}"
+elif [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+  surface_reflectivity_model="constant"
+elif [[ -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+  surface_reflectivity_model="ej510-empirical"
+else
+  case "${surface_preset}" in
+    wrapped)
+      surface_reflectivity_model="constant"
+      ;;
+    polishedfrontpainted|groundfrontpainted|polishedbackpainted|groundbackpainted)
+      surface_reflectivity_model="ej510-empirical"
+      ;;
+    *)
+      surface_reflectivity_model="none"
+      ;;
+  esac
+fi
+case "${surface_reflectivity_model}" in
+  none)
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model none cannot be combined with --surface-reflectivity or --surface-reflectivity-csv." >&2
+      exit 1
+    fi
+    surface_reflectivity=""
+    surface_reflectivity_energy_min=""
+    surface_reflectivity_energy_max=""
+    surface_reflectivity_vector=""
+    ;;
+  constant)
+    if [[ -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model constant cannot be combined with --surface-reflectivity-csv." >&2
+      exit 1
+    fi
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+      surface_reflectivity="${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}"
+    elif [[ "${surface_preset}" == "wrapped" ]]; then
+      surface_reflectivity="0.95"
+    else
+      echo "--surface-reflectivity-model constant requires --surface-reflectivity VALUE." >&2
+      exit 1
+    fi
+    surface_reflectivity_energy_min="0.0000020 MeV"
+    surface_reflectivity_energy_max="0.0000033 MeV"
+    surface_reflectivity_vector="$(constant_property_vector REFLECTIVITY "${surface_reflectivity}")"
+    ;;
+  ej510-empirical)
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model ej510-empirical cannot be combined with --surface-reflectivity." >&2
+      exit 1
+    fi
+    surface_reflectivity_csv="${SURFACE_REFLECTIVITY_CSV_OVERRIDE:-${EJ510_REFLECTIVITY_CSV}}"
+    if [[ ! -f "${surface_reflectivity_csv}" ]]; then
+      echo "Missing EJ-510 reflectivity CSV: ${surface_reflectivity_csv}. Pass --surface-reflectivity-csv or fill the default optical data file." >&2
+      exit 1
+    fi
+    surface_reflectivity=""
+    surface_reflectivity_energy_min=""
+    surface_reflectivity_energy_max=""
+    surface_reflectivity_vector="$(property_vector_from_wavelength_csv "${surface_reflectivity_csv}" reflectivity REFLECTIVITY)"
+    if [[ "${surface_reflectivity_csv}" == "${EJ510_REFLECTIVITY_CSV}" ]]; then
+      surface_reflectivity_source="${EJ510_REFLECTIVITY_SOURCE_URL}"
+      surface_reflectivity_digitization="manufacturer_plot_digitized_approximate"
+    else
+      surface_reflectivity_source="user_csv"
+      surface_reflectivity_digitization="unspecified"
+    fi
+    ;;
+esac
+
+case "${surface_finish}" in
+  polishedbackpainted|groundbackpainted)
+    if [[ -n "${SURFACE_RINDEX_OVERRIDE}" ]]; then
+      surface_layer_rindex="${SURFACE_RINDEX_OVERRIDE}"
+      if [[ "${surface_layer_rindex}" == "${BACKPAINTED_AIR_RINDEX}" ]]; then
+        surface_layer_rindex_model="air-gap-proxy-explicit"
+        surface_layer_rindex_source="lab_setup_assumption"
+        surface_layer_rindex_caveat="${BACKPAINTED_AIR_GAP_CAVEAT}"
+      else
+        surface_layer_rindex_model="constant-override"
+        surface_layer_rindex_source="cli"
+        surface_layer_rindex_caveat="${BACKPAINTED_MODEL_CAVEAT}"
+      fi
+      surface_layer_rindex_vector="$(constant_property_vector RINDEX "${surface_layer_rindex}")"
+    elif [[ -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+      surface_layer_rindex_model="csv-override"
+      surface_layer_rindex_source="user_csv"
+      surface_layer_rindex_caveat="${BACKPAINTED_MODEL_CAVEAT}"
+      surface_layer_rindex_csv="${SURFACE_RINDEX_CSV_OVERRIDE}"
+      surface_layer_rindex_vector="$(property_vector_from_wavelength_csv "${surface_layer_rindex_csv}" rindex RINDEX)"
+    else
+      surface_layer_rindex_model="air-gap-proxy"
+      surface_layer_rindex_source="lab_setup_assumption"
+      surface_layer_rindex_caveat="${BACKPAINTED_AIR_GAP_CAVEAT}"
+      surface_layer_rindex="${BACKPAINTED_AIR_RINDEX}"
+      surface_layer_rindex_vector="$(constant_property_vector RINDEX "${surface_layer_rindex}")"
+    fi
+    ;;
+  *)
+    if [[ -n "${SURFACE_RINDEX_OVERRIDE}" || -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+      echo "--surface-rindex and --surface-rindex-csv are supported only for polishedbackpainted or groundbackpainted surfaces." >&2
+      exit 1
+    fi
+    ;;
+esac
+grease_enabled=false
+grease_thickness=""
+grease_size=""
+grease_size_macro=""
+grease_rindex_model="none"
+grease_rindex_source=""
+grease_rindex_csv=""
+grease_rindex=""
+grease_rindex_vector=""
+grease_absorption_model_resolved="none"
+grease_abs_length=""
+grease_abs_length_mm=""
+grease_abs_length_vector=""
+grease_transmission_csv=""
+grease_transmission_source=""
+grease_transmission_reference_thickness_mm=""
+grease_abs_length_derivation=""
+if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
+  grease_enabled=true
+  grease_absorption_model_resolved="${grease_absorption_model}"
+  if [[ "${MODE}" != "full" ]]; then
+    echo "--optical-coupling ej550-grease is supported only with MODE=full flat-tile geometry." >&2
+    exit 1
+  fi
+  if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+    echo "--optical-coupling ej550-grease cannot be combined with --dimple." >&2
+    exit 1
+  fi
+  if [[ "${sipm_face}" != "-Z" ]]; then
+    echo "--optical-coupling ej550-grease supports only bottom-center --sipm-face -Z; resolved face is ${sipm_face}." >&2
+    exit 1
+  fi
+  read -r grease_sipm_local_x grease_sipm_local_y grease_sipm_local_z grease_sipm_local_unit grease_sipm_local_extra <<< "${sipm_local}"
+  if [[ -z "${grease_sipm_local_x:-}" || -z "${grease_sipm_local_y:-}" ||
+        -z "${grease_sipm_local_z:-}" || -z "${grease_sipm_local_unit:-}" ||
+        -n "${grease_sipm_local_extra:-}" ]]; then
+    echo "Could not parse resolved SiPM local position for grease validation: ${sipm_local}" >&2
+    exit 1
+  fi
+  require_number "resolved SiPM local x" "${grease_sipm_local_x}"
+  require_number "resolved SiPM local y" "${grease_sipm_local_y}"
+  require_number "resolved SiPM local z" "${grease_sipm_local_z}"
+  grease_sipm_local_x_mm="$(length_to_unit "${grease_sipm_local_x}" "${grease_sipm_local_unit}" "mm")"
+  grease_sipm_local_y_mm="$(length_to_unit "${grease_sipm_local_y}" "${grease_sipm_local_unit}" "mm")"
+  grease_sipm_local_z_mm="$(length_to_unit "${grease_sipm_local_z}" "${grease_sipm_local_unit}" "mm")"
+  awk -v x="${grease_sipm_local_x_mm}" -v y="${grease_sipm_local_y_mm}" -v z="${grease_sipm_local_z_mm}" '
+    BEGIN {
+      if (x < 0) x = -x
+      if (y < 0) y = -y
+      if (z < 0) z = -z
+      if (x > 1e-9 || y > 1e-9 || z > 1e-9) {
+        printf "EJ-550 grease coupling supports only --sipm-local-position \"0 0 0 unit\".\n" > "/dev/stderr"
+        exit 1
+      }
+    }'
+
+  grease_thickness="${GREASE_THICKNESS_OVERRIDE}"
+  if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
+    grease_size="${grease_size_u} ${grease_size_v} ${grease_size_unit}"
+    grease_size_macro="${grease_size_u} ${grease_size_v} 0 ${grease_size_unit}"
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" ]]; then
+    grease_rindex_model="constant-override"
+    grease_rindex_source="cli"
+    grease_rindex="${GREASE_RINDEX_OVERRIDE}"
+    grease_rindex_vector="$(constant_property_vector RINDEX "${grease_rindex}")"
+  elif [[ -n "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    grease_rindex_model="csv-override"
+    grease_rindex_source="user_csv"
+    grease_rindex_csv="${GREASE_RINDEX_CSV_OVERRIDE}"
+    grease_rindex_vector="$(property_vector_from_wavelength_csv "${grease_rindex_csv}" rindex RINDEX)"
+  else
+    grease_rindex_model="ej550-official-constant"
+    grease_rindex_source="https://eljentechnology.com/images/products/data_sheets/EJ-550_EJ-552.pdf"
+    grease_rindex="${EJ550_OFFICIAL_RINDEX}"
+    grease_rindex_vector="$(constant_property_vector RINDEX "${grease_rindex}")"
+  fi
+  case "${grease_absorption_model_resolved}" in
+    transparent)
+      grease_abs_length="${GREASE_ABS_LENGTH_OVERRIDE}"
+      grease_abs_length_mm="$(length_to_unit "${grease_abs_length_value}" "${grease_abs_length_unit}" "mm")"
+      grease_abs_length_vector="$(constant_property_vector ABSLENGTH "${grease_abs_length_mm}")"
+      ;;
+    constant)
+      grease_abs_length="${GREASE_ABS_LENGTH_OVERRIDE}"
+      grease_abs_length_mm="$(length_to_unit "${grease_abs_length_value}" "${grease_abs_length_unit}" "mm")"
+      grease_abs_length_vector="$(constant_property_vector ABSLENGTH "${grease_abs_length_mm}")"
+      ;;
+    ej550-transmission-derived)
+      grease_transmission_csv="${GREASE_TRANSMISSION_CSV_OVERRIDE:-${EJ550_TRANSMISSION_CSV}}"
+      if [[ "${grease_transmission_csv}" == "${EJ550_TRANSMISSION_CSV}" ]]; then
+        grease_transmission_source="${EJ550_TRANSMISSION_SOURCE_URL}"
+      else
+        grease_transmission_source="user_csv"
+      fi
+      grease_transmission_reference_thickness_mm="${EJ550_TRANSMISSION_REFERENCE_THICKNESS_MM}"
+      grease_abs_length_derivation="beer_lambert_L=-reference_thickness/ln(transmission)"
+      grease_abs_length_vector="$(effective_abs_length_vector_from_transmission_csv \
+        "${grease_transmission_csv}" "${grease_transmission_reference_thickness_mm}")"
       ;;
   esac
 fi
@@ -1541,12 +2359,15 @@ write_run_config() {
     printf '    "sipm_face": %s,\n' "$(if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_cavity_mode": %s,\n' "$(if [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_local_position": %s,\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "sipm_size": %s,\n' "$(if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "primary_energy": %s,\n' "$(if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "source_model": %s,\n' "$(if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "surface_reflectivity": %s,\n' "$(if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "optical_coupling": %s,\n' "$(if [[ "${OPTICAL_COUPLING}" != "none" ]]; then echo true; else echo false; fi)"
     printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
     printf '    "beam_divergence_mrad": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]]; then echo true; else echo false; fi)"
     printf '    "dimple": %s\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
@@ -1709,6 +2530,133 @@ write_run_config() {
       printf '    "near_field_step": null\n'
     fi
     printf '  },\n'
+    printf '  "optical_coupling": {\n'
+    printf '    "model": "%s",\n' "$(json_string "${OPTICAL_COUPLING}")"
+    printf '    "grease_enabled": %s,\n' "$(if [[ "${grease_enabled}" == "true" ]]; then echo true; else echo false; fi)"
+    printf '    "grease_material": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"EJ-550 optical grade silicone grease"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_density_g_cm3": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '%s' "${EJ550_DENSITY_G_CM3}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_composition_model": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"silicone_like_C2H6OSi_proxy"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_material_source": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"https://eljentechnology.com/images/products/data_sheets/EJ-550_EJ-552.pdf"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_thickness": '
+    if [[ -n "${grease_thickness}" ]]; then
+      printf '"%s"' "$(json_string "${grease_thickness}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_size": '
+    if [[ -n "${grease_size}" ]]; then
+      printf '"%s"' "$(json_string "${grease_size}")"
+    elif [[ "${grease_enabled}" == "true" ]]; then
+      printf '"follow_sipm_active_area"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_model": "%s",\n' "$(json_string "${grease_rindex_model}")"
+    printf '    "grease_rindex_source": '
+    if [[ -n "${grease_rindex_source}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex": '
+    if [[ -n "${grease_rindex}" ]]; then
+      printf '%s' "$(format_num "${grease_rindex}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_csv": '
+    if [[ -n "${grease_rindex_csv}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_absorption_model": "%s",\n' "$(json_string "${grease_absorption_model_resolved}")"
+    printf '    "grease_abs_length": '
+    if [[ -n "${grease_abs_length}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_mm": '
+    if [[ -n "${grease_abs_length_mm}" ]]; then
+      printf '%s' "$(format_num "${grease_abs_length_mm}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_csv": '
+    if [[ -n "${grease_transmission_csv}" ]]; then
+      printf '"%s"' "$(json_string "${grease_transmission_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_source": '
+    if [[ -n "${grease_transmission_source}" ]]; then
+      printf '"%s"' "$(json_string "${grease_transmission_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_reference_thickness_mm": '
+    if [[ -n "${grease_transmission_reference_thickness_mm}" ]]; then
+      printf '%s' "$(format_num "${grease_transmission_reference_thickness_mm}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_derivation": '
+    if [[ -n "${grease_abs_length_derivation}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length_derivation}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_vector": '
+    if [[ -n "${grease_rindex_vector}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_vector}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_vector": '
+    if [[ -n "${grease_abs_length_vector}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length_vector}")"
+    else
+      printf 'null'
+    fi
+    printf '\n'
+    printf '  },\n'
     printf '  "dimple": {\n'
     printf '    "enabled": %s,\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
     if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
@@ -1796,7 +2744,86 @@ write_run_config() {
     printf ',\n'
     printf '    "reflectivity_energy_max": '
     if [[ -n "${surface_reflectivity_energy_max}" ]]; then
-      printf '"%s"\n' "$(json_string "${surface_reflectivity_energy_max}")"
+      printf '"%s"' "$(json_string "${surface_reflectivity_energy_max}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_model": "%s",\n' "$(json_string "${surface_reflectivity_model}")"
+    printf '    "reflectivity_source": '
+    if [[ -n "${surface_reflectivity_source}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_digitization": '
+    if [[ -n "${surface_reflectivity_digitization}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_digitization}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "paint_volume_model": '
+    if [[ "${surface_reflectivity_model}" == "ej510-empirical" ]]; then
+      printf '"optical_surface_proxy"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "ej510_three_layer_reference_thickness_mm": '
+    if [[ "${surface_reflectivity_model}" == "ej510-empirical" ]]; then
+      printf '%s' "${EJ510_COATING_REFERENCE_THICKNESS_MM}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_csv": '
+    if [[ -n "${surface_reflectivity_csv}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_model": "%s",\n' "$(json_string "${surface_layer_rindex_model}")"
+    printf '    "surface_layer_rindex_source": '
+    if [[ -n "${surface_layer_rindex_source}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex": '
+    if [[ -n "${surface_layer_rindex}" ]]; then
+      printf '%s' "$(format_num "${surface_layer_rindex}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_csv": '
+    if [[ -n "${surface_layer_rindex_csv}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_vector": '
+    if [[ -n "${surface_layer_rindex_vector}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_vector}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_caveat": '
+    if [[ -n "${surface_layer_rindex_caveat}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_caveat}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_vector": '
+    if [[ -n "${surface_reflectivity_vector}" ]]; then
+      printf '"%s"\n' "$(json_string "${surface_reflectivity_vector}")"
     else
       printf 'null\n'
     fi
@@ -1898,6 +2925,29 @@ generate_root_plots() {
 }
 
 write_run_config
+
+SURFACE_PROPERTIES_FRAGMENT=""
+if [[ -n "${surface_reflectivity_vector}" || -n "${surface_layer_rindex_vector}" ]]; then
+  SURFACE_PROPERTIES_FRAGMENT="${RUN_DIR}/surface_properties.mac"
+  {
+    if [[ -n "${surface_reflectivity_vector}" ]]; then
+      printf '/opnovice2/surfaceProperty %s\n' "${surface_reflectivity_vector}"
+    fi
+    if [[ -n "${surface_layer_rindex_vector}" ]]; then
+      printf '/opnovice2/surfaceProperty %s\n' "${surface_layer_rindex_vector}"
+    fi
+  } > "${SURFACE_PROPERTIES_FRAGMENT}"
+fi
+
+GREASE_PROPERTIES_FRAGMENT=""
+if [[ "${grease_enabled}" == "true" ]]; then
+  GREASE_PROPERTIES_FRAGMENT="${RUN_DIR}/grease_properties.mac"
+  {
+    printf '/opnovice2/greaseProperty %s\n' "${grease_rindex_vector}"
+    printf '/opnovice2/greaseProperty %s\n' "${grease_abs_length_vector}"
+  } > "${GREASE_PROPERTIES_FRAGMENT}"
+fi
+
 cp "${RUN_CONFIG}" "${LATEST_RUN_CONFIG}"
 cp "${POINTS_CSV}" "${LATEST_POINTS_CSV}"
 if [[ -L "${LATEST_RUN_LINK}" || ! -e "${LATEST_RUN_LINK}" ]]; then
@@ -1946,9 +2996,24 @@ fi
 if [[ -n "${surface_preset}" ]]; then
   echo "Surface preset: ${surface_preset} (finish=${surface_finish}, sigma_alpha=${surface_sigma_alpha})"
 fi
+echo "Surface reflectivity model: ${surface_reflectivity_model}"
+if [[ -n "${surface_reflectivity}" ]]; then
+  echo "Surface reflectivity: ${surface_reflectivity}"
+fi
+if [[ -n "${surface_reflectivity_csv}" ]]; then
+  echo "Surface reflectivity CSV: ${surface_reflectivity_csv}"
+fi
+if [[ "${surface_layer_rindex_model}" != "none" ]]; then
+  echo "Surface-layer RINDEX: model=${surface_layer_rindex_model}, value=${surface_layer_rindex:-csv}, caveat=${surface_layer_rindex_caveat}"
+fi
+echo "Optical coupling: ${OPTICAL_COUPLING}"
+if [[ "${grease_enabled}" == "true" ]]; then
+  echo "Grease: thickness=${grease_thickness}, size=${grease_size:-follow_sipm_active_area}, rindex_model=${grease_rindex_model}, absorption_model=${grease_absorption_model_resolved}, abs_length=${grease_abs_length:-derived_from_transmission}"
+fi
 if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
   echo "Dimple: hemisphere radius=$(format_num "${DIMPLE_RADIUS}") ${DIMPLE_UNIT} (${DIMPLE_SIPM_MODE}, radius_mm=$(format_num "${DIMPLE_RADIUS_MM}"))"
 fi
+echo "SiPM size: ${sipm_size}"
 echo "Metadata: ${RUN_CONFIG}, ${POINTS_CSV}"
 echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS_CSV}"
 
@@ -1964,12 +3029,14 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     --set "/run/beamOn=${N_EVENTS}"
     --set "/opnovice2/sipm/face=${sipm_face}"
     --set "/opnovice2/sipm/localPosition=${sipm_local}"
+    --set "/opnovice2/sipm/size=${sipm_size}"
     --require "/analysis/setFileName"
     --require "${position_cmd}"
     --require "${direction_cmd}"
     --require "/run/beamOn"
     --require "/opnovice2/sipm/face"
     --require "/opnovice2/sipm/localPosition"
+    --require "/opnovice2/sipm/size"
   )
 
   if [[ "${source_model}" == "sr90-decay" ]]; then
@@ -2064,6 +3131,30 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       --set "/opnovice2/surfacePreset=${surface_preset}"
       --require "/opnovice2/surfacePreset"
     )
+  fi
+  if [[ -n "${SURFACE_PROPERTIES_FRAGMENT}" ]]; then
+    macro_args+=(
+      --remove "/opnovice2/surfaceProperty"
+      --insert-file-before "${SURFACE_PROPERTIES_FRAGMENT}=/run/initialize"
+      --require "/opnovice2/surfaceProperty"
+    )
+  fi
+  if [[ "${grease_enabled}" == "true" ]]; then
+    macro_args+=(
+      --remove "/opnovice2/greaseProperty"
+      --set "/opnovice2/grease/enabled=true"
+      --set "/opnovice2/grease/thickness=${grease_thickness}"
+      --insert-file-before "${GREASE_PROPERTIES_FRAGMENT}=/run/initialize"
+      --require "/opnovice2/grease/enabled"
+      --require "/opnovice2/grease/thickness"
+      --require "/opnovice2/greaseProperty"
+    )
+    if [[ -n "${grease_size_macro}" ]]; then
+      macro_args+=(
+        --set "/opnovice2/grease/size=${grease_size_macro}"
+        --require "/opnovice2/grease/size"
+      )
+    fi
   fi
   if [[ "${SOURCE_MODE}" == "gun" || "${electron_energy_mode}" != "fixed" ]]; then
     macro_args+=(

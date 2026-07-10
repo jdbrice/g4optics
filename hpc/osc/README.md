@@ -94,6 +94,45 @@ python3 hpc/osc/generate_scan_plan.py \
   --step 5 --grid-unit mm
 ```
 
+Additional painted presets are supported for lab matching:
+`polishedfrontpainted`, `groundfrontpainted`, `polishedbackpainted`, and
+`groundbackpainted`.
+
+The lab v2 real-setup scaffold uses the repository's digitized EJ-510
+reflectivity curve, the official EJ-550 constant refractive index 1.46, and the
+confirmed circular Gaussian beam sigma of 5 mm. Grease thickness remains a
+required experimental input:
+
+```bash
+GREASE_THICKNESS="... mm" \
+hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+Divergence calibration starts from `polishedfrontpainted`, matching the
+observed lab setup where EJ-510 is applied directly to the EJ-200 tile. The
+later four-surface comparison retains both backpainted variants as sensitivity
+models. Those variants explicitly use an air-gap surface `RINDEX=1.0003`; this
+is recorded as a caveat in every plan and in `run_config.json`, not presented as
+the refractive index of EJ-510. Override it only for a deliberate model study
+with `BACKPAINTED_AIR_RINDEX=...` or the runner's `--surface-rindex`/
+`--surface-rindex-csv` options.
+
+The default grease absorption model is `transparent` (`ABSLENGTH=1000 mm`).
+For an explicitly derived sensitivity model based on Eljen's 0.1 mm
+transmission plot, use:
+
+```bash
+GREASE_THICKNESS="... mm" \
+GREASE_ABSORPTION_MODEL=ej550-transmission-derived \
+hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+`BEAM_SIGMA`, `GREASE_RINDEX`, `GREASE_RINDEX_CSV`, and
+`GREASE_TRANSMISSION_CSV` remain optional overrides. The transmission-derived
+model converts the digitized transmission values to an effective bulk
+absorption length with `L=-0.1 mm/ln(T)`; it is recorded as a derived model in
+`run_config.json`, not as a directly tabulated manufacturer absorption length.
+
 For Week 8 dimple scans, add dimple options:
 
 ```bash

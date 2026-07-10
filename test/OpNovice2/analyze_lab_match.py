@@ -72,10 +72,20 @@ def coord_key(x: float, y: float, precision: int) -> tuple[float, float]:
     return (round(x, precision), round(y, precision))
 
 
+def combine_uncertainty(response: float, csv_uncertainty: float, relative_uncertainty: float) -> float:
+    csv_component = csv_uncertainty if finite(csv_uncertainty) and csv_uncertainty > 0 else 0.0
+    relative_component = abs(response) * relative_uncertainty if finite(response) else 0.0
+    total = math.sqrt(csv_component * csv_component + relative_component * relative_component)
+    if total > 0:
+        return total
+    return csv_uncertainty
+
+
 def read_lab_rows(
     path: Path,
     response_column: str,
     uncertainty_column: str,
+    relative_uncertainty: float,
     x_offset: float,
     y_offset: float,
 ) -> list[LabRow]:
@@ -89,12 +99,14 @@ def read_lab_rows(
         if missing:
             raise ValueError(f"{path} is missing columns: {', '.join(sorted(missing))}")
         for row in reader:
+            response = parse_float(row[response_column], response_column)
+            csv_uncertainty = parse_float(row[uncertainty_column], uncertainty_column)
             rows.append(
                 LabRow(
                     x=parse_float(row["X"], "X") + x_offset,
                     y=parse_float(row["Y"], "Y") + y_offset,
-                    response=parse_float(row[response_column], response_column),
-                    uncertainty=parse_float(row[uncertainty_column], uncertainty_column),
+                    response=response,
+                    uncertainty=combine_uncertainty(response, csv_uncertainty, relative_uncertainty),
                 )
             )
     if not rows:
@@ -264,6 +276,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--lab-response-column", default="Dark_Current_Subtracted_Integral")
     parser.add_argument("--lab-uncertainty-column", default="Uncertainty")
+    parser.add_argument(
+        "--lab-relative-uncertainty",
+        type=float,
+        default=0.10,
+        help="Additional pointwise relative lab/model uncertainty added in quadrature.",
+    )
     parser.add_argument("--tile-size-mm", help='Override inferred tile size, e.g. "50 50 16".')
     parser.add_argument("--x-offset", type=float, default=0.0)
     parser.add_argument("--y-offset", type=float, default=0.0)
@@ -274,6 +292,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    if args.lab_relative_uncertainty < 0:
+        raise SystemExit("--lab-relative-uncertainty must be non-negative")
     lab_csv = Path(args.lab_csv)
     sim_csv = Path(args.sim_csv)
     geometry = parse_tile_size(args.tile_size_mm, lab_csv)
@@ -282,6 +302,7 @@ def main() -> int:
         lab_csv,
         args.lab_response_column,
         args.lab_uncertainty_column,
+        args.lab_relative_uncertainty,
         args.x_offset,
         args.y_offset,
     )
@@ -308,6 +329,9 @@ def main() -> int:
         row["lab_csv"] = str(lab_csv)
         row["sim_csv"] = str(sim_csv)
         row["sim_response"] = args.sim_response
+        row["lab_uncertainty_column"] = args.lab_uncertainty_column
+        row["lab_relative_uncertainty"] = args.lab_relative_uncertainty
+        row["lab_uncertainty_model"] = "csv_plus_relative"
         row["divergence_mrad"] = divergence if divergence is not None else float("nan")
         row["missing_points"] = len(missing)
 
@@ -315,6 +339,9 @@ def main() -> int:
         "lab_csv",
         "sim_csv",
         "sim_response",
+        "lab_uncertainty_column",
+        "lab_relative_uncertainty",
+        "lab_uncertainty_model",
         "divergence_mrad",
         "region",
         "matched_points",

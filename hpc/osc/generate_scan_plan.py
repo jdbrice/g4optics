@@ -162,7 +162,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--surface-preset",
         action="append",
-        choices=["polished", "ground", "wrapped"],
+        choices=[
+            "polished",
+            "ground",
+            "wrapped",
+            "polishedfrontpainted",
+            "groundfrontpainted",
+            "polishedbackpainted",
+            "groundbackpainted",
+        ],
         help="Surface preset. Repeat for Week 7 sweeps.",
     )
     parser.add_argument("--dimple", action="store_true", help="Enable dimple scan arguments.")
