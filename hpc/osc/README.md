@@ -79,9 +79,7 @@ tasks total. Submit that bounded set with the same resumable helper by
 overriding its plan-set expectations:
 
 ```bash
-PLAN_DIR=hpc/osc/generated/lab_v2_realsetup/divergence_validation \
-EXPECTED_PLANS=8 EXPECTED_TASKS=172 \
-  hpc/osc/submit-lab-v2-calibration.sh PAS2524 /path/to/geant4-data
+hpc/osc/submit-lab-v2-validation.sh PAS2524 /path/to/geant4-data
 ```
 
 Use the same command with a final `--check-only` before submission to validate
