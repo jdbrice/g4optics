@@ -6,3 +6,5 @@ slurm-*.out
 outputs/
 test/OpNovice2/LOCAL_USAGE_GUIDE.zh.md
 .vscode/
+out_archives/
+out_files/
