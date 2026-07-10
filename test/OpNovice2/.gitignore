@@ -16,6 +16,8 @@ scan_runs/
 scan_runs_june_30/
 scan_runs_june_30_2026.tar.gz
 scan_latest
+lab_run/
+lab_run_v2/
 run_config.json
 *_run_config.json
 *.root
