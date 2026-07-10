@@ -3,15 +3,24 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-PLAN_DIR="${PROJECT_ROOT}/hpc/osc/generated/lab_v2_realsetup/divergence_calibration"
-MANIFEST="${PLAN_DIR}/submission-manifest.tsv"
-REBUILD_MANIFEST="${PLAN_DIR}/rebuild-smoke-jobs.tsv"
-EXPECTED_PLANS=24
-EXPECTED_TASKS=516
+PLAN_DIR="${PLAN_DIR:-${PROJECT_ROOT}/hpc/osc/generated/lab_v2_realsetup/divergence_calibration}"
+if [[ "${PLAN_DIR}" != /* ]]; then
+  PLAN_DIR="${PROJECT_ROOT}/${PLAN_DIR}"
+fi
+MANIFEST="${MANIFEST:-${PLAN_DIR}/submission-manifest.tsv}"
+if [[ "${MANIFEST}" != /* ]]; then
+  MANIFEST="${PROJECT_ROOT}/${MANIFEST}"
+fi
+REBUILD_MANIFEST="${REBUILD_MANIFEST:-${PLAN_DIR}/rebuild-smoke-jobs.tsv}"
+if [[ "${REBUILD_MANIFEST}" != /* ]]; then
+  REBUILD_MANIFEST="${PROJECT_ROOT}/${REBUILD_MANIFEST}"
+fi
+EXPECTED_PLANS="${EXPECTED_PLANS:-24}"
+EXPECTED_TASKS="${EXPECTED_TASKS:-516}"
 MAX_ACTIVE_TASKS="${MAX_ACTIVE_TASKS:-1000}"
 
 usage() {
-  echo "Usage: $0 ACCOUNT G4_DATA_ROOT [--resume|--retry-all|--rebuild-smoke]" >&2
+  echo "Usage: $0 ACCOUNT G4_DATA_ROOT [--check-only|--resume|--retry-all|--rebuild-smoke]" >&2
 }
 
 ACCOUNT="${1:-}"
@@ -22,7 +31,7 @@ if [[ -z "${ACCOUNT}" || -z "${G4_DATA_ROOT_VALUE}" || $# -gt 3 ]]; then
   exit 2
 fi
 case "${SUBMIT_MODE}" in
-  ""|--resume|--retry-all|--rebuild-smoke)
+  ""|--check-only|--resume|--retry-all|--rebuild-smoke)
     ;;
   *)
     usage
@@ -40,7 +49,10 @@ if [[ ! -d "${PLAN_DIR}" ]]; then
   exit 1
 fi
 
-mapfile -t plans < <(find "${PLAN_DIR}" -maxdepth 1 -type f -name '*.txt' | sort)
+plans=()
+while IFS= read -r plan; do
+  plans+=("${plan}")
+done < <(find "${PLAN_DIR}" -maxdepth 1 -type f -name '*.txt' | sort)
 if [[ "${#plans[@]}" -ne "${EXPECTED_PLANS}" ]]; then
   echo "Expected ${EXPECTED_PLANS} plans, found ${#plans[@]} in ${PLAN_DIR}." >&2
   exit 1
@@ -61,6 +73,13 @@ done
 if [[ "${total_tasks}" -ne "${EXPECTED_TASKS}" ]]; then
   echo "Expected ${EXPECTED_TASKS} tasks, found ${total_tasks}." >&2
   exit 1
+fi
+
+if [[ "${SUBMIT_MODE}" == "--check-only" ]]; then
+  echo "Validated ${#plans[@]} plans with ${total_tasks} tasks."
+  echo "Plan directory: ${PLAN_DIR}"
+  echo "Geant4 datasets: ${G4_DATA_ROOT_VALUE}"
+  exit 0
 fi
 
 if [[ "${SUBMIT_MODE}" == "--rebuild-smoke" ]]; then

@@ -13,6 +13,10 @@ SURFACE_REFLECTIVITY_CSV="${SURFACE_REFLECTIVITY_CSV:-optical_data/ej510_reflect
 CALIBRATION_SURFACE="${CALIBRATION_SURFACE:-polishedfrontpainted}"
 BACKPAINTED_AIR_RINDEX="${BACKPAINTED_AIR_RINDEX:-1.0003}"
 BEST_DIVERGENCE_MRAD="${BEST_DIVERGENCE_MRAD:-55}"
+DIVERGENCES_MRAD="${DIVERGENCES_MRAD:-25 35 45 55 65 75}"
+DIVERGENCE_STAGE="${DIVERGENCE_STAGE:-divergence_calibration}"
+GENERATE_DIVERGENCE_CALIBRATION="${GENERATE_DIVERGENCE_CALIBRATION:-1}"
+GENERATE_SURFACE_COMPARISON="${GENERATE_SURFACE_COMPARISON:-1}"
 OPTICAL_COUPLING="${OPTICAL_COUPLING:-none}"
 GREASE_ABSORPTION_MODEL="${GREASE_ABSORPTION_MODEL:-transparent}"
 GREASE_TRANSMISSION_CSV="${GREASE_TRANSMISSION_CSV:-optical_data/ej550_transmission_empirical.csv}"
@@ -110,7 +114,24 @@ if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
   esac
 fi
 
-DIVERGENCES=(25 35 45 55 65 75)
+read -r -a DIVERGENCES <<< "${DIVERGENCES_MRAD}"
+if [[ "${#DIVERGENCES[@]}" -eq 0 ]]; then
+  echo "DIVERGENCES_MRAD must contain at least one divergence." >&2
+  exit 1
+fi
+for divergence in "${DIVERGENCES[@]}"; do
+  if [[ ! "${divergence}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    echo "Invalid divergence in DIVERGENCES_MRAD: ${divergence}" >&2
+    exit 1
+  fi
+done
+for toggle_name in GENERATE_DIVERGENCE_CALIBRATION GENERATE_SURFACE_COMPARISON; do
+  toggle_value="${!toggle_name}"
+  if [[ "${toggle_value}" != "0" && "${toggle_value}" != "1" ]]; then
+    echo "${toggle_name} must be 0 or 1." >&2
+    exit 1
+  fi
+done
 SURFACES=(polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted)
 
 CSV_5X5X16="test/OpNovice2/lab_data/5x5x1.6_painted_undimpled_opticalGrease/responses_tile_50.000000x50.000000_pattern_eighth_grid_16mm_painted_optical_grease_tile_OM_1776182096.csv"
@@ -182,12 +203,23 @@ generate_quadrant_set() {
   generate_one "${stage}" "lab_v2_11p5x11p5x4" "${CSV_10X10X4}" "115 115 4 mm" 36 "${surface}" "${divergence}"
 }
 
-for divergence in "${DIVERGENCES[@]}"; do
-  generate_quadrant_set "divergence_calibration" "${CALIBRATION_SURFACE}" "${divergence}"
-done
+generated_dirs=()
+if [[ "${GENERATE_DIVERGENCE_CALIBRATION}" == "1" ]]; then
+  generated_dirs+=("${OUT_ROOT}/${DIVERGENCE_STAGE}")
+  for divergence in "${DIVERGENCES[@]}"; do
+    generate_quadrant_set "${DIVERGENCE_STAGE}" "${CALIBRATION_SURFACE}" "${divergence}"
+  done
+fi
 
-for surface in "${SURFACES[@]}"; do
-  generate_quadrant_set "surface_comparison" "${surface}" "${BEST_DIVERGENCE_MRAD}"
-done
+if [[ "${GENERATE_SURFACE_COMPARISON}" == "1" ]]; then
+  generated_dirs+=("${OUT_ROOT}/surface_comparison")
+  for surface in "${SURFACES[@]}"; do
+    generate_quadrant_set "surface_comparison" "${surface}" "${BEST_DIVERGENCE_MRAD}"
+  done
+fi
 
-find "${OUT_ROOT}/divergence_calibration" "${OUT_ROOT}/surface_comparison" -type f -name "*.txt" | sort
+if [[ "${#generated_dirs[@]}" -eq 0 ]]; then
+  echo "Nothing requested: both generation toggles are 0." >&2
+  exit 1
+fi
+find "${generated_dirs[@]}" -type f -name "*.txt" | sort

@@ -63,6 +63,39 @@ markers before merging. It writes one uniquely named map per plan plus
 `finalization_summary.tsv` and `all_efficiency_maps.csv` under
 `test/OpNovice2/scan_runs/lab_v2_realsetup/divergence_calibration/`.
 
+To generate the focused 45/75 mrad high-statistics validation without also
+regenerating the surface study:
+
+```bash
+EVENTS=5000 \
+DIVERGENCES_MRAD="45 75" \
+DIVERGENCE_STAGE=divergence_validation \
+GENERATE_SURFACE_COMPARISON=0 \
+  hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+This produces eight arrays (four tile geometries at each divergence) with 172
+tasks total. Submit that bounded set with the same resumable helper by
+overriding its plan-set expectations:
+
+```bash
+PLAN_DIR=hpc/osc/generated/lab_v2_realsetup/divergence_validation \
+EXPECTED_PLANS=8 EXPECTED_TASKS=172 \
+  hpc/osc/submit-lab-v2-calibration.sh PAS2524 /path/to/geant4-data
+```
+
+Use the same command with a final `--check-only` before submission to validate
+the plan count, task count, and Geant4 dataset path without calling `sbatch`.
+
+After completion, the generic finalizer can audit and merge the validation set:
+
+```bash
+python3 hpc/osc/finalize_lab_v2_calibration.py \
+  --manifest hpc/osc/generated/lab_v2_realsetup/divergence_validation/submission-manifest.tsv \
+  --output-dir test/OpNovice2/scan_runs/lab_v2_realsetup/divergence_validation \
+  --expected-plans 8 --expected-tasks 172
+```
+
 By default the merge writes a ROOT-compatible run directory under `test/OpNovice2/scan_runs`.
 For beam-size scans, the directory name is inferred from `run_config.json`, for example `test/OpNovice2/scan_runs/week9_2mm_thickness_1mm_beam_sigma/efficiency_map.csv`.
 If auto-naming is not specific enough, pass `--label NAME`; if you need the old flat-file behavior, pass an explicit CSV path with `--out path/to/file.csv`.
