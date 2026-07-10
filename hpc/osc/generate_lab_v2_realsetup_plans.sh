@@ -13,6 +13,8 @@ SURFACE_REFLECTIVITY_CSV="${SURFACE_REFLECTIVITY_CSV:-optical_data/ej510_reflect
 CALIBRATION_SURFACE="${CALIBRATION_SURFACE:-polishedfrontpainted}"
 BACKPAINTED_AIR_RINDEX="${BACKPAINTED_AIR_RINDEX:-1.0003}"
 BEST_DIVERGENCE_MRAD="${BEST_DIVERGENCE_MRAD:-55}"
+SURFACE_COMPARISON_STAGE="${SURFACE_COMPARISON_STAGE:-surface_comparison}"
+SURFACE_PRESETS="${SURFACE_PRESETS:-polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted}"
 DIVERGENCES_MRAD="${DIVERGENCES_MRAD:-25 35 45 55 65 75}"
 DIVERGENCE_STAGE="${DIVERGENCE_STAGE:-divergence_calibration}"
 GENERATE_DIVERGENCE_CALIBRATION="${GENERATE_DIVERGENCE_CALIBRATION:-1}"
@@ -132,7 +134,21 @@ for toggle_name in GENERATE_DIVERGENCE_CALIBRATION GENERATE_SURFACE_COMPARISON; 
     exit 1
   fi
 done
-SURFACES=(polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted)
+read -r -a SURFACES <<< "${SURFACE_PRESETS}"
+if [[ "${#SURFACES[@]}" -eq 0 ]]; then
+  echo "SURFACE_PRESETS must contain at least one surface preset." >&2
+  exit 1
+fi
+for surface in "${SURFACES[@]}"; do
+  case "${surface}" in
+    polishedfrontpainted|groundfrontpainted|polishedbackpainted|groundbackpainted)
+      ;;
+    *)
+      echo "Invalid surface in SURFACE_PRESETS: ${surface}" >&2
+      exit 1
+      ;;
+  esac
+done
 
 CSV_5X5X16="test/OpNovice2/lab_data/5x5x1.6_painted_undimpled_opticalGrease/responses_tile_50.000000x50.000000_pattern_eighth_grid_16mm_painted_optical_grease_tile_OM_1776182096.csv"
 CSV_5X5X4="test/OpNovice2/lab_data/5x5x0.4_painted_undimpled_opticalGrease/responses_tile_50.000000x50.000000_pattern_eighth_grid_4mm_no_dimple_painted_optical_grease_JW_1776360791.csv"
@@ -212,9 +228,9 @@ if [[ "${GENERATE_DIVERGENCE_CALIBRATION}" == "1" ]]; then
 fi
 
 if [[ "${GENERATE_SURFACE_COMPARISON}" == "1" ]]; then
-  generated_dirs+=("${OUT_ROOT}/surface_comparison")
+  generated_dirs+=("${OUT_ROOT}/${SURFACE_COMPARISON_STAGE}")
   for surface in "${SURFACES[@]}"; do
-    generate_quadrant_set "surface_comparison" "${surface}" "${BEST_DIVERGENCE_MRAD}"
+    generate_quadrant_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}"
   done
 fi
 

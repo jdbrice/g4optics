@@ -168,6 +168,32 @@ the refractive index of EJ-510. Override it only for a deliberate model study
 with `BACKPAINTED_AIR_RINDEX=...` or the runner's `--surface-rindex`/
 `--surface-rindex-csv` options.
 
+The focused 75 mrad, 5000-event surface study can reuse the completed
+`polishedfrontpainted` validation baseline and generate only the other three
+surface hypotheses:
+
+```bash
+EVENTS=5000 \
+BEST_DIVERGENCE_MRAD=75 \
+SURFACE_COMPARISON_STAGE=surface_comparison_75mrad_5000events \
+SURFACE_PRESETS="groundfrontpainted polishedbackpainted groundbackpainted" \
+GENERATE_DIVERGENCE_CALIBRATION=0 \
+GENERATE_SURFACE_COMPARISON=1 \
+  hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+This produces 12 arrays and 258 point tasks. Validate or submit exactly that
+set with `hpc/osc/submit-lab-v2-surface.sh`; after completion,
+`hpc/osc/finalize-lab-v2-surface.sh` audits the task logs, merges the maps, and
+packages both the new surface outputs and the existing polished-front baseline.
+
+After downloading and extracting the archive, score and plot the four surfaces:
+
+```bash
+python3 test/OpNovice2/analyze_lab_v2_surface.py
+root -l -b -q 'test/OpNovice2/plot_lab_v2_surface.C()'
+```
+
 The default grease absorption model is `transparent` (`ABSLENGTH=1000 mm`).
 For an explicitly derived sensitivity model based on Eljen's 0.1 mm
 transmission plot, use:
