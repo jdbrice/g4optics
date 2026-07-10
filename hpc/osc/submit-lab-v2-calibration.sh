@@ -5,12 +5,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 PLAN_DIR="${PROJECT_ROOT}/hpc/osc/generated/lab_v2_realsetup/divergence_calibration"
 MANIFEST="${PLAN_DIR}/submission-manifest.tsv"
+REBUILD_MANIFEST="${PLAN_DIR}/rebuild-smoke-jobs.tsv"
 EXPECTED_PLANS=24
 EXPECTED_TASKS=516
 MAX_ACTIVE_TASKS="${MAX_ACTIVE_TASKS:-1000}"
 
 usage() {
-  echo "Usage: $0 ACCOUNT G4_DATA_ROOT [--resume|--retry-all]" >&2
+  echo "Usage: $0 ACCOUNT G4_DATA_ROOT [--resume|--retry-all|--rebuild-smoke]" >&2
 }
 
 ACCOUNT="${1:-}"
@@ -21,7 +22,7 @@ if [[ -z "${ACCOUNT}" || -z "${G4_DATA_ROOT_VALUE}" || $# -gt 3 ]]; then
   exit 2
 fi
 case "${SUBMIT_MODE}" in
-  ""|--resume|--retry-all)
+  ""|--resume|--retry-all|--rebuild-smoke)
     ;;
   *)
     usage
@@ -60,6 +61,43 @@ done
 if [[ "${total_tasks}" -ne "${EXPECTED_TASKS}" ]]; then
   echo "Expected ${EXPECTED_TASKS} tasks, found ${total_tasks}." >&2
   exit 1
+fi
+
+if [[ "${SUBMIT_MODE}" == "--rebuild-smoke" ]]; then
+  active_tasks="$(squeue -h -r -u "${USER}" | wc -l | tr -d '[:space:]')"
+  if (( active_tasks + 1 > MAX_ACTIVE_TASKS )); then
+    echo "Refusing rebuild smoke: ${active_tasks} active tasks already reach MAX_ACTIVE_TASKS=${MAX_ACTIVE_TASKS}." >&2
+    exit 1
+  fi
+
+  plan="${plans[0]}"
+  relative_plan="${plan#${PROJECT_ROOT}/}"
+  job_id="$(
+    cd "${PROJECT_ROOT}"
+    sbatch --parsable \
+      -A "${ACCOUNT}" \
+      --array="1-1" \
+      --export="ALL,SCAN_ARGS_FILE=${relative_plan},G4_DATA_ROOT=${G4_DATA_ROOT_VALUE},G4_FORCE_REBUILD=1" \
+      hpc/osc/submit_scan.sbatch
+  )"
+  job_id="${job_id%%;*}"
+  if [[ ! "${job_id}" =~ ^[0-9]+$ ]]; then
+    echo "Unexpected rebuild smoke job id: ${job_id}" >&2
+    exit 1
+  fi
+
+  if [[ ! -e "${REBUILD_MANIFEST}" ]]; then
+    printf 'job_id\tplan\tsubmitted_utc\tgit_commit\tg4_data_root\n' > "${REBUILD_MANIFEST}"
+  fi
+  printf '%s\t%s\t%s\t%s\t%s\n' \
+    "${job_id}" \
+    "${relative_plan}" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "$(git -C "${PROJECT_ROOT}" rev-parse HEAD)" \
+    "${G4_DATA_ROOT_VALUE}" >> "${REBUILD_MANIFEST}"
+  echo "Submitted rebuild smoke ${job_id}: ${relative_plan}"
+  echo "Rebuild manifest: ${REBUILD_MANIFEST}"
+  exit 0
 fi
 
 if [[ -s "${MANIFEST}" && "${SUBMIT_MODE}" != "--resume" && "${SUBMIT_MODE}" != "--retry-all" ]]; then
