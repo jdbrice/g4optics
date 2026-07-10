@@ -10,14 +10,28 @@ EXPECTED_TASKS=516
 MAX_ACTIVE_TASKS="${MAX_ACTIVE_TASKS:-1000}"
 
 usage() {
-  echo "Usage: $0 ACCOUNT [--resume]" >&2
+  echo "Usage: $0 ACCOUNT G4_DATA_ROOT [--resume|--retry-all]" >&2
 }
 
 ACCOUNT="${1:-}"
-RESUME="${2:-}"
-if [[ -z "${ACCOUNT}" || ( -n "${RESUME}" && "${RESUME}" != "--resume" ) || $# -gt 2 ]]; then
+G4_DATA_ROOT_VALUE="${2:-}"
+SUBMIT_MODE="${3:-}"
+if [[ -z "${ACCOUNT}" || -z "${G4_DATA_ROOT_VALUE}" || $# -gt 3 ]]; then
   usage
   exit 2
+fi
+case "${SUBMIT_MODE}" in
+  ""|--resume|--retry-all)
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
+if [[ ! -d "${G4_DATA_ROOT_VALUE}" ]]; then
+  echo "Missing Geant4 dataset root: ${G4_DATA_ROOT_VALUE}" >&2
+  usage
+  exit 1
 fi
 
 if [[ ! -d "${PLAN_DIR}" ]]; then
@@ -48,9 +62,9 @@ if [[ "${total_tasks}" -ne "${EXPECTED_TASKS}" ]]; then
   exit 1
 fi
 
-if [[ -s "${MANIFEST}" && "${RESUME}" != "--resume" ]]; then
+if [[ -s "${MANIFEST}" && "${SUBMIT_MODE}" != "--resume" && "${SUBMIT_MODE}" != "--retry-all" ]]; then
   echo "Submission manifest already exists: ${MANIFEST}" >&2
-  echo "Inspect it first, then pass --resume to submit only missing plans." >&2
+  echo "Inspect it first, then pass --resume for missing plans or --retry-all after a failed attempt." >&2
   exit 1
 fi
 if [[ ! -e "${MANIFEST}" ]]; then
@@ -69,7 +83,7 @@ remaining_tasks=0
 remaining_plans=0
 for plan in "${plans[@]}"; do
   relative_plan="${plan#${PROJECT_ROOT}/}"
-  if is_submitted "${relative_plan}"; then
+  if [[ "${SUBMIT_MODE}" != "--retry-all" ]] && is_submitted "${relative_plan}"; then
     continue
   fi
   remaining_tasks=$((remaining_tasks + $(count_plan_tasks "${plan}")))
@@ -92,7 +106,7 @@ submitted_plans=0
 submitted_tasks=0
 for plan in "${plans[@]}"; do
   relative_plan="${plan#${PROJECT_ROOT}/}"
-  if is_submitted "${relative_plan}"; then
+  if [[ "${SUBMIT_MODE}" != "--retry-all" ]] && is_submitted "${relative_plan}"; then
     echo "Skipping recorded plan: ${relative_plan}"
     continue
   fi
@@ -103,7 +117,7 @@ for plan in "${plans[@]}"; do
     sbatch --parsable \
       -A "${ACCOUNT}" \
       --array="1-${task_count}" \
-      --export="ALL,SCAN_ARGS_FILE=${relative_plan}" \
+      --export="ALL,SCAN_ARGS_FILE=${relative_plan},G4_DATA_ROOT=${G4_DATA_ROOT_VALUE}" \
       hpc/osc/submit_scan.sbatch
   )"
   job_id="${job_id%%;*}"
@@ -124,4 +138,5 @@ for plan in "${plans[@]}"; do
 done
 
 echo "Submitted ${submitted_plans} arrays with ${submitted_tasks} tasks."
+echo "Geant4 datasets: ${G4_DATA_ROOT_VALUE}"
 echo "Manifest: ${MANIFEST}"
