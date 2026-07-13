@@ -15,6 +15,7 @@ BACKPAINTED_AIR_RINDEX="${BACKPAINTED_AIR_RINDEX:-1.0003}"
 BEST_DIVERGENCE_MRAD="${BEST_DIVERGENCE_MRAD:-55}"
 SURFACE_COMPARISON_STAGE="${SURFACE_COMPARISON_STAGE:-surface_comparison}"
 SURFACE_PRESETS="${SURFACE_PRESETS:-polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted}"
+SURFACE_SAMPLE_SET="${SURFACE_SAMPLE_SET:-all}"
 DIVERGENCES_MRAD="${DIVERGENCES_MRAD:-25 35 45 55 65 75}"
 DIVERGENCE_STAGE="${DIVERGENCE_STAGE:-divergence_calibration}"
 DIVERGENCE_SAMPLE_SET="${DIVERGENCE_SAMPLE_SET:-all}"
@@ -143,6 +144,14 @@ case "${DIVERGENCE_SAMPLE_SET}" in
     exit 1
     ;;
 esac
+case "${SURFACE_SAMPLE_SET}" in
+  all|5x5)
+    ;;
+  *)
+    echo "SURFACE_SAMPLE_SET must be all or 5x5." >&2
+    exit 1
+    ;;
+esac
 read -r -a SURFACES <<< "${SURFACE_PRESETS}"
 if [[ "${#SURFACES[@]}" -eq 0 ]]; then
   echo "SURFACE_PRESETS must contain at least one surface preset." >&2
@@ -259,7 +268,11 @@ fi
 if [[ "${GENERATE_SURFACE_COMPARISON}" == "1" ]]; then
   generated_dirs+=("${OUT_ROOT}/${SURFACE_COMPARISON_STAGE}")
   for surface in "${SURFACES[@]}"; do
-    generate_quadrant_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}" "four-tile surface comparison"
+    if [[ "${SURFACE_SAMPLE_SET}" == "5x5" ]]; then
+      generate_5x5_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}" "5x5-only surface comparison"
+    else
+      generate_quadrant_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}" "four-tile surface comparison"
+    fi
   done
 fi
 

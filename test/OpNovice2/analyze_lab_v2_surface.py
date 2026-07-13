@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Score the four lab v2 painted-surface hypotheses at fixed divergence."""
+"""Score lab v2 painted-surface hypotheses at fixed divergence."""
 
 from __future__ import annotations
 
@@ -51,6 +51,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--divergence-mrad", type=float, default=75.0)
     parser.add_argument("--events-per-point", type=int, default=5000)
     parser.add_argument("--lab-relative-uncertainty", type=float, default=0.10)
+    parser.add_argument(
+        "--sample-set",
+        choices=("all", "5x5"),
+        default="all",
+        help="Tile samples included in the equal-weight surface metrics.",
+    )
     parser.add_argument(
         "--surface-preset",
         action="append",
@@ -137,6 +143,11 @@ def global_fit_metrics(
         for row in relevant
         if finite(float(row["normalized_rmse"]))
     ]
+    finite_scaled_rmse = [
+        float(row["scaled_normalized_rmse"])
+        for row in relevant
+        if finite(float(row["scaled_normalized_rmse"]))
+    ]
     finite_pearson = [
         float(row["pearson_r"])
         for row in relevant
@@ -164,6 +175,11 @@ def global_fit_metrics(
         ),
         "mean_sample_normalized_rmse": (
             sum(finite_rmse) / len(finite_rmse) if finite_rmse else math.nan
+        ),
+        "mean_sample_scaled_normalized_rmse": (
+            sum(finite_scaled_rmse) / len(finite_scaled_rmse)
+            if finite_scaled_rmse
+            else math.nan
         ),
         "mean_sample_pearson_r": (
             sum(finite_pearson) / len(finite_pearson)
@@ -200,6 +216,11 @@ def main() -> int:
     surface_dir = resolve_path(project_root, args.surface_scan_dir)
     out_dir = resolve_path(project_root, args.out_dir)
     surfaces = tuple(args.surface_preset or DEFAULT_SURFACES)
+    samples = (
+        tuple(sample for sample in SAMPLES if sample.sample_id.startswith("5x5"))
+        if args.sample_set == "5x5"
+        else SAMPLES
+    )
     divergence_tag = f"{number_token(args.divergence_mrad)}mrad"
     if len(set(surfaces)) != len(surfaces):
         raise SystemExit("--surface-preset values must be unique")
@@ -211,7 +232,7 @@ def main() -> int:
 
     for surface in surfaces:
         points_for_surface: dict[str, list[MatchPoint]] = {}
-        for sample in SAMPLES:
+        for sample in samples:
             lab_path = resolve_path(project_root, sample.lab_csv)
             sim_path = simulation_csv(
                 baseline_dir,
@@ -279,8 +300,14 @@ def main() -> int:
                         ),
                         "all_chi2_ndf": all_metrics["chi2_ndf"],
                         "all_normalized_rmse": all_metrics["normalized_rmse"],
+                        "all_scaled_normalized_rmse": all_metrics[
+                            "scaled_normalized_rmse"
+                        ],
                         "inside_chi2_ndf": inside_metrics["chi2_ndf"],
                         "inside_normalized_rmse": inside_metrics["normalized_rmse"],
+                        "inside_scaled_normalized_rmse": inside_metrics[
+                            "scaled_normalized_rmse"
+                        ],
                     }
                 )
         all_points[surface] = points_for_surface
@@ -320,6 +347,7 @@ def main() -> int:
         "ndf",
         "chi2_ndf",
         "normalized_rmse",
+        "scaled_normalized_rmse",
         "pearson_r",
         "lab_csv",
         "sim_csv",
@@ -338,6 +366,7 @@ def main() -> int:
         "global_scaled_normalized_rmse",
         "mean_sample_chi2_ndf",
         "mean_sample_normalized_rmse",
+        "mean_sample_scaled_normalized_rmse",
         "mean_sample_pearson_r",
     ]
     profile_fields = [
@@ -358,8 +387,10 @@ def main() -> int:
         "scaled_sim_global",
         "all_chi2_ndf",
         "all_normalized_rmse",
+        "all_scaled_normalized_rmse",
         "inside_chi2_ndf",
         "inside_normalized_rmse",
+        "inside_scaled_normalized_rmse",
     ]
     write_csv(
         out_dir / f"surface_sample_metrics_{divergence_tag}.csv",
@@ -382,14 +413,22 @@ def main() -> int:
         "divergence_mrad": args.divergence_mrad,
         "output_tag": divergence_tag,
         "events_per_point": args.events_per_point,
+        "sample_set": args.sample_set,
+        "sample_ids": [sample.sample_id for sample in samples],
+        "baseline_scan_dir": display_path(baseline_dir, project_root),
+        "surface_scan_dir": display_path(surface_dir, project_root),
         "surface_candidates": list(surfaces),
         "lab_relative_uncertainty": args.lab_relative_uncertainty,
-        "primary_metric": "all_mean_sample_chi2_ndf",
+        "outside_points_included_in_all": True,
+        "primary_metric": "all_mean_sample_scaled_normalized_rmse",
         "best_all_mean_sample_chi2_ndf": best_surface(
             global_metrics, "all", "mean_sample_chi2_ndf"
         ),
         "best_all_mean_sample_normalized_rmse": best_surface(
             global_metrics, "all", "mean_sample_normalized_rmse"
+        ),
+        "best_all_mean_sample_scaled_normalized_rmse": best_surface(
+            global_metrics, "all", "mean_sample_scaled_normalized_rmse"
         ),
         "best_all_global_chi2_ndf": best_surface(
             global_metrics, "all", "global_chi2_ndf"
@@ -400,12 +439,17 @@ def main() -> int:
         "best_inside_mean_sample_normalized_rmse": best_surface(
             global_metrics, "inside", "mean_sample_normalized_rmse"
         ),
+        "best_inside_mean_sample_scaled_normalized_rmse": best_surface(
+            global_metrics, "inside", "mean_sample_scaled_normalized_rmse"
+        ),
         "best_inside_global_chi2_ndf": best_surface(
             global_metrics, "inside", "global_chi2_ndf"
         ),
         "caveat": (
             "Painted finishes are Geant4 boundary hypotheses, not explicit paint "
-            "volumes. Simulation statistical uncertainty is not included."
+            "volumes. The primary metric averages per-tile scaled normalized RMSE "
+            "with equal tile weight and includes outside-tile points. Simulation "
+            "statistical uncertainty is not included."
         ),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -416,8 +460,8 @@ def main() -> int:
         handle.write("\n")
 
     print(
-        f"Analyzed {len(SAMPLES)} samples x {len(surfaces)} surfaces = "
-        f"{len(SAMPLES) * len(surfaces)} maps."
+        f"Analyzed {len(samples)} samples x {len(surfaces)} surfaces = "
+        f"{len(samples) * len(surfaces)} maps."
     )
     print(f"Wrote analysis outputs to {out_dir}")
     print(json.dumps(picks, indent=2, sort_keys=True))

@@ -46,8 +46,10 @@ struct SurfaceProfilePoint {
   double scaledSim = kNaN;
   double allChi2Ndf = kNaN;
   double allRmse = kNaN;
+  double allScaledRmse = kNaN;
   double insideChi2Ndf = kNaN;
   double insideRmse = kNaN;
+  double insideScaledRmse = kNaN;
 };
 
 struct SurfaceGlobalMetric {
@@ -56,6 +58,7 @@ struct SurfaceGlobalMetric {
   double meanSampleChi2Ndf = kNaN;
   double globalChi2Ndf = kNaN;
   double meanSampleRmse = kNaN;
+  double meanSampleScaledRmse = kNaN;
 };
 
 struct SurfaceSampleMetric {
@@ -63,6 +66,7 @@ struct SurfaceSampleMetric {
   std::string surface;
   std::string region;
   double chi2Ndf = kNaN;
+  double scaledRmse = kNaN;
 };
 
 std::map<std::string, int> SurfaceHeader(const std::string& line)
@@ -93,8 +97,10 @@ std::vector<SurfaceProfilePoint> ReadSurfaceProfiles(const TString& path)
   const int simCol = ColumnIndex(columns, "scaled_sim_sample");
   const int allChi2Col = ColumnIndex(columns, "all_chi2_ndf");
   const int allRmseCol = ColumnIndex(columns, "all_normalized_rmse");
+  const int allScaledRmseCol = ColumnIndex(columns, "all_scaled_normalized_rmse");
   const int insideChi2Col = ColumnIndex(columns, "inside_chi2_ndf");
   const int insideRmseCol = ColumnIndex(columns, "inside_normalized_rmse");
+  const int insideScaledRmseCol = ColumnIndex(columns, "inside_scaled_normalized_rmse");
 
   std::vector<SurfaceProfilePoint> rows;
   while (std::getline(in, line)) {
@@ -113,8 +119,10 @@ std::vector<SurfaceProfilePoint> ReadSurfaceProfiles(const TString& path)
     row.scaledSim = ParseDouble(fields[simCol]);
     row.allChi2Ndf = ParseDouble(fields[allChi2Col]);
     row.allRmse = ParseDouble(fields[allRmseCol]);
+    row.allScaledRmse = ParseDouble(fields[allScaledRmseCol]);
     row.insideChi2Ndf = ParseDouble(fields[insideChi2Col]);
     row.insideRmse = ParseDouble(fields[insideRmseCol]);
+    row.insideScaledRmse = ParseDouble(fields[insideScaledRmseCol]);
     rows.push_back(row);
   }
   return rows;
@@ -132,6 +140,7 @@ std::vector<SurfaceGlobalMetric> ReadSurfaceGlobalMetrics(const TString& path)
   const int sampleChi2Col = ColumnIndex(columns, "mean_sample_chi2_ndf");
   const int globalChi2Col = ColumnIndex(columns, "global_chi2_ndf");
   const int rmseCol = ColumnIndex(columns, "mean_sample_normalized_rmse");
+  const int scaledRmseCol = ColumnIndex(columns, "mean_sample_scaled_normalized_rmse");
 
   std::vector<SurfaceGlobalMetric> rows;
   while (std::getline(in, line)) {
@@ -144,6 +153,7 @@ std::vector<SurfaceGlobalMetric> ReadSurfaceGlobalMetrics(const TString& path)
     row.meanSampleChi2Ndf = ParseDouble(fields[sampleChi2Col]);
     row.globalChi2Ndf = ParseDouble(fields[globalChi2Col]);
     row.meanSampleRmse = ParseDouble(fields[rmseCol]);
+    row.meanSampleScaledRmse = ParseDouble(fields[scaledRmseCol]);
     rows.push_back(row);
   }
   return rows;
@@ -160,6 +170,7 @@ std::vector<SurfaceSampleMetric> ReadSurfaceSampleMetrics(const TString& path)
   const int surfaceCol = ColumnIndex(columns, "surface_preset");
   const int regionCol = ColumnIndex(columns, "region");
   const int chi2Col = ColumnIndex(columns, "chi2_ndf");
+  const int scaledRmseCol = ColumnIndex(columns, "scaled_normalized_rmse");
 
   std::vector<SurfaceSampleMetric> rows;
   while (std::getline(in, line)) {
@@ -171,6 +182,7 @@ std::vector<SurfaceSampleMetric> ReadSurfaceSampleMetrics(const TString& path)
     row.surface = Trim(fields[surfaceCol]);
     row.region = Trim(fields[regionCol]);
     row.chi2Ndf = ParseDouble(fields[chi2Col]);
+    row.scaledRmse = ParseDouble(fields[scaledRmseCol]);
     rows.push_back(row);
   }
   return rows;
@@ -189,6 +201,37 @@ std::string ShortSurfaceLabel(const std::string& surface)
   if (surface == "polishedbackpainted") return "polished back";
   if (surface == "groundbackpainted") return "ground back";
   return surface;
+}
+
+std::string ShortSampleLabel(const std::string& sampleId)
+{
+  if (sampleId == "11p5x11p5x16") return "11.5x11.5x1.6 cm";
+  if (sampleId == "11p5x11p5x4") return "11.5x11.5x0.4 cm";
+  if (sampleId == "5x5x16") return "5x5x1.6 cm";
+  if (sampleId == "5x5x4") return "5x5x0.4 cm";
+  return sampleId;
+}
+
+std::vector<std::string> ActiveSamples(const std::vector<SurfaceProfilePoint>& rows)
+{
+  std::vector<std::string> active;
+  for (const auto& sampleId : kSampleOrder) {
+    const bool present = std::any_of(rows.begin(), rows.end(), [&](const auto& row) {
+      return row.sampleId == sampleId;
+    });
+    if (present) active.push_back(sampleId);
+  }
+  return active;
+}
+
+void DivideForSamples(TCanvas* canvas, size_t sampleCount)
+{
+  if (sampleCount == 0) return;
+  if (sampleCount <= 2) {
+    canvas->Divide(static_cast<int>(sampleCount), 1, 0.002, 0.002);
+  } else {
+    canvas->Divide(2, 2, 0.002, 0.002);
+  }
 }
 
 double LabMaximum(const std::vector<SurfaceProfilePoint>& points)
@@ -286,9 +329,9 @@ void DrawSurfaceQuadrantPanel(const std::vector<SurfaceProfilePoint>& points)
   note->SetTextAlign(12);
   note->SetTextSize(0.024);
   note->AddText(Form("all: #chi^{2}/ndf = %.2f", first.allChi2Ndf));
-  note->AddText(Form("all: normalized RMSE = %.1f%%", 100.0 * first.allRmse));
+  note->AddText(Form("all: scaled NRMSE = %.1f%%", 100.0 * first.allScaledRmse));
   note->AddText(Form("inside: #chi^{2}/ndf = %.2f", first.insideChi2Ndf));
-  note->AddText(Form("inside: normalized RMSE = %.1f%%", 100.0 * first.insideRmse));
+  note->AddText(Form("inside: scaled NRMSE = %.1f%%", 100.0 * first.insideScaledRmse));
   note->Draw();
 }
 
@@ -354,26 +397,24 @@ void DrawSurfaceBars(const std::vector<SurfaceGlobalMetric>& rows,
   legend->Draw();
 }
 
-void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows,
-                              double divergenceMrad)
+void DrawPerSampleSurfaceScaledRmse(const std::vector<SurfaceSampleMetric>& rows,
+                                    const std::vector<std::string>& sampleOrder,
+                                    double divergenceMrad)
 {
-  const std::vector<std::string> labels = {
-    "11.5x11.5x1.6 cm", "11.5x11.5x0.4 cm", "5x5x1.6 cm", "5x5x0.4 cm"
-  };
   const Color_t colors[] = {kBlue + 1, kOrange + 7, kMagenta + 1, kGreen + 2};
   const Style_t markers[] = {20, 21, 22, 23};
   std::vector<TGraph*> graphs;
   double maximum = 0.0;
-  for (size_t sampleIndex = 0; sampleIndex < kSampleOrder.size(); ++sampleIndex) {
+  for (size_t sampleIndex = 0; sampleIndex < sampleOrder.size(); ++sampleIndex) {
     auto* graph = new TGraph();
     for (size_t surfaceIndex = 0; surfaceIndex < kSurfaceOrder.size(); ++surfaceIndex) {
       for (const auto& row : rows) {
-        if (row.sampleId == kSampleOrder[sampleIndex]
+        if (row.sampleId == sampleOrder[sampleIndex]
             && row.surface == kSurfaceOrder[surfaceIndex]
             && row.region == "all"
-            && std::isfinite(row.chi2Ndf)) {
-          graph->SetPoint(graph->GetN(), surfaceIndex + 1.0, row.chi2Ndf);
-          maximum = std::max(maximum, row.chi2Ndf);
+            && std::isfinite(row.scaledRmse)) {
+          graph->SetPoint(graph->GetN(), surfaceIndex + 1.0, 100.0 * row.scaledRmse);
+          maximum = std::max(maximum, 100.0 * row.scaledRmse);
         }
       }
     }
@@ -385,14 +426,15 @@ void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows,
     graphs.push_back(graph);
   }
   gPad->SetLeftMargin(0.13);
-  gPad->SetRightMargin(0.04);
+  gPad->SetRightMargin(0.28);
   gPad->SetBottomMargin(0.18);
   gPad->SetTopMargin(0.11);
   gPad->SetGrid(1, 1);
   gPad->SetFillColor(kWhite);
+  if (maximum <= 0.0) maximum = 1.0;
   auto* frame = gPad->DrawFrame(
     0.5, 0.0, 4.5, 1.15 * maximum,
-    Form("Per-sample shape fit, all points (%g mrad);surface;#chi^{2}/ndf",
+    Form("Per-tile scaled residual, all points (%g mrad);surface;scaled normalized RMSE [%%]",
          divergenceMrad));
   frame->GetYaxis()->SetTitleOffset(0.90);
   for (size_t i = 0; i < kSurfaceOrder.size(); ++i) {
@@ -401,12 +443,12 @@ void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows,
       ShortSurfaceLabel(kSurfaceOrder[i]).c_str());
   }
   frame->GetXaxis()->LabelsOption("v");
-  auto* legend = new TLegend(0.55, 0.14, 0.94, 0.37);
+  auto* legend = new TLegend(0.73, 0.72, 0.985, 0.90);
   legend->SetBorderSize(0);
   legend->SetFillColorAlpha(kWhite, 0.90);
   for (size_t i = 0; i < graphs.size(); ++i) {
     graphs[i]->Draw("LP same");
-    legend->AddEntry(graphs[i], labels[i].c_str(), "lp");
+    legend->AddEntry(graphs[i], ShortSampleLabel(sampleOrder[i]).c_str(), "lp");
   }
   legend->Draw();
 }
@@ -531,21 +573,29 @@ void plot_lab_v2_surface(
         Form("Profile divergence does not match requested %g mrad", divergenceMrad));
     }
   }
+  const auto sampleOrder = ActiveSamples(profiles);
+  if (sampleOrder.empty()) {
+    throw std::runtime_error("No recognized lab v2 samples found in surface profiles");
+  }
 
   for (const auto& surface : kSurfaceOrder) {
     auto* canvas = new TCanvas(
       Form("c_surface_%s", surface.c_str()),
       Form("Lab v2 %s at %g mrad", surface.c_str(), divergenceMrad),
       1500,
-      1050);
+      sampleOrder.size() <= 2 ? 650 : 1050);
     canvas->SetFillColor(kWhite);
-    canvas->Divide(2, 2, 0.002, 0.002);
-    for (size_t sampleIndex = 0; sampleIndex < kSampleOrder.size(); ++sampleIndex) {
+    DivideForSamples(canvas, sampleOrder.size());
+    for (size_t sampleIndex = 0; sampleIndex < sampleOrder.size(); ++sampleIndex) {
       std::vector<SurfaceProfilePoint> points;
       for (const auto& point : profiles) {
-        if (point.surface == surface && point.sampleId == kSampleOrder[sampleIndex]) {
+        if (point.surface == surface && point.sampleId == sampleOrder[sampleIndex]) {
           points.push_back(point);
         }
+      }
+      if (points.empty()) {
+        throw std::runtime_error(
+          "Missing profile rows for " + surface + ", " + sampleOrder[sampleIndex]);
       }
       std::sort(points.begin(), points.end(), [](const auto& a, const auto& b) {
         return a.pointIndex < b.pointIndex;
@@ -570,26 +620,26 @@ void plot_lab_v2_surface(
   overview->cd(1);
   DrawSurfaceBars(
     globalMetrics,
-    Form("Equal-weight mean of per-tile fits (%g mrad)", divergenceMrad),
-    "mean #chi^{2}/ndf",
-    &SurfaceGlobalMetric::meanSampleChi2Ndf,
-    1.0);
+    Form("Primary: equal-weight per-tile residual (%g mrad)", divergenceMrad),
+    "mean scaled normalized RMSE [%]",
+    &SurfaceGlobalMetric::meanSampleScaledRmse,
+    100.0);
   overview->cd(2);
   DrawSurfaceBars(
     globalMetrics,
-    Form("One shared scale across four tiles (%g mrad)", divergenceMrad),
-    "global #chi^{2}/ndf",
-    &SurfaceGlobalMetric::globalChi2Ndf,
+    Form("Equal-weight per-tile uncertainty diagnostic (%g mrad)", divergenceMrad),
+    "mean #chi^{2}/ndf",
+    &SurfaceGlobalMetric::meanSampleChi2Ndf,
     1.0);
   overview->cd(3);
   DrawSurfaceBars(
     globalMetrics,
-    Form("Mean spatial-shape discrepancy (%g mrad)", divergenceMrad),
-    "normalized RMSE [%]",
-    &SurfaceGlobalMetric::meanSampleRmse,
-    100.0);
+    Form("One shared scale across selected tiles (%g mrad)", divergenceMrad),
+    "global #chi^{2}/ndf",
+    &SurfaceGlobalMetric::globalChi2Ndf,
+    1.0);
   overview->cd(4);
-  DrawPerSampleSurfaceChi2(sampleMetrics, divergenceMrad);
+  DrawPerSampleSurfaceScaledRmse(sampleMetrics, sampleOrder, divergenceMrad);
   overview->SaveAs(JoinSurfacePath(
     analysisDir, Form("lab_v2_surface_overview_%s.png", divergenceTag.Data())));
   overview->SaveAs(JoinSurfacePath(
@@ -597,12 +647,15 @@ void plot_lab_v2_surface(
   delete overview;
 
   auto* overlay = new TCanvas(
-    "c_surface_overlay", Form("Lab v2 surfaces by tile at %g mrad", divergenceMrad), 1500, 1050);
+    "c_surface_overlay",
+    Form("Lab v2 surfaces by tile at %g mrad", divergenceMrad),
+    1500,
+    sampleOrder.size() <= 2 ? 650 : 1050);
   overlay->SetFillColor(kWhite);
-  overlay->Divide(2, 2, 0.002, 0.002);
-  for (size_t i = 0; i < kSampleOrder.size(); ++i) {
+  DivideForSamples(overlay, sampleOrder.size());
+  for (size_t i = 0; i < sampleOrder.size(); ++i) {
     overlay->cd(static_cast<int>(i + 1));
-    DrawCrossSurfacePanel(profiles, kSampleOrder[i]);
+    DrawCrossSurfacePanel(profiles, sampleOrder[i]);
   }
   overlay->SaveAs(JoinSurfacePath(
     analysisDir, Form("lab_v2_surface_overlay_by_tile_%s.png", divergenceTag.Data())));

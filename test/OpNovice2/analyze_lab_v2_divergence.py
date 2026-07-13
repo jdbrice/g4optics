@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Score the lab v2 divergence calibration across all four tile samples."""
+"""Score lab v2 divergence candidates across a selected set of tile samples."""
 
 from __future__ import annotations
 
@@ -26,6 +26,9 @@ from analyze_lab_match import (
 
 
 DEFAULT_DIVERGENCES = (25.0, 35.0, 45.0, 55.0, 65.0, 75.0)
+DEFAULT_SCAN_DIR = (
+    "test/OpNovice2/scan_runs/lab_v2_realsetup/divergence_calibration"
+)
 
 
 @dataclass(frozen=True)
@@ -88,8 +91,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project-root", default=str(project_root))
     parser.add_argument(
         "--scan-dir",
-        default=(
-            "test/OpNovice2/scan_runs/lab_v2_realsetup/divergence_calibration"
+        action="append",
+        default=[],
+        help=(
+            "Directory containing simulation maps. Repeat to combine scan stages; "
+            "each requested sample/divergence must resolve to exactly one map."
         ),
     )
     parser.add_argument(
@@ -114,6 +120,12 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Divergence candidate. Repeat; defaults to 25,35,...,75 mrad.",
     )
+    parser.add_argument(
+        "--sample-set",
+        choices=("all", "5x5"),
+        default="all",
+        help="Tile samples included in the equal-weight metrics.",
+    )
     return parser.parse_args()
 
 
@@ -127,7 +139,7 @@ def number_token(value: float) -> str:
 
 
 def simulation_csv(
-    scan_dir: Path,
+    scan_dirs: tuple[Path, ...],
     sample: SampleSpec,
     divergence: float,
     events_per_point: int,
@@ -137,7 +149,21 @@ def simulation_csv(
         f"lab_v2_{sample.sample_id}_polishedfrontpainted_sigma5mm_"
         f"{token}mrad_{events_per_point}events"
     )
-    return scan_dir / run_name / "efficiency_map.csv"
+    candidates = [scan_dir / run_name / "efficiency_map.csv" for scan_dir in scan_dirs]
+    matches = [candidate for candidate in candidates if candidate.is_file()]
+    if not matches:
+        searched = "\n  ".join(str(candidate) for candidate in candidates)
+        raise FileNotFoundError(
+            f"missing simulation map for {sample.sample_id} at {divergence:g} mrad; "
+            f"searched:\n  {searched}"
+        )
+    if len(matches) > 1:
+        found = "\n  ".join(str(match) for match in matches)
+        raise ValueError(
+            f"ambiguous simulation map for {sample.sample_id} at {divergence:g} mrad; "
+            f"found:\n  {found}"
+        )
+    return matches[0]
 
 
 def match_sample(
@@ -202,6 +228,16 @@ def fit_metrics(points: list[MatchPoint], region: str) -> dict[str, float | int 
         and sigma > 0
     )
     ndf = max(len(selected) - 1, 0)
+    lab_max = max((abs(value) for value in lab if finite(value)), default=0.0)
+    scaled_normalized_rmse = (
+        math.sqrt(
+            sum((y_lab - scale * y_sim) ** 2 for y_lab, y_sim in zip(lab, sim))
+            / len(selected)
+        )
+        / lab_max
+        if selected and lab_max > 0 and finite(scale)
+        else math.nan
+    )
     return {
         "region": region,
         "matched_points": len(selected),
@@ -210,6 +246,7 @@ def fit_metrics(points: list[MatchPoint], region: str) -> dict[str, float | int 
         "ndf": ndf,
         "chi2_ndf": chi2 / ndf if ndf else math.nan,
         "normalized_rmse": normalized_rmse(lab, sim),
+        "scaled_normalized_rmse": scaled_normalized_rmse,
         "pearson_r": pearson(lab, sim),
     }
 
@@ -265,6 +302,11 @@ def global_fit_metrics(
         for row in relevant
         if finite(float(row["normalized_rmse"]))
     ]
+    finite_scaled_rmse = [
+        float(row["scaled_normalized_rmse"])
+        for row in relevant
+        if finite(float(row["scaled_normalized_rmse"]))
+    ]
     finite_pearson = [
         float(row["pearson_r"])
         for row in relevant
@@ -286,6 +328,11 @@ def global_fit_metrics(
         "mean_sample_chi2_ndf": sum(finite_chi2) / len(finite_chi2) if finite_chi2 else math.nan,
         "mean_sample_normalized_rmse": (
             sum(finite_rmse) / len(finite_rmse) if finite_rmse else math.nan
+        ),
+        "mean_sample_scaled_normalized_rmse": (
+            sum(finite_scaled_rmse) / len(finite_scaled_rmse)
+            if finite_scaled_rmse
+            else math.nan
         ),
         "mean_sample_pearson_r": (
             sum(finite_pearson) / len(finite_pearson) if finite_pearson else math.nan
@@ -321,9 +368,17 @@ def main() -> int:
     if args.events_per_point <= 0:
         raise SystemExit("--events-per-point must be positive")
     project_root = Path(args.project_root).resolve()
-    scan_dir = resolve_path(project_root, args.scan_dir)
+    scan_dirs = tuple(
+        resolve_path(project_root, value)
+        for value in (args.scan_dir or [DEFAULT_SCAN_DIR])
+    )
     out_dir = resolve_path(project_root, args.out_dir)
     divergences = tuple(args.divergence_mrad or DEFAULT_DIVERGENCES)
+    samples = (
+        tuple(sample for sample in SAMPLES if sample.sample_id.startswith("5x5"))
+        if args.sample_set == "5x5"
+        else SAMPLES
+    )
 
     sample_metrics: list[dict[str, object]] = []
     global_metrics: list[dict[str, object]] = []
@@ -332,10 +387,10 @@ def main() -> int:
 
     for divergence in divergences:
         points_for_divergence: dict[str, list[MatchPoint]] = {}
-        for sample in SAMPLES:
+        for sample in samples:
             lab_path = resolve_path(project_root, sample.lab_csv)
             sim_path = simulation_csv(
-                scan_dir,
+                scan_dirs,
                 sample,
                 divergence,
                 args.events_per_point,
@@ -390,8 +445,14 @@ def main() -> int:
                         ),
                         "all_chi2_ndf": all_metrics["chi2_ndf"],
                         "all_normalized_rmse": all_metrics["normalized_rmse"],
+                        "all_scaled_normalized_rmse": all_metrics[
+                            "scaled_normalized_rmse"
+                        ],
                         "inside_chi2_ndf": inside_metrics["chi2_ndf"],
                         "inside_normalized_rmse": inside_metrics["normalized_rmse"],
+                        "inside_scaled_normalized_rmse": inside_metrics[
+                            "scaled_normalized_rmse"
+                        ],
                     }
                 )
         all_points[divergence] = points_for_divergence
@@ -429,6 +490,7 @@ def main() -> int:
         "ndf",
         "chi2_ndf",
         "normalized_rmse",
+        "scaled_normalized_rmse",
         "pearson_r",
         "lab_csv",
         "sim_csv",
@@ -446,6 +508,7 @@ def main() -> int:
         "global_scaled_normalized_rmse",
         "mean_sample_chi2_ndf",
         "mean_sample_normalized_rmse",
+        "mean_sample_scaled_normalized_rmse",
         "mean_sample_pearson_r",
     ]
     profile_fields = [
@@ -465,8 +528,10 @@ def main() -> int:
         "scaled_sim_global",
         "all_chi2_ndf",
         "all_normalized_rmse",
+        "all_scaled_normalized_rmse",
         "inside_chi2_ndf",
         "inside_normalized_rmse",
+        "inside_scaled_normalized_rmse",
     ]
     write_csv(out_dir / "sample_metrics.csv", sample_fields, sample_metrics)
     write_csv(out_dir / "global_metrics.csv", global_fields, global_metrics)
@@ -476,6 +541,14 @@ def main() -> int:
         "surface_preset": "polishedfrontpainted",
         "beam_sigma_mm": 5.0,
         "events_per_point": args.events_per_point,
+        "sample_set": args.sample_set,
+        "sample_ids": [sample.sample_id for sample in samples],
+        "scan_dirs": [
+            str(path.relative_to(project_root))
+            if path.is_relative_to(project_root)
+            else str(path)
+            for path in scan_dirs
+        ],
         "lab_relative_uncertainty": args.lab_relative_uncertainty,
         "outside_points_included_in_all": True,
         "best_all_mean_sample_chi2_ndf_mrad": best_divergence(
@@ -483,6 +556,9 @@ def main() -> int:
         ),
         "best_all_mean_sample_normalized_rmse_mrad": best_divergence(
             global_metrics, "all", "mean_sample_normalized_rmse"
+        ),
+        "best_all_mean_sample_scaled_normalized_rmse_mrad": best_divergence(
+            global_metrics, "all", "mean_sample_scaled_normalized_rmse"
         ),
         "best_all_global_chi2_ndf_mrad": best_divergence(
             global_metrics, "all", "global_chi2_ndf"
@@ -493,13 +569,18 @@ def main() -> int:
         "best_inside_mean_sample_normalized_rmse_mrad": best_divergence(
             global_metrics, "inside", "mean_sample_normalized_rmse"
         ),
+        "best_inside_mean_sample_scaled_normalized_rmse_mrad": best_divergence(
+            global_metrics, "inside", "mean_sample_scaled_normalized_rmse"
+        ),
         "best_inside_global_chi2_ndf_mrad": best_divergence(
             global_metrics, "inside", "global_chi2_ndf"
         ),
         "caveat": (
             "Shared-scale metrics test cross-sample yield consistency; per-sample metrics "
-            "test spatial shape after fitting one scale per tile. Simulation statistical "
-            "uncertainty is not included."
+            "test spatial shape with one independently fitted scale per tile. "
+            "scaled_normalized_rmse uses that uncertainty-weighted fitted scale, while "
+            "normalized_rmse compares profiles normalized to their own maxima. Simulation "
+            "statistical uncertainty is not included."
         ),
     }
     with (out_dir / "best_divergence.json").open("w", encoding="utf-8") as handle:
@@ -507,8 +588,8 @@ def main() -> int:
         handle.write("\n")
 
     print(
-        f"Analyzed {len(SAMPLES)} samples x {len(divergences)} divergences = "
-        f"{len(SAMPLES) * len(divergences)} maps."
+        f"Analyzed {len(samples)} samples x {len(divergences)} divergences = "
+        f"{len(samples) * len(divergences)} maps."
     )
     print(f"Wrote analysis outputs to {out_dir}")
     print(json.dumps(picks, indent=2, sort_keys=True))

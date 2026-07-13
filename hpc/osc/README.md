@@ -223,6 +223,30 @@ allows two hours per task. After completion,
 `hpc/osc/finalize-lab-v2-5x5-divergence-refinement.sh` audits and merges all 150
 tasks into an explicitly labeled output directory and archive.
 
+With 55 mrad selected as the provisional Stage A nominal value, the focused
+5x5-only surface comparison reuses the new 5000-event polished-front maps and
+generates only the other three surface hypotheses:
+
+```bash
+EVENTS=5000 \
+BEST_DIVERGENCE_MRAD=55 \
+SURFACE_COMPARISON_STAGE=surface_comparison_5x5_55mrad_5000events \
+SURFACE_SAMPLE_SET=5x5 \
+SURFACE_PRESETS="groundfrontpainted polishedbackpainted groundbackpainted" \
+GENERATE_DIVERGENCE_CALIBRATION=0 \
+GENERATE_SURFACE_COMPARISON=1 \
+  hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+This produces 6 arrays and 90 tasks. The baseline is specifically the 55 mrad
+maps from Stage A jobs `50392947` and `50392952`, not the earlier 500-event
+calibration. Validate or submit with
+`hpc/osc/submit-lab-v2-5x5-surface-55mrad.sh`; finalize with
+`hpc/osc/finalize-lab-v2-5x5-surface-55mrad.sh`. The surface analyzer accepts
+`--sample-set 5x5` and ranks the hypotheses with the same equal-weight,
+all-point scaled normalized RMSE used for divergence calibration. The complete
+commands and provenance are recorded in the generated stage `README.md`.
+
 The default grease absorption model is `transparent` (`ABSLENGTH=1000 mm`).
 For an explicitly derived sensitivity model based on Eljen's 0.1 mm
 transmission plot, use:
