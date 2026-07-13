@@ -194,6 +194,35 @@ python3 test/OpNovice2/analyze_lab_v2_surface.py
 root -l -b -q 'test/OpNovice2/plot_lab_v2_surface.C()'
 ```
 
+The analyzer and ROOT macro tag every output filename with the selected
+divergence (for example, `_75mrad`). For a different divergence, pass the same
+value to `--divergence-mrad` and as the macro's second argument so separate
+studies can share one analysis directory without overwriting each other.
+
+The Stage A 5x5-only divergence refinement keeps every physical setting fixed
+and adds high-statistics intermediate points between the existing 45 and
+75 mrad runs:
+
+```bash
+EVENTS=5000 \
+DIVERGENCE_STAGE=divergence_refinement_5x5_polishedfrontpainted_5000events \
+DIVERGENCES_MRAD="50 55 60 65 70" \
+DIVERGENCE_SAMPLE_SET=5x5 \
+CALIBRATION_SURFACE=polishedfrontpainted \
+GENERATE_DIVERGENCE_CALIBRATION=1 \
+GENERATE_SURFACE_COMPARISON=0 \
+  hpc/osc/generate_lab_v2_realsetup_plans.sh
+```
+
+This produces 10 arrays and 150 tasks. Every plan filename and header records
+`polishedfrontpainted`, the empirical EJ-510 model, Gaussian sigma 5 mm, the
+Sr-90 spectrum, the 2.4 mm SiPM, and 5000 events per point. The 45 and 75 mrad
+validation maps are reused rather than resubmitted. Submit with
+`hpc/osc/submit-lab-v2-5x5-divergence-refinement.sh`; the shared Slurm template
+allows two hours per task. After completion,
+`hpc/osc/finalize-lab-v2-5x5-divergence-refinement.sh` audits and merges all 150
+tasks into an explicitly labeled output directory and archive.
+
 The default grease absorption model is `transparent` (`ABSLENGTH=1000 mm`).
 For an explicitly derived sensitivity model based on Eljen's 0.1 mm
 transmission plot, use:

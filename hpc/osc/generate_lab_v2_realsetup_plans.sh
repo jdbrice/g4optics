@@ -17,6 +17,7 @@ SURFACE_COMPARISON_STAGE="${SURFACE_COMPARISON_STAGE:-surface_comparison}"
 SURFACE_PRESETS="${SURFACE_PRESETS:-polishedfrontpainted groundfrontpainted polishedbackpainted groundbackpainted}"
 DIVERGENCES_MRAD="${DIVERGENCES_MRAD:-25 35 45 55 65 75}"
 DIVERGENCE_STAGE="${DIVERGENCE_STAGE:-divergence_calibration}"
+DIVERGENCE_SAMPLE_SET="${DIVERGENCE_SAMPLE_SET:-all}"
 GENERATE_DIVERGENCE_CALIBRATION="${GENERATE_DIVERGENCE_CALIBRATION:-1}"
 GENERATE_SURFACE_COMPARISON="${GENERATE_SURFACE_COMPARISON:-1}"
 OPTICAL_COUPLING="${OPTICAL_COUPLING:-none}"
@@ -134,6 +135,14 @@ for toggle_name in GENERATE_DIVERGENCE_CALIBRATION GENERATE_SURFACE_COMPARISON; 
     exit 1
   fi
 done
+case "${DIVERGENCE_SAMPLE_SET}" in
+  all|5x5)
+    ;;
+  *)
+    echo "DIVERGENCE_SAMPLE_SET must be all or 5x5." >&2
+    exit 1
+    ;;
+esac
 read -r -a SURFACES <<< "${SURFACE_PRESETS}"
 if [[ "${#SURFACES[@]}" -eq 0 ]]; then
   echo "SURFACE_PRESETS must contain at least one surface preset." >&2
@@ -163,7 +172,14 @@ generate_one() {
   local beam_z="$5"
   local surface="$6"
   local divergence="$7"
+  local study_role="$8"
   local out_dir="${OUT_ROOT}/${stage}"
+  local surface_caveat=""
+  case "${surface}" in
+    polishedbackpainted|groundbackpainted)
+      surface_caveat="; backpainted air-gap sensitivity proxy RINDEX=${BACKPAINTED_AIR_RINDEX}"
+      ;;
+  esac
   local -a command=(
     python3 hpc/osc/generate_lab_scan_plan.py
     --lab-csv "${lab_csv}"
@@ -183,7 +199,7 @@ generate_one() {
     --sipm-local-position "0 0 0 cm"
     --sipm-size "${SIPM_SIZE}"
     --divergence-mrad "${divergence}"
-    --description "lab v2 real setup scaffold: EJ-200, EJ-510, SiPM ${SIPM_SIZE}; optical coupling=${OPTICAL_COUPLING}; none means zero-gap proxy for experimental EJ-550; stage=${stage}; backpainted uses air-gap RINDEX=${BACKPAINTED_AIR_RINDEX} caveat"
+    --description "lab v2 real setup: role=${study_role}; stage=${stage}; surface=${surface}; EJ-200 tile; EJ-510 empirical optical-surface proxy; bare Sr-90/Y-90 spectrum without source encapsulation or collimator; Gaussian sigma=${BEAM_SIGMA} mm; divergence=${divergence} mrad; SiPM=${SIPM_SIZE} at -Z center; optical coupling=${OPTICAL_COUPLING}; none means zero-gap proxy for experimental EJ-550${surface_caveat}"
   )
   if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
     command+=(
@@ -213,24 +229,37 @@ generate_quadrant_set() {
   local stage="$1"
   local surface="$2"
   local divergence="$3"
-  generate_one "${stage}" "lab_v2_5x5x16" "${CSV_5X5X16}" "50 50 16 mm" 30 "${surface}" "${divergence}"
-  generate_one "${stage}" "lab_v2_5x5x4" "${CSV_5X5X4}" "50 50 4 mm" 36 "${surface}" "${divergence}"
-  generate_one "${stage}" "lab_v2_11p5x11p5x16" "${CSV_10X10X16}" "115 115 16 mm" 30 "${surface}" "${divergence}"
-  generate_one "${stage}" "lab_v2_11p5x11p5x4" "${CSV_10X10X4}" "115 115 4 mm" 36 "${surface}" "${divergence}"
+  local study_role="$4"
+  generate_5x5_set "${stage}" "${surface}" "${divergence}" "${study_role}"
+  generate_one "${stage}" "lab_v2_11p5x11p5x16" "${CSV_10X10X16}" "115 115 16 mm" 30 "${surface}" "${divergence}" "${study_role}"
+  generate_one "${stage}" "lab_v2_11p5x11p5x4" "${CSV_10X10X4}" "115 115 4 mm" 36 "${surface}" "${divergence}" "${study_role}"
+}
+
+generate_5x5_set() {
+  local stage="$1"
+  local surface="$2"
+  local divergence="$3"
+  local study_role="$4"
+  generate_one "${stage}" "lab_v2_5x5x16" "${CSV_5X5X16}" "50 50 16 mm" 30 "${surface}" "${divergence}" "${study_role}"
+  generate_one "${stage}" "lab_v2_5x5x4" "${CSV_5X5X4}" "50 50 4 mm" 36 "${surface}" "${divergence}" "${study_role}"
 }
 
 generated_dirs=()
 if [[ "${GENERATE_DIVERGENCE_CALIBRATION}" == "1" ]]; then
   generated_dirs+=("${OUT_ROOT}/${DIVERGENCE_STAGE}")
   for divergence in "${DIVERGENCES[@]}"; do
-    generate_quadrant_set "${DIVERGENCE_STAGE}" "${CALIBRATION_SURFACE}" "${divergence}"
+    if [[ "${DIVERGENCE_SAMPLE_SET}" == "5x5" ]]; then
+      generate_5x5_set "${DIVERGENCE_STAGE}" "${CALIBRATION_SURFACE}" "${divergence}" "5x5-only divergence refinement"
+    else
+      generate_quadrant_set "${DIVERGENCE_STAGE}" "${CALIBRATION_SURFACE}" "${divergence}" "four-tile divergence calibration"
+    fi
   done
 fi
 
 if [[ "${GENERATE_SURFACE_COMPARISON}" == "1" ]]; then
   generated_dirs+=("${OUT_ROOT}/${SURFACE_COMPARISON_STAGE}")
   for surface in "${SURFACES[@]}"; do
-    generate_quadrant_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}"
+    generate_quadrant_set "${SURFACE_COMPARISON_STAGE}" "${surface}" "${BEST_DIVERGENCE_MRAD}" "four-tile surface comparison"
   done
 fi
 

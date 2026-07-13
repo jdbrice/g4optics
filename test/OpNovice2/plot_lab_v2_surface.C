@@ -247,9 +247,10 @@ void DrawSurfaceQuadrantPanel(const std::vector<SurfaceProfilePoint>& points)
     yMin - pad,
     points.size() + 0.5,
     yMax + pad,
-    Form("%s, %s;lab scan point index;response / lab max [%%]",
+    Form("%s, %s, %g mrad;lab scan point index;response / lab max [%%]",
          points.front().sampleTitle.c_str(),
-         ShortSurfaceLabel(points.front().surface).c_str()));
+         ShortSurfaceLabel(points.front().surface).c_str(),
+         points.front().divergence));
   frame->GetYaxis()->SetTitleOffset(0.90);
   frame->GetXaxis()->SetNdivisions(points.size() > 20 ? 14 : static_cast<int>(points.size()));
 
@@ -353,7 +354,8 @@ void DrawSurfaceBars(const std::vector<SurfaceGlobalMetric>& rows,
   legend->Draw();
 }
 
-void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows)
+void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows,
+                              double divergenceMrad)
 {
   const std::vector<std::string> labels = {
     "11.5x11.5x1.6 cm", "11.5x11.5x0.4 cm", "5x5x1.6 cm", "5x5x0.4 cm"
@@ -390,7 +392,8 @@ void DrawPerSampleSurfaceChi2(const std::vector<SurfaceSampleMetric>& rows)
   gPad->SetFillColor(kWhite);
   auto* frame = gPad->DrawFrame(
     0.5, 0.0, 4.5, 1.15 * maximum,
-    "Per-sample shape fit, all points;surface;#chi^{2}/ndf");
+    Form("Per-sample shape fit, all points (%g mrad);surface;#chi^{2}/ndf",
+         divergenceMrad));
   frame->GetYaxis()->SetTitleOffset(0.90);
   for (size_t i = 0; i < kSurfaceOrder.size(); ++i) {
     frame->GetXaxis()->SetBinLabel(
@@ -469,7 +472,9 @@ void DrawCrossSurfacePanel(const std::vector<SurfaceProfilePoint>& rows,
   const double pad = span > 0.0 ? 0.12 * span : 10.0;
   auto* frame = gPad->DrawFrame(
     0.5, yMin - pad, reference.size() + 0.5, yMax + pad,
-    Form("%s;lab scan point index;response / lab max [%%]", reference.front().sampleTitle.c_str()));
+    Form("%s, %g mrad;lab scan point index;response / lab max [%%]",
+         reference.front().sampleTitle.c_str(),
+         reference.front().divergence));
   frame->GetYaxis()->SetTitleOffset(0.90);
   labGraph->SetMarkerStyle(20);
   labGraph->SetMarkerSize(0.78);
@@ -496,8 +501,12 @@ void DrawCrossSurfacePanel(const std::vector<SurfaceProfilePoint>& rows,
 }  // namespace
 
 void plot_lab_v2_surface(
-  const TString& analysisDir = "test/OpNovice2/lab_run_v2/surface_analysis")
+  const TString& analysisDir = "test/OpNovice2/lab_run_v2/surface_analysis",
+  double divergenceMrad = 75.0)
 {
+  if (!std::isfinite(divergenceMrad) || divergenceMrad < 0.0) {
+    throw std::runtime_error("divergenceMrad must be finite and non-negative");
+  }
   gStyle->SetOptStat(0);
   gStyle->SetTextFont(42);
   gStyle->SetLabelFont(42, "XYZ");
@@ -506,14 +515,27 @@ void plot_lab_v2_surface(
   gStyle->SetPadColor(kWhite);
   gSystem->mkdir(analysisDir, true);
 
-  const auto profiles = ReadSurfaceProfiles(JoinSurfacePath(analysisDir, "surface_profiles.csv"));
-  const auto globalMetrics = ReadSurfaceGlobalMetrics(JoinSurfacePath(analysisDir, "surface_global_metrics.csv"));
-  const auto sampleMetrics = ReadSurfaceSampleMetrics(JoinSurfacePath(analysisDir, "surface_sample_metrics.csv"));
+  TString divergenceToken = Form("%g", divergenceMrad);
+  divergenceToken.ReplaceAll(".", "p");
+  const TString divergenceTag = divergenceToken + "mrad";
+  const auto profiles = ReadSurfaceProfiles(
+    JoinSurfacePath(analysisDir, Form("surface_profiles_%s.csv", divergenceTag.Data())));
+  const auto globalMetrics = ReadSurfaceGlobalMetrics(
+    JoinSurfacePath(analysisDir, Form("surface_global_metrics_%s.csv", divergenceTag.Data())));
+  const auto sampleMetrics = ReadSurfaceSampleMetrics(
+    JoinSurfacePath(analysisDir, Form("surface_sample_metrics_%s.csv", divergenceTag.Data())));
+
+  for (const auto& point : profiles) {
+    if (!std::isfinite(point.divergence) || std::abs(point.divergence - divergenceMrad) > 1e-9) {
+      throw std::runtime_error(
+        Form("Profile divergence does not match requested %g mrad", divergenceMrad));
+    }
+  }
 
   for (const auto& surface : kSurfaceOrder) {
     auto* canvas = new TCanvas(
       Form("c_surface_%s", surface.c_str()),
-      Form("Lab v2 %s", surface.c_str()),
+      Form("Lab v2 %s at %g mrad", surface.c_str(), divergenceMrad),
       1500,
       1050);
     canvas->SetFillColor(kWhite);
@@ -532,50 +554,60 @@ void plot_lab_v2_surface(
       DrawSurfaceQuadrantPanel(points);
     }
     canvas->cd(0);
-    canvas->SaveAs(JoinSurfacePath(analysisDir, Form("lab_v2_surface_%s.png", surface.c_str())));
-    canvas->SaveAs(JoinSurfacePath(analysisDir, Form("lab_v2_surface_%s.pdf", surface.c_str())));
+    canvas->SaveAs(JoinSurfacePath(
+      analysisDir,
+      Form("lab_v2_surface_%s_%s.png", surface.c_str(), divergenceTag.Data())));
+    canvas->SaveAs(JoinSurfacePath(
+      analysisDir,
+      Form("lab_v2_surface_%s_%s.pdf", surface.c_str(), divergenceTag.Data())));
     delete canvas;
   }
 
-  auto* overview = new TCanvas("c_surface_overview", "Lab v2 surface overview", 1500, 1050);
+  auto* overview = new TCanvas(
+    "c_surface_overview", Form("Lab v2 surface overview at %g mrad", divergenceMrad), 1500, 1050);
   overview->SetFillColor(kWhite);
   overview->Divide(2, 2, 0.002, 0.002);
   overview->cd(1);
   DrawSurfaceBars(
     globalMetrics,
-    "Equal-weight mean of per-tile fits",
+    Form("Equal-weight mean of per-tile fits (%g mrad)", divergenceMrad),
     "mean #chi^{2}/ndf",
     &SurfaceGlobalMetric::meanSampleChi2Ndf,
     1.0);
   overview->cd(2);
   DrawSurfaceBars(
     globalMetrics,
-    "One shared scale across four tiles",
+    Form("One shared scale across four tiles (%g mrad)", divergenceMrad),
     "global #chi^{2}/ndf",
     &SurfaceGlobalMetric::globalChi2Ndf,
     1.0);
   overview->cd(3);
   DrawSurfaceBars(
     globalMetrics,
-    "Mean spatial-shape discrepancy",
+    Form("Mean spatial-shape discrepancy (%g mrad)", divergenceMrad),
     "normalized RMSE [%]",
     &SurfaceGlobalMetric::meanSampleRmse,
     100.0);
   overview->cd(4);
-  DrawPerSampleSurfaceChi2(sampleMetrics);
-  overview->SaveAs(JoinSurfacePath(analysisDir, "lab_v2_surface_overview.png"));
-  overview->SaveAs(JoinSurfacePath(analysisDir, "lab_v2_surface_overview.pdf"));
+  DrawPerSampleSurfaceChi2(sampleMetrics, divergenceMrad);
+  overview->SaveAs(JoinSurfacePath(
+    analysisDir, Form("lab_v2_surface_overview_%s.png", divergenceTag.Data())));
+  overview->SaveAs(JoinSurfacePath(
+    analysisDir, Form("lab_v2_surface_overview_%s.pdf", divergenceTag.Data())));
   delete overview;
 
-  auto* overlay = new TCanvas("c_surface_overlay", "Lab v2 surfaces by tile", 1500, 1050);
+  auto* overlay = new TCanvas(
+    "c_surface_overlay", Form("Lab v2 surfaces by tile at %g mrad", divergenceMrad), 1500, 1050);
   overlay->SetFillColor(kWhite);
   overlay->Divide(2, 2, 0.002, 0.002);
   for (size_t i = 0; i < kSampleOrder.size(); ++i) {
     overlay->cd(static_cast<int>(i + 1));
     DrawCrossSurfacePanel(profiles, kSampleOrder[i]);
   }
-  overlay->SaveAs(JoinSurfacePath(analysisDir, "lab_v2_surface_overlay_by_tile.png"));
-  overlay->SaveAs(JoinSurfacePath(analysisDir, "lab_v2_surface_overlay_by_tile.pdf"));
+  overlay->SaveAs(JoinSurfacePath(
+    analysisDir, Form("lab_v2_surface_overlay_by_tile_%s.png", divergenceTag.Data())));
+  overlay->SaveAs(JoinSurfacePath(
+    analysisDir, Form("lab_v2_surface_overlay_by_tile_%s.pdf", divergenceTag.Data())));
   delete overlay;
 }
 

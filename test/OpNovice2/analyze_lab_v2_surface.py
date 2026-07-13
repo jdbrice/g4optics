@@ -200,6 +200,7 @@ def main() -> int:
     surface_dir = resolve_path(project_root, args.surface_scan_dir)
     out_dir = resolve_path(project_root, args.out_dir)
     surfaces = tuple(args.surface_preset or DEFAULT_SURFACES)
+    divergence_tag = f"{number_token(args.divergence_mrad)}mrad"
     if len(set(surfaces)) != len(surfaces):
         raise SystemExit("--surface-preset values must be unique")
 
@@ -360,13 +361,26 @@ def main() -> int:
         "inside_chi2_ndf",
         "inside_normalized_rmse",
     ]
-    write_csv(out_dir / "surface_sample_metrics.csv", sample_fields, sample_metrics)
-    write_csv(out_dir / "surface_global_metrics.csv", global_fields, global_metrics)
-    write_csv(out_dir / "surface_profiles.csv", profile_fields, profile_rows)
+    write_csv(
+        out_dir / f"surface_sample_metrics_{divergence_tag}.csv",
+        sample_fields,
+        sample_metrics,
+    )
+    write_csv(
+        out_dir / f"surface_global_metrics_{divergence_tag}.csv",
+        global_fields,
+        global_metrics,
+    )
+    write_csv(
+        out_dir / f"surface_profiles_{divergence_tag}.csv",
+        profile_fields,
+        profile_rows,
+    )
 
     picks = {
         "beam_sigma_mm": 5.0,
         "divergence_mrad": args.divergence_mrad,
+        "output_tag": divergence_tag,
         "events_per_point": args.events_per_point,
         "surface_candidates": list(surfaces),
         "lab_relative_uncertainty": args.lab_relative_uncertainty,
@@ -395,7 +409,9 @@ def main() -> int:
         ),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    with (out_dir / "best_surface.json").open("w", encoding="utf-8") as handle:
+    with (out_dir / f"best_surface_{divergence_tag}.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(picks, handle, indent=2, sort_keys=True)
         handle.write("\n")
 
