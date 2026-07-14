@@ -604,6 +604,8 @@ void plot_lab_v2_surface(
       DrawSurfaceQuadrantPanel(points);
     }
     canvas->cd(0);
+    canvas->Modified();
+    canvas->Update();
     canvas->SaveAs(JoinSurfacePath(
       analysisDir,
       Form("lab_v2_surface_%s_%s.png", surface.c_str(), divergenceTag.Data())));
@@ -640,6 +642,8 @@ void plot_lab_v2_surface(
     1.0);
   overview->cd(4);
   DrawPerSampleSurfaceScaledRmse(sampleMetrics, sampleOrder, divergenceMrad);
+  overview->Modified();
+  overview->Update();
   overview->SaveAs(JoinSurfacePath(
     analysisDir, Form("lab_v2_surface_overview_%s.png", divergenceTag.Data())));
   overview->SaveAs(JoinSurfacePath(
@@ -657,6 +661,8 @@ void plot_lab_v2_surface(
     overlay->cd(static_cast<int>(i + 1));
     DrawCrossSurfacePanel(profiles, sampleOrder[i]);
   }
+  overlay->Modified();
+  overlay->Update();
   overlay->SaveAs(JoinSurfacePath(
     analysisDir, Form("lab_v2_surface_overlay_by_tile_%s.png", divergenceTag.Data())));
   overlay->SaveAs(JoinSurfacePath(
