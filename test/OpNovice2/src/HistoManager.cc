@@ -149,7 +149,20 @@ void HistoManager::Book()
   analysisMan->CreateNtupleIColumn("scintillation_photons");
   analysisMan->CreateNtupleIColumn("sipm_detected_photons");
   analysisMan->CreateNtupleDColumn("collection_efficiency");
+  analysisMan->CreateNtupleDColumn("primary_kinetic_energy_mev");
   // When all ntuple columns are created, the ntuple has to be closed using `FinishNtuple()` function.
+  analysisMan->FinishNtuple();
+
+  analysisMan->CreateNtuple("decay_betas", "Radioactive-decay beta electron tracks");
+  analysisMan->CreateNtupleIColumn("event_id");
+  analysisMan->CreateNtupleIColumn("track_id");
+  analysisMan->CreateNtupleSColumn("parent_name");
+  analysisMan->CreateNtupleSColumn("creator_process");
+  analysisMan->CreateNtupleDColumn("kinetic_energy_mev");
+  analysisMan->CreateNtupleDColumn("x_mm");
+  analysisMan->CreateNtupleDColumn("y_mm");
+  analysisMan->CreateNtupleDColumn("z_mm");
+  analysisMan->CreateNtupleDColumn("global_time_ns");
   analysisMan->FinishNtuple();
 
   for (G4int i = 0; i < analysisMan->GetNofH1s(); ++i) {

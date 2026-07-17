@@ -37,6 +37,7 @@
 
 #include "G4Box.hh"
 #include "G4Element.hh"
+#include "G4IntersectionSolid.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4LogicalVolume.hh"
@@ -66,6 +67,7 @@ DetectorConstruction::DetectorConstruction()
   fSurfaceMPT = new G4MaterialPropertiesTable();
   // The properties table of SiPM
   fSiPMMPT = new G4MaterialPropertiesTable();
+  fGreaseMPT = new G4MaterialPropertiesTable();
 
   fSurface = new G4OpticalSurface("Surface");
   fSurface->SetType(dielectric_dielectric);
@@ -73,10 +75,20 @@ DetectorConstruction::DetectorConstruction()
   fSurface->SetModel(unified);
   fSurface->SetMaterialPropertiesTable(fSurfaceMPT);
 
-  fTankMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
-  fWorldMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR");
+  auto nist = G4NistManager::Instance();
+  fTankMaterial = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+  fWorldMaterial = nist->FindOrBuildMaterial("G4_AIR");
   // The material of SiPM
-  fSiPMMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_Si");
+  fSiPMMaterial = nist->FindOrBuildMaterial("G4_Si");
+
+  // EJ-550 optical-grade silicone grease is represented with a simple
+  // silicone-like composition proxy. Eljen specifies a specific gravity of
+  // 1.06; optical constants are supplied by macro.
+  fGreaseMaterial = new G4Material("EJ550_Grease", 1.06 * g / cm3, 4);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("C"), 2);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("H"), 6);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("O"), 1);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("Si"), 1);
 
   fDetectorMessenger = new DetectorMessenger(this);
 
@@ -104,6 +116,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fSurfaceMPT;
   // Frees the memory of SiPM
   delete fSiPMMPT;
+  delete fGreaseMPT;
   delete fSurface;
   delete fDetectorMessenger;
 }
@@ -119,6 +132,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // SiPM Properties Table
   fSiPMMaterial->SetMaterialPropertiesTable(fSiPMMPT);
+  fGreaseMaterial->SetMaterialPropertiesTable(fGreaseMPT);
 
   // ------------- Volumes --------------
   // The experimental Hall
@@ -179,6 +193,65 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   fTank_LV = new G4LogicalVolume(tank_solid, fTankMaterial, "Tank");
 
   fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
+
+  if (fGreaseEnabled) {
+    ValidateGreaseConfiguration();
+
+    G4VSolid* greaseSolid = nullptr;
+    G4ThreeVector greasePos;
+
+    if (fDimpleEnabled) {
+      G4double sipmHx = 0.0;
+      G4double sipmHy = 0.0;
+      G4double sipmHz = 0.0;
+      G4ThreeVector sipmPos;
+      ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+
+      const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+      const G4double clipHz = 0.5 * (fDimpleRadius - localBottom);
+      const G4double clipCenterZ = localBottom + clipHz;
+
+      auto greaseSphere = new G4Sphere("Grease_DimpleSphere",
+                                        0.,
+                                        fDimpleRadius,
+                                        0.,
+                                        360. * deg,
+                                        0.,
+                                        180. * deg);
+      auto greaseClip = new G4Box("Grease_DimpleClip",
+                                   0.5 * GetGreaseActiveU(),
+                                   0.5 * GetGreaseActiveV(),
+                                   clipHz);
+      greaseSolid = new G4IntersectionSolid("Grease_DimpleGap",
+                                             greaseSphere,
+                                             greaseClip,
+                                             nullptr,
+                                             G4ThreeVector(0., 0., clipCenterZ));
+      greasePos = G4ThreeVector(0., 0., -fTank_z);
+    }
+    else {
+      G4double greaseHx = 0.0;
+      G4double greaseHy = 0.0;
+      G4double greaseHz = 0.0;
+      ComputeGreasePlacement(greaseHx, greaseHy, greaseHz, greasePos);
+      greaseSolid = new G4Box("Grease_Box", greaseHx, greaseHy, greaseHz);
+    }
+
+    fGrease_LV = new G4LogicalVolume(greaseSolid, fGreaseMaterial, "Grease");
+
+    auto greaseVis = new G4VisAttributes(G4Colour(0.0, 0.8, 1.0, 0.35));
+    greaseVis->SetForceSolid(true);
+    fGrease_LV->SetVisAttributes(greaseVis);
+
+    fGrease = new G4PVPlacement(nullptr,
+                                greasePos,
+                                fGrease_LV,
+                                "Grease",
+                                fWorld_LV,
+                                false,
+                                0,
+                                true);
+  }
 
   // The SiPM
   G4double sipmHx = 0.0;
@@ -253,6 +326,13 @@ void DetectorConstruction::SetSurfacePreset(const G4String& preset)
   fSurface->SetModel(unified);
   fSurface->SetType(dielectric_dielectric);
 
+  const auto addConstantReflectivity = [&]() {
+    const G4int nEntries = 2;
+    G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
+    G4double reflectivity[nEntries] = {0.95, 0.95};
+    fSurfaceMPT->AddProperty("REFLECTIVITY", photonEnergy, reflectivity, nEntries);
+  };
+
   if (preset == "polished") {
     fSurface->SetFinish(polished);
     fSurface->SetSigmaAlpha(0.0);
@@ -264,16 +344,29 @@ void DetectorConstruction::SetSurfacePreset(const G4String& preset)
   else if (preset == "wrapped") {
     fSurface->SetFinish(polishedfrontpainted);
     fSurface->SetSigmaAlpha(0.0);
-
-    const G4int nEntries = 2;
-    G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
-    G4double reflectivity[nEntries] = {0.95, 0.95};
-    fSurfaceMPT->AddProperty("REFLECTIVITY", photonEnergy, reflectivity, nEntries);
+    addConstantReflectivity();
+  }
+  else if (preset == "polishedfrontpainted") {
+    fSurface->SetFinish(polishedfrontpainted);
+    fSurface->SetSigmaAlpha(0.0);
+  }
+  else if (preset == "groundfrontpainted") {
+    fSurface->SetFinish(groundfrontpainted);
+    fSurface->SetSigmaAlpha(0.2);
+  }
+  else if (preset == "polishedbackpainted") {
+    fSurface->SetFinish(polishedbackpainted);
+    fSurface->SetSigmaAlpha(0.0);
+  }
+  else if (preset == "groundbackpainted") {
+    fSurface->SetFinish(groundbackpainted);
+    fSurface->SetSigmaAlpha(0.2);
   }
   else {
     G4ExceptionDescription msg;
     msg << "Invalid surface preset: " << preset
-        << ". Use polished, ground, or wrapped.";
+        << ". Use polished, ground, wrapped, polishedfrontpainted, "
+        << "groundfrontpainted, polishedbackpainted, or groundbackpainted.";
     G4Exception("DetectorConstruction::SetSurfacePreset",
                 "OpNovice2_Surface_001",
                 FatalException,
@@ -343,6 +436,30 @@ void DetectorConstruction::AddSurfaceMPC(const G4String& prop, G4double v)
   fSurfaceMPT->AddConstProperty(prop, v);
   G4cout << "The MPT for the surface is now: " << G4endl;
   fSurfaceMPT->DumpTable();
+  G4cout << "............." << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void DetectorConstruction::AddGreaseMPV(const G4String& prop, G4MaterialPropertyVector* mpv)
+{
+  if (fGreaseMPT->GetProperty(prop) != nullptr) {
+    fGreaseMPT->RemoveProperty(prop);
+  }
+  fGreaseMPT->AddProperty(prop, mpv);
+  G4cout << "The MPT for the grease is now: " << G4endl;
+  fGreaseMPT->DumpTable();
+  G4cout << "............." << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void DetectorConstruction::AddGreaseMPC(const G4String& prop, G4double v)
+{
+  if (fGreaseMPT->ConstPropertyExists(prop)) {
+    fGreaseMPT->RemoveConstProperty(prop);
+  }
+  fGreaseMPT->AddConstProperty(prop, v);
+  G4cout << "The MPT for the grease is now: " << G4endl;
+  fGreaseMPT->DumpTable();
   G4cout << "............." << G4endl;
 }
 
@@ -653,6 +770,151 @@ void DetectorConstruction::ValidateDimpleConfiguration() const
   }
 }
 
+G4double DetectorConstruction::GetGreaseActiveU() const
+{
+  return fGreaseActiveU > 0.0 ? fGreaseActiveU : fSiPMActiveU;
+}
+
+G4double DetectorConstruction::GetGreaseActiveV() const
+{
+  return fGreaseActiveV > 0.0 ? fGreaseActiveV : fSiPMActiveV;
+}
+
+void DetectorConstruction::ValidateGreaseConfiguration() const
+{
+  const G4double safety = 1.e-6 * mm;
+
+  if (fSiPMFace != "-Z" && fSiPMFace != "bottom") {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling currently supports only -Z SiPM placement. "
+        << "Current /opnovice2/sipm/face is " << fSiPMFace << ".";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_001",
+                FatalException,
+                msg);
+  }
+
+  if (fBottomCavityEnabled) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling cannot be combined with bottom cavity geometry.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_002",
+                FatalException,
+                msg);
+  }
+
+  if (std::abs(fSiPMLocalPosition.x()) > safety ||
+      std::abs(fSiPMLocalPosition.y()) > safety ||
+      std::abs(fSiPMLocalPosition.z()) > safety) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling currently supports only bottom-center SiPM local "
+        << "position 0 0 0. Current local position is "
+        << fSiPMLocalPosition / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_003",
+                FatalException,
+                msg);
+  }
+
+  if (!fDimpleEnabled && fGreaseThickness <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 flat-pad thickness must be positive when grease coupling is enabled.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_004",
+                FatalException,
+                msg);
+  }
+
+  const G4double greaseU = GetGreaseActiveU();
+  const G4double greaseV = GetGreaseActiveV();
+  if (greaseU <= 0.0 || greaseV <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease active size must be positive. Current size is "
+        << greaseU / mm << " x " << greaseV / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_005",
+                FatalException,
+                msg);
+  }
+
+  if (0.5 * greaseU > fTank_x + safety || 0.5 * greaseV > fTank_y + safety) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease pad does not fit on the tile bottom face. "
+        << "grease=" << greaseU / mm << " x " << greaseV / mm
+        << " mm, tile=" << (2.0 * fTank_x) / mm << " x "
+        << (2.0 * fTank_y) / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_006",
+                FatalException,
+                msg);
+  }
+
+  if (fDimpleEnabled) {
+    if (fGreaseThickness > safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap coupling derives its thickness from the curved "
+          << "dimple-to-SiPM gap; do not set /opnovice2/grease/thickness.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_007",
+                  FatalException,
+                  msg);
+    }
+
+    if (greaseU > fSiPMActiveU + safety || greaseV > fSiPMActiveV + safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint cannot exceed the SiPM active face. "
+          << "grease=" << greaseU / mm << " x " << greaseV / mm
+          << " mm, SiPM=" << fSiPMActiveU / mm << " x "
+          << fSiPMActiveV / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_008",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double greaseCornerRadius =
+      std::sqrt(0.25 * greaseU * greaseU + 0.25 * greaseV * greaseV);
+    if (greaseCornerRadius >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint does not fit inside the dimple. "
+          << "corner radius=" << greaseCornerRadius / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_009",
+                  FatalException,
+                  msg);
+    }
+
+    G4double sipmHx = 0.0;
+    G4double sipmHy = 0.0;
+    G4double sipmHz = 0.0;
+    G4ThreeVector sipmPos;
+    ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+    const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+    if (localBottom >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap has no positive clearance above the SiPM. "
+          << "SiPM top relative to dimple center=" << localBottom / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_010",
+                  FatalException,
+                  msg);
+    }
+  }
+}
+
+void DetectorConstruction::ComputeGreasePlacement(G4double& hx,
+                                                  G4double& hy,
+                                                  G4double& hz,
+                                                  G4ThreeVector& pos) const
+{
+  hx = 0.5 * GetGreaseActiveU();
+  hy = 0.5 * GetGreaseActiveV();
+  hz = 0.5 * fGreaseThickness;
+  pos = G4ThreeVector(0.0, 0.0, -fTank_z - hz);
+}
+
 
 void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
                                                 G4double& hy,
@@ -724,7 +986,8 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
       }
     }
     else {
-      pos = G4ThreeVector(u, v, -fTank_z - ht);
+      const G4double greaseOffset = fGreaseEnabled ? fGreaseThickness : 0.0;
+      pos = G4ThreeVector(u, v, -fTank_z - greaseOffset - ht);
     }
   }
   else if (fSiPMFace == "bottomCavity") {
@@ -844,4 +1107,53 @@ void DetectorConstruction::SetSiPMSize(const G4ThreeVector& size)
          << fSiPMActiveU / mm << " mm, activeV="
          << fSiPMActiveV / mm << " mm, thickness="
          << fSiPMThickness / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetGreaseEnabled(G4bool enabled)
+{
+  fGreaseEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease coupling "
+         << (fGreaseEnabled ? "enabled" : "disabled") << G4endl;
+}
+
+void DetectorConstruction::SetGreaseThickness(G4double thickness)
+{
+  if (thickness <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "Invalid EJ-550 grease thickness: " << thickness / mm
+        << " mm. Thickness must be positive.";
+    G4Exception("DetectorConstruction::SetGreaseThickness",
+                "OpNovice2_Grease_007",
+                FatalException,
+                msg);
+  }
+
+  fGreaseThickness = thickness;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease thickness set to "
+         << fGreaseThickness / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetGreaseSize(const G4ThreeVector& size)
+{
+  if (size.x() <= 0.0 || size.y() <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "Invalid EJ-550 grease size: " << size.x() / mm << " x "
+        << size.y() / mm << " mm. Active dimensions must be positive.";
+    G4Exception("DetectorConstruction::SetGreaseSize",
+                "OpNovice2_Grease_008",
+                FatalException,
+                msg);
+  }
+
+  fGreaseActiveU = size.x();
+  fGreaseActiveV = size.y();
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease size set to activeU="
+         << fGreaseActiveU / mm << " mm, activeV="
+         << fGreaseActiveV / mm << " mm" << G4endl;
 }

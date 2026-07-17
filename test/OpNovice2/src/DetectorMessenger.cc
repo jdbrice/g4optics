@@ -73,7 +73,8 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
 
   fSurfacePresetCmd = new G4UIcmdWithAString("/opnovice2/surfacePreset", this);
   fSurfacePresetCmd->SetGuidance("Apply a Week 7 surface preset.");
-  fSurfacePresetCmd->SetGuidance("Options: polished, ground, wrapped.");
+  fSurfacePresetCmd->SetGuidance("Options: polished, ground, wrapped, polishedfrontpainted,");
+  fSurfacePresetCmd->SetGuidance("groundfrontpainted, polishedbackpainted, groundbackpainted.");
   fSurfacePresetCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fSurfacePresetCmd->SetToBeBroadcasted(false);
 
@@ -209,6 +210,41 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fSiPMSizeCmd->SetDefaultUnit("mm");
   fSiPMSizeCmd->AvailableForStates(G4State_PreInit);
   fSiPMSizeCmd->SetToBeBroadcasted(false);
+
+  fGreaseEnabledCmd = new G4UIcmdWithABool("/opnovice2/grease/enabled", this);
+  fGreaseEnabledCmd->SetGuidance(
+    "Enable EJ-550 coupling between tile and SiPM (flat pad or curved dimple gap).");
+  fGreaseEnabledCmd->SetDefaultValue(false);
+  fGreaseEnabledCmd->AvailableForStates(G4State_PreInit);
+  fGreaseEnabledCmd->SetToBeBroadcasted(false);
+
+  fGreaseThicknessCmd =
+    new G4UIcmdWithADoubleAndUnit("/opnovice2/grease/thickness", this);
+  fGreaseThicknessCmd->SetGuidance(
+    "Set EJ-550 flat-pad thickness; omit for curved dimple-gap coupling.");
+  fGreaseThicknessCmd->SetParameterName("thickness", false);
+  fGreaseThicknessCmd->SetUnitCategory("Length");
+  fGreaseThicknessCmd->SetDefaultUnit("mm");
+  fGreaseThicknessCmd->AvailableForStates(G4State_PreInit);
+  fGreaseThicknessCmd->SetToBeBroadcasted(false);
+
+  fGreaseSizeCmd = new G4UIcmdWith3VectorAndUnit("/opnovice2/grease/size", this);
+  fGreaseSizeCmd->SetGuidance("Set EJ-550 grease pad active size: activeU activeV unused.");
+  fGreaseSizeCmd->SetParameterName("activeU", "activeV", "unused", false);
+  fGreaseSizeCmd->SetUnitCategory("Length");
+  fGreaseSizeCmd->SetDefaultUnit("mm");
+  fGreaseSizeCmd->AvailableForStates(G4State_PreInit);
+  fGreaseSizeCmd->SetToBeBroadcasted(false);
+
+  fGreaseMatPropVectorCmd = new G4UIcmdWithAString("/opnovice2/greaseProperty", this);
+  fGreaseMatPropVectorCmd->SetGuidance("Set material property vector for EJ-550 grease.");
+  fGreaseMatPropVectorCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fGreaseMatPropVectorCmd->SetToBeBroadcasted(false);
+
+  fGreaseMatPropConstCmd = new G4UIcmdWithAString("/opnovice2/greaseConstProperty", this);
+  fGreaseMatPropConstCmd->SetGuidance("Set material constant property for EJ-550 grease.");
+  fGreaseMatPropConstCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fGreaseMatPropConstCmd->SetToBeBroadcasted(false);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -241,6 +277,11 @@ DetectorMessenger::~DetectorMessenger()
   delete fSiPMCavityModeCmd;
   delete fSiPMLocalPositionCmd;
   delete fSiPMSizeCmd;
+  delete fGreaseEnabledCmd;
+  delete fGreaseThicknessCmd;
+  delete fGreaseSizeCmd;
+  delete fGreaseMatPropVectorCmd;
+  delete fGreaseMatPropConstCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -495,6 +536,27 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
     }
     fDetector->AddSurfaceMPV(prop, mpv);
   }
+  else if (command == fGreaseMatPropVectorCmd) {
+    // Convert string to physics vector
+    // string format is property name, then pairs of energy, value
+    auto mpv = new G4MaterialPropertyVector();
+    G4cout << newValue << G4endl;
+    std::istringstream instring(newValue);
+    G4String prop;
+    instring >> prop;
+    while (instring) {
+      G4String tmp;
+      instring >> tmp;
+      if (tmp == "") {
+        break;
+      }
+      G4double en = G4UIcommand::ConvertToDouble(tmp);
+      instring >> tmp;
+      G4double val = G4UIcommand::ConvertToDouble(tmp);
+      mpv->InsertValues(en, val);
+    }
+    fDetector->AddGreaseMPV(prop, mpv);
+  }
 
   else if (command == fTankMatPropConstCmd) {
     // Convert string to physics vector
@@ -531,6 +593,18 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
     instring >> tmp;
     G4double val = G4UIcommand::ConvertToDouble(tmp);
     fDetector->AddSurfaceMPC(prop, val);
+  }
+  else if (command == fGreaseMatPropConstCmd) {
+    // Convert string to physics vector
+    // string format is property name, then value
+    // space delimited
+    std::istringstream instring(newValue);
+    G4String prop;
+    G4String tmp;
+    instring >> prop;
+    instring >> tmp;
+    G4double val = G4UIcommand::ConvertToDouble(tmp);
+    fDetector->AddGreaseMPC(prop, val);
   }
   else if (command == fWorldMaterialCmd) {
     fDetector->SetWorldMaterial(newValue);
@@ -574,6 +648,16 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   else if (command == fSiPMSizeCmd) {
     fDetector->SetSiPMSize(
       fSiPMSizeCmd->GetNew3VectorValue(newValue));
+  }
+  else if (command == fGreaseEnabledCmd) {
+    fDetector->SetGreaseEnabled(fGreaseEnabledCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fGreaseThicknessCmd) {
+    fDetector->SetGreaseThickness(fGreaseThicknessCmd->GetNewDoubleValue(newValue));
+  }
+  else if (command == fGreaseSizeCmd) {
+    fDetector->SetGreaseSize(
+      fGreaseSizeCmd->GetNew3VectorValue(newValue));
   }
 }
 

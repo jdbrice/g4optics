@@ -60,9 +60,18 @@ class TrackInformation : public G4VUserTrackInformation
     inline G4int GetReflectionNumber() const { return fReflectionNumber; }
     inline void IncrementReflectionNumber() { ++fReflectionNumber; }
 
+    void SetDecayBetaSource(const G4String& parentName, const G4String& creatorProcess);
+    void ClearDecayBetaSource();
+    inline G4bool GetIsDecayBeta() const { return fIsDecayBeta; }
+    inline const G4String& GetDecayBetaParentName() const { return fDecayBetaParentName; }
+    inline const G4String& GetDecayBetaCreatorProcess() const { return fDecayBetaCreatorProcess; }
+
   private:
     G4bool fFirstTankX = false;
+    G4bool fIsDecayBeta = false;
     G4int fReflectionNumber = 0;
+    G4String fDecayBetaParentName;
+    G4String fDecayBetaCreatorProcess;
 };
 
 extern G4ThreadLocal G4Allocator<TrackInformation>* aTrackInformationAllocator;

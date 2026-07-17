@@ -93,6 +93,13 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fSiPMCavityModeCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMLocalPositionCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMSizeCmd = nullptr;
+
+    // EJ-550 optical grease coupling
+    G4UIcmdWithABool* fGreaseEnabledCmd = nullptr;
+    G4UIcmdWithADoubleAndUnit* fGreaseThicknessCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fGreaseSizeCmd = nullptr;
+    G4UIcmdWithAString* fGreaseMatPropVectorCmd = nullptr;
+    G4UIcmdWithAString* fGreaseMatPropConstCmd = nullptr;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

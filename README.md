@@ -10,7 +10,7 @@
 **Status:** Weeks 1–12 below are complete (working environment, tuned geometry/surface model, Sr-90 spectrum, validated position-scan framework). This phase uses that machinery to match real lab measurements and then make predictions for a new tile design.
 
 ### Step 0: Verify Actual Tile Dimensions
-Before building any geometry, measure the actual lab tiles with calipers rather than trusting the nominal labels. Some tiles nominally called "10×10 mm" are rough-cut and are actually closer to 11.5×11.5 mm. Measure each tile used in this comparison (nominal 5×5×16mm and 10×10×16mm) and use the **measured** dimensions in the Geant4 geometry — a few percent size mismatch is enough to bias the uniformity comparison. Record the measured dimensions in the analysis notes.
+Before building any geometry, measure the actual lab tiles with calipers rather than trusting the nominal labels. Some tiles nominally called "10cm×10cm" are rough-cut and are actually closer to 11.5×11.5 cm. Measure each tile used in this comparison (nominal 5cm×5cm×16mm and 10cm×10×16mm) and use the **measured** dimensions in the Geant4 geometry — a few percent size mismatch is enough to bias the uniformity comparison. Record the measured dimensions in the analysis notes.
 
 ### Step 1: Simulate the Matching Geometries
 Build Geant4 geometries for the two lab test tiles using their measured (not nominal) dimensions. Use the realistic beta energy spectrum (Week 10 approach — decay-based or spectrum-based) rather than a monoenergetic beam; this is essential for the light yield comparison to be meaningful.
@@ -24,13 +24,13 @@ The lab beam has some finite transverse (x–y) spot size at the tile face that 
 This scan does double duty: it validates the simulation against data, and it produces an estimate of the actual beam spot size in the lab, which is not otherwise directly measured.
 
 ### Step 3: Validation Deliverables
-1. **Comparison plots** of light-yield uniformity vs. position, data vs. simulation, for both the 5×5×16mm and 10×10×16mm tiles, at the best-fit beam spot size.
+1. **Comparison plots** of light-yield uniformity vs. position, data vs. simulation, for both the 5cm×5cm×16mm and 10cm×10cm×16mm tiles, at the best-fit beam spot size.
 2. **Beam spot size estimate** (best-fit transverse profile parameter, with an uncertainty), derived from the Step 2 scan.
 
 Do not proceed to Step 4 until both of the above are validated — i.e., the simulation reproduces the shape of the data's uniformity curve within uncertainties.
 
 ### Step 4: Predictions for the 10×10×24mm Tile
-Using the validated model (geometry, surface finish, spectrum, beam spot size) from Steps 1–3, simulate the new 10×10×24mm tile and predict light uniformity and yield for different SiPM placements, at minimum:
+Using the validated model (geometry, surface finish, spectrum, beam spot size) from Steps 1–3, simulate the new 10cm×10cm×24mm tile and predict light uniformity and yield for different SiPM placements, at minimum:
 - Center-back
 - Center-side
 - Center-back + dimple
@@ -49,7 +49,7 @@ apptainer build geant4.sif docker://carlomt/geant4:11.4.2-almalinux9
 
 then you can run an interactive shell in the container via:
 ```
-apprtainer run geant4.sif bash
+apptainer run geant4.sif bash
 ```
 
 or you can directly run your command via:
@@ -289,26 +289,38 @@ Now match the actual experimental driver. Sr-90 is a β⁻ emitter widely used a
 ### 10.1 The Sr-90 Beta Spectrum
 Sr-90 decays to Y-90 (β⁻, endpoint ≈ 0.546 MeV), and Y-90 in turn decays β⁻ with a much higher endpoint (≈ 2.28 MeV). The electrons hitting your tile are therefore **not monoenergetic** — they follow a continuous beta spectrum dominated by the Y-90 high-energy tail. Modeling this correctly is important because low-energy betas barely penetrate the tile while the energetic Y-90 betas behave like minimum-ionizing particles.
 
-Two options, in increasing realism:
-1. **Decay-based:** Use the radioactive decay physics. Place a `Sr90` ion as the primary (`/gps/particle ion` with `/gps/ion 38 90`) and let `G4RadioactiveDecay` produce the betas, enabling the full Sr-90 → Y-90 → Zr-90 chain. This is the most faithful but requires care that the decay chain and the `G4RadioactiveDecayPhysics` constructor are registered in your physics list.
-2. **Spectrum-based:** Supply the combined beta energy spectrum directly to GPS as a histogram:
+There are three source-model paths with different tradeoffs:
+1. **Spectrum-based:** Supply the combined beta energy spectrum directly to GPS as a histogram:
    ```
    /gps/ene/type Arb
-   /gps/hist/type energy
+   /gps/hist/type arb
    # ... /gps/hist/point E prob   pairs defining the spectrum ...
    /gps/hist/inter Lin
    ```
-   This is simpler and faster, and decouples the source spectrum from decay-physics bookkeeping.
+   This is the Week 10.1 production default in this repository (`--source-model sr90-spectrum`). It is simple, fast, reproducible, and decouples the source spectrum from decay-physics bookkeeping.
+2. **Decay-based:** Use the radioactive decay physics. Place a `Sr90` ion as the primary (`/gps/particle ion` with `/gps/ion 38 90`) and let `G4RadioactiveDecay` produce the betas, enabling the full Sr-90 -> Y-90 -> Zr-90 chain. This is the most faithful representation of the decay process, but it requires care that the decay chain and the `G4RadioactiveDecayPhysics` constructor are registered in your physics list.
+   In this repository this is implemented as `--source-model sr90-decay` under Week 10.1b. It is a production-quality optional model, but it is validation-first: confirm the `decay_betas` ntuple spectrum against `sr90_allowed_beta_v1` before using it for 441-point production scans. This mode is a bare stationary ion decay model; it does not yet include source encapsulation, collimator transmission, or a forced electron beam direction.
+3. **Empirical historical proxy:** The older `sr90Beta` sampler is retained only as `--source-model sr90-empirical` / `--electron-energy-mode sr90Beta` for historical comparison. It should not be treated as the new production source model.
 
-Either way, **document which approach you chose and why**, and verify the sampled spectrum by histogramming the primary electron energies.
+Whichever production approach is used, **document which approach you chose and why**, and verify the sampled spectrum. For `sr90-spectrum`, histogram `primary_kinetic_energy_mev` from the `scan` ntuple. For `sr90-decay`, `primary_kinetic_energy_mev` records the ion primary at rest; use the `decay_betas` ntuple and the `decay_beta_*` summary columns for beta-energy QA.
+
+Week 10.1b does not replace Week 10.2. The next named study remains beam divergence; decay validation is part of source-model realism in Week 10.1.
 
 ### 10.2 Beam Divergence
-A real collimated source has angular spread. Use GPS to give the beam a finite divergence of a specified number of milliradians:
+A real collimated source has angular spread. The scan runner exposes this as `--beam-divergence-mrad VALUE`, independent of `--beam-sigma`:
+
 ```
+/gps/direction 0 0 -1
 /gps/ang/type beam2d
-/gps/ang/sigma_r 5 mrad   # set to your measured/assumed divergence
+/gps/ang/sigma_x VALUE mrad
+/gps/ang/sigma_y VALUE mrad
 ```
-(Alternatively `/gps/ang/type iso` confined to a cone, depending on your collimator model.) Confirm that the divergence is small enough that the spot on the tile is consistent with the collimator geometry in the lab.
+
+Omitted or `0` keeps the previous pencil beam. A positive value requires `--source-mode gps` and records `beam.angular_model`, `beam.divergence_parameter = "sigma_x=sigma_y"`, `beam.divergence_mrad`, and `beam.direction` in `run_config.json`.
+
+`VALUE` is a 2D Gaussian angular sigma, not a hard cone half-angle. The mean beam direction remains `/gps/direction 0 0 -1`; setting equal x/y sigmas gives an axisymmetric angular spread around that direction. The early `10 mrad` decision scan was a small smoke pass. After the lab estimate of roughly `5 deg` (about `100 mrad`), the current Week 10.2 sensitivity target is around `75, 100, 125 mrad`, while reusing or rerunning the corresponding `0 mrad` baselines.
+
+`sr90-decay` remains a Week 10.1b cross-check tool and is not part of the Week 10.2 production matrix.
 
 ### 10.3 The Study
 Repeat the key scans (position, and your best thickness/finish/dimple combination) using the Sr-90 source model instead of a monoenergetic beam. This is the simulation configuration you will actually compare against lab data.

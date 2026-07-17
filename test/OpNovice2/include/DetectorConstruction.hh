@@ -95,6 +95,13 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     void AddSurfaceMPC(const G4String& prop, G4double v);
     G4MaterialPropertiesTable* GetSurfaceMaterialPropertiesTable() { return fSurfaceMPT; }
 
+    void SetGreaseEnabled(G4bool enabled);
+    void SetGreaseThickness(G4double thickness);
+    void SetGreaseSize(const G4ThreeVector& size);
+    void AddGreaseMPV(const G4String& prop, G4MaterialPropertyVector* mpv);
+    void AddGreaseMPC(const G4String& prop, G4double v);
+    G4MaterialPropertiesTable* GetGreaseMaterialPropertiesTable() { return fGreaseMPT; }
+
     void SetWorldMaterial(const G4String&);
     G4Material* GetWorldMaterial() const { return fWorldMaterial; }
     void SetTankMaterial(const G4String&);
@@ -153,6 +160,16 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4Material* fSiPMMaterial = nullptr;
     G4MaterialPropertiesTable* fSiPMMPT = nullptr;
 
+    // Optional EJ-550 coupling: flat pad or curved dimple-to-SiPM gap.
+    G4VPhysicalVolume* fGrease = nullptr;
+    G4LogicalVolume* fGrease_LV = nullptr;
+    G4Material* fGreaseMaterial = nullptr;
+    G4MaterialPropertiesTable* fGreaseMPT = nullptr;
+    G4bool fGreaseEnabled = false;
+    G4double fGreaseThickness = 0.0;
+    G4double fGreaseActiveU = 0.0;
+    G4double fGreaseActiveV = 0.0;
+
     // General SiPM placement.
     // fSiPMFace controls which tile face the SiPM is attached to.
     // Accepted values: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.
@@ -185,7 +202,14 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                                           G4double v,
                                           G4double hu,
                                           G4double hv) const;
+    G4double GetGreaseActiveU() const;
+    G4double GetGreaseActiveV() const;
+    void ComputeGreasePlacement(G4double& hx,
+                                G4double& hy,
+                                G4double& hz,
+                                G4ThreeVector& pos) const;
     void ValidateDimpleConfiguration() const;
+    void ValidateGreaseConfiguration() const;
     void ResetSurfaceMaterialPropertiesTable();
 };
 

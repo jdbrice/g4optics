@@ -39,6 +39,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4UnitsTable.hh"
 
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -48,14 +50,35 @@ Run::Run() : G4Run()
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void Run::BeginEvent()
+void Run::BeginEvent(G4int eventID)
 {
+  fCurrentEventID = eventID;
   fEventGeneratedOpticalCount = 0;
   fEventScintCount = 0;
   fEventSiPMDetectionCount = 0;
   fEventHitValid = false;
   fEventHitPosition = G4ThreeVector();
   fEventScintPositionSum = G4ThreeVector();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryKineticEnergy(G4double energy)
+{
+  fPrimaryEnergyCount += 1;
+  fPrimaryEnergySum += energy;
+  fPrimaryEnergySum2 += energy * energy;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, energy);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, energy);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddDecayBetaEnergy(G4double energy)
+{
+  fDecayBetaCount += 1;
+  fDecayBetaEnergySum += energy;
+  fDecayBetaEnergySum2 += energy * energy;
+  fDecayBetaEnergyMin = std::min(fDecayBetaEnergyMin, energy);
+  fDecayBetaEnergyMax = std::max(fDecayBetaEnergyMax, energy);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -121,6 +144,46 @@ G4ThreeVector Run::GetMeanScintillationCentroid() const
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyMean() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  return fPrimaryEnergySum / G4double(fPrimaryEnergyCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyRms() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  const G4double mean = GetPrimaryKineticEnergyMean();
+  const G4double mean2 = fPrimaryEnergySum2 / G4double(fPrimaryEnergyCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetDecayBetaEnergyMean() const
+{
+  if (fDecayBetaCount == 0) {
+    return 0.;
+  }
+  return fDecayBetaEnergySum / G4double(fDecayBetaCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetDecayBetaEnergyRms() const
+{
+  if (fDecayBetaCount == 0) {
+    return 0.;
+  }
+  const G4double mean = GetDecayBetaEnergyMean();
+  const G4double mean2 = fDecayBetaEnergySum2 / G4double(fDecayBetaCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void Run::SetPrimary(G4ParticleDefinition* particle, G4double energy, G4bool polarized,
                      G4double polarization, const G4String& electronEnergyMode)
 {
@@ -176,6 +239,16 @@ void Run::Merge(const G4Run* run)
   fHitPositionSum += localRun->fHitPositionSum;
   fScintCentroidCount += localRun->fScintCentroidCount;
   fScintCentroidSum += localRun->fScintCentroidSum;
+  fPrimaryEnergyCount += localRun->fPrimaryEnergyCount;
+  fPrimaryEnergySum += localRun->fPrimaryEnergySum;
+  fPrimaryEnergySum2 += localRun->fPrimaryEnergySum2;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, localRun->fPrimaryEnergyMin);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, localRun->fPrimaryEnergyMax);
+  fDecayBetaCount += localRun->fDecayBetaCount;
+  fDecayBetaEnergySum += localRun->fDecayBetaEnergySum;
+  fDecayBetaEnergySum2 += localRun->fDecayBetaEnergySum2;
+  fDecayBetaEnergyMin = std::min(fDecayBetaEnergyMin, localRun->fDecayBetaEnergyMin);
+  fDecayBetaEnergyMax = std::max(fDecayBetaEnergyMax, localRun->fDecayBetaEnergyMax);
 
   G4Run::Merge(run);
 }

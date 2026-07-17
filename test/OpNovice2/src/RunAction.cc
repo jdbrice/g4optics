@@ -71,13 +71,19 @@ namespace
     const auto shootPosition = run->GetMeanShootPosition();
     const auto hitPosition = run->GetMeanHitPosition();
     const auto scintCentroid = run->GetMeanScintillationCentroid();
+    const auto primaryEnergyCount = run->GetPrimaryKineticEnergyCount();
+    const auto decayBetaCount = run->GetDecayBetaCount();
 
     out << "events,generated_optical_photons,scintillation_photons,"
         << "sipm_detected_photons,collection_efficiency,"
         << "shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,"
         << "hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,"
         << "scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,"
-        << "scint_centroid_z_mm\n";
+        << "scint_centroid_z_mm,"
+        << "primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,"
+        << "primary_energy_min_mev,primary_energy_max_mev,"
+        << "decay_beta_count,decay_beta_energy_mean_mev,decay_beta_energy_rms_mev,"
+        << "decay_beta_energy_min_mev,decay_beta_energy_max_mev\n";
     out << std::setprecision(17);
     out << run->GetNumberOfEvents() << ','
         << generatedOptical << ','
@@ -98,6 +104,24 @@ namespace
         << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.y() / mm : missingPosition)
         << ','
         << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.z() / mm : missingPosition)
+        << ','
+        << primaryEnergyCount << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMean() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyRms() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMin() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMax() / MeV : missingPosition)
+        << ','
+        << decayBetaCount << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMean() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyRms() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMin() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMax() / MeV : missingPosition)
         << '\n';
   }
 }

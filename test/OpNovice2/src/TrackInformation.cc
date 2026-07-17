@@ -53,6 +53,10 @@ TrackInformation::TrackInformation(const G4Track*) : G4VUserTrackInformation()
 TrackInformation::TrackInformation(const TrackInformation* aTrackInfo) : G4VUserTrackInformation()
 {
   fFirstTankX = aTrackInfo->fFirstTankX;
+  fIsDecayBeta = aTrackInfo->fIsDecayBeta;
+  fReflectionNumber = aTrackInfo->fReflectionNumber;
+  fDecayBetaParentName = aTrackInfo->fDecayBetaParentName;
+  fDecayBetaCreatorProcess = aTrackInfo->fDecayBetaCreatorProcess;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -62,6 +66,10 @@ TrackInformation::~TrackInformation() = default;
 TrackInformation& TrackInformation::operator=(const TrackInformation& aTrackInfo)
 {
   fFirstTankX = aTrackInfo.fFirstTankX;
+  fIsDecayBeta = aTrackInfo.fIsDecayBeta;
+  fReflectionNumber = aTrackInfo.fReflectionNumber;
+  fDecayBetaParentName = aTrackInfo.fDecayBetaParentName;
+  fDecayBetaCreatorProcess = aTrackInfo.fDecayBetaCreatorProcess;
 
   return *this;
 }
@@ -70,6 +78,26 @@ TrackInformation& TrackInformation::operator=(const TrackInformation& aTrackInfo
 void TrackInformation::SetSourceTrackInformation(const G4Track*)
 {
   fFirstTankX = true;
+  fIsDecayBeta = false;
+  fDecayBetaParentName = "";
+  fDecayBetaCreatorProcess = "";
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void TrackInformation::SetDecayBetaSource(const G4String& parentName,
+                                          const G4String& creatorProcess)
+{
+  fIsDecayBeta = true;
+  fDecayBetaParentName = parentName;
+  fDecayBetaCreatorProcess = creatorProcess;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void TrackInformation::ClearDecayBetaSource()
+{
+  fIsDecayBeta = false;
+  fDecayBetaParentName = "";
+  fDecayBetaCreatorProcess = "";
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
