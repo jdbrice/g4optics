@@ -1,0 +1,24 @@
+# Optional human geometry sanity check. This is not a statistical run.
+/vis/open TSGQtZB
+/vis/viewer/set/autoRefresh false
+/vis/verbose errors
+
+/vis/drawVolume
+/vis/viewer/set/style surface
+/vis/viewer/set/auxiliaryEdge true
+/vis/geometry/set/visibility World 0 false
+/vis/geometry/set/colour SteelAbsorber 0 0.72 0.72 0.78 0.45
+/vis/geometry/set/forceWireframe SteelAbsorber 0 true
+/vis/geometry/set/colour Tank 0 0.10 0.35 1.00 0.82
+/vis/geometry/set/forceSolid Tank 0 true
+/vis/geometry/set/colour SiPM 0 0.00 1.00 0.00 1.00
+/vis/geometry/set/forceSolid SiPM 0 true
+
+# Oblique +X/upstream view: exposes the ten-layer longitudinal ordering and
+# the two green SiPMs on each tile's +X face.
+/vis/viewer/set/viewpointThetaPhi 70 25
+/vis/viewer/zoom 1.15
+/vis/scene/add/axes 0 0 0 100 mm
+/vis/viewer/set/autoRefresh true
+/vis/viewer/flush
+/vis/verbose warnings

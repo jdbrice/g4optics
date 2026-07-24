@@ -36,6 +36,7 @@
 
 #include "G4EmStandardPhysics_option4.hh"
 #include "G4OpticalPhysics.hh"
+#include "G4RadioactiveDecayPhysics.hh"
 #include "G4RunManagerFactory.hh"
 #include "G4String.hh"
 #include "G4Types.hh"
@@ -78,6 +79,7 @@ int main(int argc, char** argv)
   auto opticalPhysics = new G4OpticalPhysics();
 
   physicsList->RegisterPhysics(opticalPhysics);
+  physicsList->RegisterPhysics(new G4RadioactiveDecayPhysics());
   runManager->SetUserInitialization(physicsList);
 
   runManager->SetUserInitialization(new ActionInitialization());

@@ -1,0 +1,40 @@
+{
+  "schema_version": "steel-module-production-program-lock-v1",
+  "status": "accepted-formal-phase-1",
+  "study_preset": "steel-module-scan-v1",
+  "policy_id": "steel-module-production-sms016-019-v1",
+  "program_directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns/steel-module-production-program-cbc03814",
+  "program_id": "sm-v1-production-program-7c1cafa00829",
+  "program_hash": "7c1cafa00829cefc70b556ef82d5988c1ca688a6941f5deab8dfab9255cdbab2",
+  "production_program_json_sha256": "628d483efabc32a007e14de029e169f4298f9e379dc8d7903655dc19ca8c7526",
+  "root_checksum_manifest_sha256": "07f410086c50bc957292a109b7955fed5d2ea2b10912c63114b7d258fc841020",
+  "parent_plan_hash": "6ac71a6dbc234e8fb4d93af026f0f5d552e0f217c78169585a89e9eb67f36a6a",
+  "authorization_graph_hash": "758b09e5703adc9f0fecb5511fee2583ec39b7607fb61fb32a0cc6100d343a40",
+  "program_source": {
+    "commit": "cbc03814e80e8d0742a3bfb17921c118c6ff1585",
+    "tree": "b236ed2643c814336b08b293f16507b6f3b39dc6",
+    "branch": "exp/realistic-detector",
+    "dirty": false
+  },
+  "runtime": {
+    "mode": "osc-production",
+    "geant4_version": "11.4.2",
+    "environment_identity": "6984ac6b9a4b46bc958ca233cf6cddaa02d5b9213cff387f27363536a0f1f709",
+    "image_sha256": "6a777120a8ad8ae4959580e5c1e9eaa4dc2a837a95cbfca533f2f07d71d54962",
+    "g4_data_manifest_sha256": "ef94e0915e1fffd0c24923dec161252da608400f5572f088bac8d5ce77acf807",
+    "executable_sha256": "adbcbc2facf4bb39b4671c7d47a8f9caf9e4f691b9a28a6d5e0d79d354b4cf41",
+    "executable_build_source_commit": "88f15eace17137475310913d585a96908a493c72",
+    "executable_build_source_tree": "1d3f2b60b1b6230d3209e7a9ab661ac304f4f458"
+  },
+  "task_count": 914,
+  "event_count": 228500,
+  "accepted_statistical_evidence": true,
+  "submittable": false,
+  "initial_managed_child": "BC-S1",
+  "locked_children": [
+    "FIXED",
+    "BC-S2",
+    "BC-S3",
+    "BC-S4"
+  ]
+}

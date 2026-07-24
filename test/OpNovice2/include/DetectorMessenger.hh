@@ -78,6 +78,10 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWith3VectorAndUnit* fTankSizeCmd = nullptr;
     G4UIcmdWithAString* fTankSizePresetCmd = nullptr;
     G4UIcmdWithABool* fTankBottomCavityCmd = nullptr;
+    G4UIcmdWithABool* fAbsorberEnabledCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fAbsorberSizeCmd = nullptr;
+    G4UIcmdWithABool* fStackEnabledCmd = nullptr;
+    G4UIcmdWithAnInteger* fStackLayersCmd = nullptr;
     G4UIcmdWithABool* fDimpleEnabledCmd = nullptr;
     G4UIcmdWithADoubleAndUnit* fDimpleRadiusCmd = nullptr;
     G4UIcmdWithAString* fDimpleModeCmd = nullptr;
@@ -89,10 +93,18 @@ class DetectorMessenger : public G4UImessenger
     G4UIcmdWithAString* fWorldMaterialCmd = nullptr;
 
     // SiPM geometry
+    G4UIcmdWithAString* fSiPMLayoutCmd = nullptr;
     G4UIcmdWithAString* fSiPMFaceCmd = nullptr;
     G4UIcmdWithAString* fSiPMCavityModeCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMLocalPositionCmd = nullptr;
     G4UIcmdWith3VectorAndUnit* fSiPMSizeCmd = nullptr;
+
+    // EJ-550 optical grease coupling
+    G4UIcmdWithABool* fGreaseEnabledCmd = nullptr;
+    G4UIcmdWithADoubleAndUnit* fGreaseThicknessCmd = nullptr;
+    G4UIcmdWith3VectorAndUnit* fGreaseSizeCmd = nullptr;
+    G4UIcmdWithAString* fGreaseMatPropVectorCmd = nullptr;
+    G4UIcmdWithAString* fGreaseMatPropConstCmd = nullptr;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

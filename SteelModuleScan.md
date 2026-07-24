@@ -7,5 +7,6 @@ With the SiPM in center back of tile (10x10 version) and absorber = 4cm steel + 
 
 Repeat with SiPM on edge, and again with 4 SiPm on back (-2.5cm, -2.5cm), (-2.5cm, 2.5cm), (2.5cm, -2.5cm), (2.5cm, 2.5cm)
 
+## 07-21 Update
 
-
+Extra: do 2 SiPM on the side.

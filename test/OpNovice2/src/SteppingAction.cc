@@ -31,6 +31,7 @@
 
 #include "SteppingAction.hh"
 
+#include "DetectorConstruction.hh"
 #include "HistoManager.hh"
 #include "Run.hh"
 #include "SteppingMessenger.hh"
@@ -39,9 +40,11 @@
 #include "G4Cerenkov.hh"
 #include "G4Event.hh"
 #include "G4EventManager.hh"
+#include "G4HadronicProcessType.hh"
 #include "G4OpBoundaryProcess.hh"
 #include "G4OpticalPhoton.hh"
 #include "G4ProcessManager.hh"
+#include "G4ProcessType.hh"
 #include "G4RunManager.hh"
 #include "G4Scintillation.hh"
 #include "G4Step.hh"
@@ -78,18 +81,64 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   const G4DynamicParticle* theParticle = track->GetDynamicParticle();
   const G4ParticleDefinition* particleDef = theParticle->GetParticleDefinition();
 
+  const auto detector = static_cast<const DetectorConstruction*>(
+    G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+  const G4int preTileLayer = detector ? detector->GetTileLayer(prePV) : -1;
+  const G4int postTileLayer = detector ? detector->GetTileLayer(postPV) : -1;
+  const G4int absorberLayer = detector ? detector->GetAbsorberLayer(prePV) : -1;
+
   auto trackInfo = (TrackInformation*)(track->GetUserInformation());
 
-  if (track->GetParentID() == 0 && prePV && postPV
-      && prePV->GetName() != "Tank" && postPV->GetName() == "Tank")
-  {
+  const G4bool entersTile = postTileLayer >= 0 && preTileLayer != postTileLayer;
+  if (track->GetParentID() == 0 && entersTile) {
     run->SetPrimaryHitPosition(endPoint->GetPosition());
+    if (particleDef->GetParticleName() == "neutron") {
+      run->SetPrimaryNeutronTileEntry(endPoint->GetPosition(), postTileLayer);
+    }
+  }
+
+  if (entersTile && particleDef->GetPDGCharge() != 0.) {
+    run->RecordChargedTileEntry(track->GetTrackID(),
+                                particleDef->GetPDGEncoding(),
+                                particleDef->GetPDGCharge(),
+                                endPoint->GetKineticEnergy(),
+                                postTileLayer);
+  }
+
+  const G4double energyDeposit = step->GetTotalEnergyDeposit();
+  if (absorberLayer >= 0) {
+    run->AddSteelEnergyDeposit(energyDeposit, absorberLayer);
+  }
+  if (preTileLayer >= 0) {
+    run->AddTileEnergyDeposit(particleDef->GetPDGEncoding(),
+                              particleDef->GetPDGCharge(),
+                              energyDeposit,
+                              preTileLayer);
+  }
+
+  if (absorberLayer >= 0 && track->GetParentID() == 0
+      && particleDef->GetParticleName() == "neutron") {
+    const G4VProcess* process = endPoint->GetProcessDefinedStep();
+    if (process && process->GetProcessType() == fHadronic) {
+      const G4int subtype = process->GetProcessSubType();
+      const G4String& processName = process->GetProcessName();
+      if (subtype == fHadronElastic || processName == "hadElastic") {
+        run->AddPrimaryNeutronElasticInteraction(absorberLayer);
+      }
+      else if (subtype == fHadronInelastic || processName == "neutronInelastic") {
+        run->AddPrimaryNeutronInelasticInteraction(absorberLayer);
+      }
+      else if (subtype == fCapture || processName == "nCapture") {
+        run->AddPrimaryNeutronCaptureInteraction(absorberLayer);
+      }
+    }
   }
 
   if (particleDef == opticalphoton) {
     // SiPM detection
     if (prePV && prePV->GetName() == "SiPM") {
-      run->AddSiPMDetection();
+      const G4int originLayer = trackInfo ? trackInfo->GetOpticalOriginLayer() : -1;
+      run->AddSiPMDetection(prePV->GetCopyNo(), originLayer);
 
       G4double en = track->GetKineticEnergy();
       analysisMan->FillH1(27, en / eV);  // detected photon energy
@@ -102,10 +151,10 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
     
     const G4VProcess* pds = endPoint->GetProcessDefinedStep();
-    G4String procname = pds->GetProcessName();
+    G4String procname = pds ? pds->GetProcessName() : "";
     if (procname == "OpAbsorption") {
       run->AddOpAbsorption();
-      if (trackInfo->GetIsFirstTankX()) {
+      if (trackInfo && trackInfo->GetIsFirstTankX()) {
         run->AddOpAbsorptionPrior();
       }
     }
@@ -158,7 +207,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
       G4ProcessVector* postStepDoItVector = OpManager->GetPostStepProcessVector(typeDoIt);
       G4int n_proc = postStepDoItVector->entries();
 
-      if (trackInfo->GetIsFirstTankX()) {
+      if (trackInfo && trackInfo->GetIsFirstTankX()) {
         G4double px1 = p1.x();
         G4double py1 = p1.y();
         G4double pz1 = p1.z();
@@ -337,12 +386,14 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
       // selected, kill the photon when reaching the second surface
       // (note that there are 2 steps at the boundary, so the counter
       // equals 0 and 1 on the first surface)
-      if (fKillOnSecondSurface) {
+      if (fKillOnSecondSurface && trackInfo) {
         if (trackInfo->GetReflectionNumber() >= 2) {
           track->SetTrackStatus(fStopAndKill);
         }
       }
-      trackInfo->IncrementReflectionNumber();
+      if (trackInfo) {
+        trackInfo->IncrementReflectionNumber();
+      }
     }
 
     // This block serves to test that G4OpBoundaryProcess sets the group
@@ -353,8 +404,11 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     if (endPoint->GetMaterial() == startPoint->GetMaterial()) {
       G4double trackVelocity = track->GetVelocity();
       G4double materialVelocity = CLHEP::c_light;
-      G4MaterialPropertyVector* velVector =
-        endPoint->GetMaterial()->GetMaterialPropertiesTable()->GetProperty(kGROUPVEL);
+      G4MaterialPropertyVector* velVector = nullptr;
+      auto materialProperties = endPoint->GetMaterial()->GetMaterialPropertiesTable();
+      if (materialProperties) {
+        velVector = materialProperties->GetProperty(kGROUPVEL);
+      }
       if (velVector) {
         materialVelocity = velVector->Value(theParticle->GetTotalMomentum(), fIdxVelocity);
       }
@@ -400,19 +454,20 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     // loop over secondaries, create statistics
     const std::vector<const G4Track*>* secondaries = step->GetSecondaryInCurrentStep();
 
+    const G4int generationLayer = preTileLayer;
     for (auto sec : *secondaries) {
       if (sec->GetDynamicParticle()->GetParticleDefinition() == opticalphoton) {
         G4String creator_process = sec->GetCreatorProcess()->GetProcessName();
         if (creator_process == "Cerenkov") {
           G4double en = sec->GetKineticEnergy();
           run->AddCerenkovEnergy(en);
-          run->AddCerenkov();
+          run->AddCerenkov(generationLayer);
           analysisMan->FillH1(1, en / eV);
         }
         else if (creator_process == "Scintillation") {
           G4double en = sec->GetKineticEnergy();
           run->AddScintillationEnergy(en);
-          run->AddScintillation(sec->GetPosition());
+          run->AddScintillation(sec->GetPosition(), generationLayer);
           analysisMan->FillH1(2, en / eV);
 
           G4double time = sec->GetGlobalTime();

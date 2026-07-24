@@ -1,0 +1,93 @@
+{
+  "schema_version": "steel-module-production-bc-s1-phase2a-lock-v1",
+  "status": "accepted-formal-phase-2a-check-only",
+  "study_preset": "steel-module-scan-v1",
+  "phase": "Phase-2A",
+  "frozen_date": "2026-07-18",
+  "child_id": "BC-S1",
+  "canonical_directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns/steel-module-production-bc-s1",
+  "object_kind": "non-submittable-managed-child-plan",
+  "reserved_campaign_id": "sm-v1-production-bc-s1-ad01d98af612",
+  "program": {
+    "program_id": "sm-v1-production-program-7c1cafa00829",
+    "program_hash": "7c1cafa00829cefc70b556ef82d5988c1ca688a6941f5deab8dfab9255cdbab2",
+    "parent_plan_hash": "6ac71a6dbc234e8fb4d93af026f0f5d552e0f217c78169585a89e9eb67f36a6a",
+    "authorization_graph_hash": "758b09e5703adc9f0fecb5511fee2583ec39b7607fb61fb32a0cc6100d343a40",
+    "formal_lock_path": "hpc/osc/configurations/steel-module-production-program-v1.lock.json",
+    "formal_lock_sha256": "6187d56c2602bd5f22364475f6532a541791876164a1167a0946b350eaf6f51d"
+  },
+  "child": {
+    "child_plan_hash": "1d1bf8a24d7a3e23cca745b718d53e79f8ec6e178b3df44980d75e01f1c609bb",
+    "binding_hash": "14a3764457247c981145bd7277b2abb78b4b5038c1c9a40aa7354d3275d993a0",
+    "task_count": 32,
+    "event_count": 8000,
+    "events_per_task": 250,
+    "tile_thickness_mm": [
+      4,
+      24
+    ],
+    "sipm_layout": "back-center",
+    "absorber_transverse_mm": 500,
+    "seed_block_range_inclusive": [
+      0,
+      15
+    ]
+  },
+  "execution_source": {
+    "commit": "cbc03814e80e8d0742a3bfb17921c118c6ff1585",
+    "tree": "b236ed2643c814336b08b293f16507b6f3b39dc6",
+    "branch": "exp/realistic-detector",
+    "dirty": false
+  },
+  "control_plane": {
+    "commit": "4a07a40c43849356959dde60bce3e7b3ef025495",
+    "tree": "753cb27dba1df1f84a283baa07b8c614c8e5d913",
+    "branch": "exp/realistic-detector",
+    "dirty": false
+  },
+  "artifacts": {
+    "managed_child_json": {
+      "path": "managed_child.json",
+      "sha256": "4c4b6dcbabe82962d90bfd4140cabebc9302d1571b823a53cd50b879294b8a00"
+    },
+    "program_binding_json": {
+      "path": "program_binding.json",
+      "sha256": "2607b958018e8a32086b9ebe65e424edc5e388702ceac881e5c9d70503526269"
+    },
+    "root_checksum_manifest": {
+      "path": "SHA256SUMS",
+      "sha256": "7fee31135156a6f288f34ed990a87ea19f31d6a39bbde24dd7efe5e6dfcaf47b"
+    }
+  },
+  "validation": {
+    "infrastructure_gate_passed": true,
+    "materializer_passed": true,
+    "dedicated_check_only_passed": true,
+    "root_checksums_verified": true,
+    "root_checksum_exit_code": 0
+  },
+  "accepted_statistical_evidence": true,
+  "accepted_statistical_evidence_scope": "managed plan identity and provenance only; not production physics evidence",
+  "submittable": false,
+  "campaign_json_created": false,
+  "submission_journal_created": false,
+  "source_archive_created": false,
+  "slurm_command_created": false,
+  "boundary": {
+    "next_gate": "managed-attempt-and-downstream-closure",
+    "pending": [
+      "managed actual-attempt and journal contract",
+      "whole-child finalizer and event/seed audit",
+      "BC-ONLY-S1 cumulative checkpoint and analyzer",
+      "offline static review renderer",
+      "append-only human progression recorder",
+      "full non-overwriting dry run"
+    ],
+    "locked_children": [
+      "FIXED",
+      "BC-S2",
+      "BC-S3",
+      "BC-S4"
+    ]
+  }
+}

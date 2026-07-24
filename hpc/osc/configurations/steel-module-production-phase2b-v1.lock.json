@@ -1,0 +1,207 @@
+{
+  "acceptance_instructions": {
+    "proposal_is_authority": false,
+    "required_status": "accepted-formal-phase-2b-ready",
+    "review_required": true,
+    "set_managed_submission_ready": true
+  },
+  "automatic_submission": false,
+  "checker_evidence": {
+    "analysis_environment": {
+      "matplotlib": "3.9.4",
+      "numpy": "2.0.2",
+      "uproot": "5.6.9"
+    },
+    "formal_execution_intent_count_after_checks": 0,
+    "frozen_worker_source": {
+      "command": [
+        "/users/PAS2524/anolddriver66/g4optics-rn/analysis-venv/bin/python3",
+        "-I",
+        "-c",
+        "<frozen-loader-probe>"
+      ],
+      "control_source_has_git_metadata": false,
+      "exit_code": 0,
+      "geant4_run_performed": false,
+      "phase2a_lock_relocated": true,
+      "real_scheduler_contact_performed": false,
+      "runtime_artifacts_verified": true,
+      "stdout_sha256": "9b5d2d531485b8ca75ad66369b3551930b1c1a62a2f9575899655ccd0b1e3cdd"
+    },
+    "shared_filesystem": {
+      "atomic_directory_publish": true,
+      "cross_process_flock": true,
+      "directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns",
+      "exclusive_create_no_replace": true,
+      "existing_target_rejected": true,
+      "temporary_probe_removed": true
+    },
+    "synthetic_downstream_dry_run": true,
+    "top_level": {
+      "blocked_commands": [
+        "sbatch",
+        "scontrol",
+        "squeue",
+        "sacct"
+      ],
+      "command": [
+        "/users/PAS2524/anolddriver66/g4optics-rn/analysis-venv/bin/python3",
+        "hpc/osc/check_steel_module_campaign_infrastructure.py"
+      ],
+      "exit_code": 0,
+      "phase2b_markers_verified": true,
+      "real_scheduler_contact_performed": false,
+      "scheduler_commands_blocked": true,
+      "stdout": "steel-module campaign infrastructure: PASS (18-task smoke, 120-task frozen pilot, 914-task production program, managed BC-S1 Phase-2A/2B, whole-child finalizer, checkpoint, v1/v2/production analyzers, offline review and progression recorder)\n",
+      "stdout_sha256": "a16e8909200224e89c755f8643df2d8119890ab8acfa5d761e8943be51f80a0c"
+    }
+  },
+  "control_plane": {
+    "artifacts": {
+      "docs/decisions/steel-module-production-phase2b-v1.md": {
+        "sha256": "95d72869bc803a36a5857d48f04e24ddcf14d0111adf0985062f3a480b46aa2d"
+      },
+      "docs/decisions/steel-module-production-program-freeze-v1.md": {
+        "sha256": "db6c2a249e2b68719ebd50bcfa3c3e5578aef5ccb3a320c89fb58999a742754b"
+      },
+      "hpc/osc/README.md": {
+        "sha256": "609427676b9b3bf2ce1d0f715938c5a918ba6e85c91199c16ede5c3dc9ba5de8"
+      },
+      "hpc/osc/analyze_steel_module_campaign.py": {
+        "sha256": "6bdf0b04556065f204e5fa12e4ec732e462c055a88408a2733e2148859eef643"
+      },
+      "hpc/osc/analyze_steel_module_campaign_v2.py": {
+        "sha256": "7dc7035854731ef006b1265a3e0e3211071767897fb806c8b7a5eac880543707"
+      },
+      "hpc/osc/analyze_steel_module_production_checkpoint.py": {
+        "sha256": "39cd707e0e6edc3223711885c3ee2a6f083f816e1960861ac7b669436e13bd52"
+      },
+      "hpc/osc/audit_realistic_neutron_campaign.py": {
+        "sha256": "78cf682bde9eef90e625ab9479fc4b6ce22d1983a212399b22969c2d453b5615"
+      },
+      "hpc/osc/build_steel_module_production_checkpoint.py": {
+        "sha256": "9964d6ae9d79abd12688abb6648d2a8e4cc24314b706c94dfe3fd918592e7a44"
+      },
+      "hpc/osc/check_steel_module_campaign_infrastructure.py": {
+        "sha256": "e66fc78186e137cf202c9307b386c53a5c3a56be604133829b596c8f20e71881"
+      },
+      "hpc/osc/check_steel_module_production_analysis.py": {
+        "sha256": "ee5117bb8864ae2e1bd9a26390845d5e615c9e4a0cff8d316fddb882ae9ebfed"
+      },
+      "hpc/osc/check_steel_module_production_finalization.py": {
+        "sha256": "daf3097068d347cdfcbba1b366fdc7af0d14adecfd82d22e069a3072f64c6c9e"
+      },
+      "hpc/osc/check_steel_module_production_phase2b_control.py": {
+        "sha256": "9aa28c1e77a20cc66c4b63cb51e83a092fe1e7622b35d3d7422d8a16078e751e"
+      },
+      "hpc/osc/finalize_steel_module_campaign.py": {
+        "sha256": "e602fa579cfd17f7529880f24bc34606408e0cfba586312ebeebd5abae53e058"
+      },
+      "hpc/osc/finalize_steel_module_managed_child.py": {
+        "sha256": "6a9e7fafe98ce5fd464fb3a1c96c60f37dec155c5bab755befd13c20c05767de"
+      },
+      "hpc/osc/generate_steel_module_production_phase2b_readiness.py": {
+        "sha256": "4281b5c9e6e6cd8c150fbc11a3631bb6be6595eb4049121f2177e717f3fa7eca"
+      },
+      "hpc/osc/manage_steel_module_production_attempt.py": {
+        "sha256": "78d6dbc917bca2fa7e8fe00384874554672a7de2eb8ed8f62e6167948dd0284d"
+      },
+      "hpc/osc/materialize_steel_module_production_execution.py": {
+        "sha256": "8b12ad9ba9ef1232c39ab4c9e841dbfbd01b6bded079a1d13a76f877a679ea84"
+      },
+      "hpc/osc/plot_steel_module_analysis_v2.py": {
+        "sha256": "81baca20b2bf219e8265548fd288c72c2b6c46b713ef900a017b720c94f0c949"
+      },
+      "hpc/osc/realistic_neutron_event_audit.py": {
+        "sha256": "d28396da27f840f31f233489b3bbee1fc1056c24378a13c5f13ce4f747ddedbc"
+      },
+      "hpc/osc/record_realistic_neutron_task_result.py": {
+        "sha256": "1f876e3e6ce674198f72295de6be5e38c614dad22b19d249a993c45482e035b0"
+      },
+      "hpc/osc/record_steel_module_production_task_result.py": {
+        "sha256": "ec59ede6f6a6b53bad256a84f68978be9c3c84f638b7108f99631109db48883f"
+      },
+      "hpc/osc/record_steel_module_progression.py": {
+        "sha256": "d611892edb8b44933c4e532510e449442c79e9fe6da8797c5da7073be34a9022"
+      },
+      "hpc/osc/record_steel_module_task_result.py": {
+        "sha256": "0fd1200baf2108369e04667fd6c9725778d67e3baf98e5c25b199227f51b5e87"
+      },
+      "hpc/osc/render_steel_module_production_review.py": {
+        "sha256": "04f069774e7740457b93c6700c16c4ea61f4615bdcc4e679a448aa56e6d32e85"
+      },
+      "hpc/osc/run_steel_module_production_phase2b_task.py": {
+        "sha256": "9d544b9ac505bd9c3b898027bcd36a038bf09efdef311ef157a1581a830d932c"
+      },
+      "hpc/osc/steel_module_campaign_lib.py": {
+        "sha256": "cebf6aedddfa213069583ebecb8e290f368cedc14645d14aadfa6656db57d479"
+      },
+      "hpc/osc/steel_module_managed_production_lib.py": {
+        "sha256": "23b8fc8b009854ba16f08b9bd28bd5b67651e6a2954048e2557298067cd95182"
+      },
+      "hpc/osc/steel_module_production_checkpoint_lib.py": {
+        "sha256": "80669274eed2587effcbdd3aa4a710191841e845933fa8247a17048441ffd7bd"
+      },
+      "hpc/osc/steel_module_production_phase2b_lib.py": {
+        "sha256": "1900d264bbc8f72d7014501d0ceb3c03d7530c230d91a9300da2ab901b1f6957"
+      },
+      "hpc/osc/steel_module_production_program_lib.py": {
+        "sha256": "adf4aaf71b2cabb58c2929194ab14592d3f590f31bdd586028bb8dda7b8315ea"
+      },
+      "hpc/osc/submit_steel_module_production_phase2b.sbatch": {
+        "sha256": "d32e9ee96463e7bfe597604300508cdfc19f96c82a561d7ecb3dea3d7a1b0382"
+      },
+      "hpc/osc/validate_steel_module_production_phase2b_readiness.py": {
+        "sha256": "a075c964a392387de791ad1b1202f9e49c9f2ff36096dcf1ad39a5debdf85cf1"
+      }
+    },
+    "git_commit": "20c9007f8cd3da27fe1b4fbd13cad8bdaefdc292",
+    "git_tree": "33f193b1a1e61e712408c0dd737915235aa2926e",
+    "source_tree_sha256": "d851b2b10a29b41546155114077fe75e6509adecbb533c07f63b8ad94588a836"
+  },
+  "created_at_utc": "2026-07-18T17:35:33.939278+00:00",
+  "execution_companion": {
+    "control_lock": {
+      "device": 214,
+      "inode": 958967,
+      "mode": 384,
+      "path": ".control.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns/steel-module-production-bc-s1-execution",
+    "execution_hash": "d07a32a6afea7d2345b4f4ca45996fd88dde93a7cf8f9d875e0ba0e47e52cf7b",
+    "execution_id": "sm-v1-production-bc-s1-execution-193d261c3059",
+    "managed_execution_json_sha256": "927d1ea48c3b9421a8f432f85ce120bc284405ce1e5fa760954a99c23307469b",
+    "static_checksum_manifest_sha256": "217a6b5609e338283f26cacea3d6f49bac13d471683ca818945b0142b7240f2a"
+  },
+  "formal_intent_count": 0,
+  "managed_submission_ready": true,
+  "osc_capabilities": {
+    "commands": {
+      "apptainer": "/usr/bin/apptainer",
+      "sacct": "/usr/bin/sacct",
+      "sbatch": "/usr/bin/sbatch",
+      "scontrol": "/usr/bin/scontrol",
+      "squeue": "/usr/bin/squeue"
+    },
+    "real_scheduler_contact_performed": false,
+    "test_scheduler": "in-process-fake-only"
+  },
+  "phase": "Phase-2B",
+  "phase2a_lock": {
+    "path": "/users/PAS2524/anolddriver66/projects/g4optics/hpc/osc/configurations/steel-module-production-bc-s1-phase2a-v1.lock.json",
+    "schema_version": "steel-module-production-bc-s1-phase2a-lock-v1",
+    "sha256": "b51d968be94d91b5e9a45ef1a48412d8626d03cd1e6d4b29ef996396e8faba3f"
+  },
+  "real_slurm_submission_performed": false,
+  "runtime": {
+    "environment_identity": "6984ac6b9a4b46bc958ca233cf6cddaa02d5b9213cff387f27363536a0f1f709",
+    "executable_sha256": "adbcbc2facf4bb39b4671c7d47a8f9caf9e4f691b9a28a6d5e0d79d354b4cf41",
+    "g4_data_manifest_sha256": "ef94e0915e1fffd0c24923dec161252da608400f5572f088bac8d5ce77acf807",
+    "image_sha256": "6a777120a8ad8ae4959580e5c1e9eaa4dc2a837a95cbfca533f2f07d71d54962"
+  },
+  "schema_version": "steel-module-production-phase2b-readiness-lock-v1",
+  "slurm_job_ids": [],
+  "status": "accepted-formal-phase-2b-ready"
+}

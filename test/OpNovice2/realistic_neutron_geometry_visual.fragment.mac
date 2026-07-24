@@ -1,0 +1,24 @@
+# Optional human geometry sanity check. This is not a statistical run.
+/vis/open TSGQtZB
+/vis/viewer/set/autoRefresh false
+/vis/verbose errors
+
+/vis/drawVolume
+/vis/viewer/set/style surface
+/vis/geometry/set/visibility World 0 false
+/vis/geometry/set/colour SteelAbsorber 0 0.45 0.45 0.50 0.30
+/vis/geometry/set/forceWireframe SteelAbsorber 0 true
+/vis/geometry/set/colour Tank 0 0.10 0.35 1.00 0.90
+/vis/geometry/set/forceSolid Tank 0 true
+/vis/geometry/set/colour SiPM 0 0.00 1.00 0.00 1.00
+/vis/geometry/set/forceSolid SiPM 0 true
+
+# Zoom into the central steel/tile contact region. The 500 mm steel edges may
+# sit outside the viewport by design so the 50 mm tile and -Z SiPM stay visible.
+/vis/viewer/set/viewpointThetaPhi 70 30
+/vis/viewer/zoom 4
+/vis/scene/add/axes 0 0 0 100 mm
+
+/vis/viewer/set/autoRefresh true
+/vis/viewer/flush
+/vis/verbose warnings

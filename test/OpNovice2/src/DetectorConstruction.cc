@@ -37,6 +37,7 @@
 
 #include "G4Box.hh"
 #include "G4Element.hh"
+#include "G4IntersectionSolid.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4LogicalVolume.hh"
@@ -55,6 +56,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -66,6 +68,7 @@ DetectorConstruction::DetectorConstruction()
   fSurfaceMPT = new G4MaterialPropertiesTable();
   // The properties table of SiPM
   fSiPMMPT = new G4MaterialPropertiesTable();
+  fGreaseMPT = new G4MaterialPropertiesTable();
 
   fSurface = new G4OpticalSurface("Surface");
   fSurface->SetType(dielectric_dielectric);
@@ -73,10 +76,29 @@ DetectorConstruction::DetectorConstruction()
   fSurface->SetModel(unified);
   fSurface->SetMaterialPropertiesTable(fSurfaceMPT);
 
-  fTankMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
-  fWorldMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR");
+  auto nist = G4NistManager::Instance();
+  fTankMaterial = nist->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+  fWorldMaterial = nist->FindOrBuildMaterial("G4_AIR");
+
+  // SAE 304 stainless steel baseline used by the realistic-neutron study.
+  // Keep the study composition explicit rather than relying on a Geant4
+  // material alias whose alloy fractions may differ across releases.
+  fAbsorberMaterial = new G4Material("StainlessSteelSAE304", 7.9 * g / cm3, 3);
+  fAbsorberMaterial->AddElement(nist->FindOrBuildElement("Fe"), 0.74);
+  fAbsorberMaterial->AddElement(nist->FindOrBuildElement("Cr"), 0.18);
+  fAbsorberMaterial->AddElement(nist->FindOrBuildElement("Ni"), 0.08);
+
   // The material of SiPM
-  fSiPMMaterial = G4NistManager::Instance()->FindOrBuildMaterial("G4_Si");
+  fSiPMMaterial = nist->FindOrBuildMaterial("G4_Si");
+
+  // EJ-550 optical-grade silicone grease is represented with a simple
+  // silicone-like composition proxy. Eljen specifies a specific gravity of
+  // 1.06; optical constants are supplied by macro.
+  fGreaseMaterial = new G4Material("EJ550_Grease", 1.06 * g / cm3, 4);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("C"), 2);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("H"), 6);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("O"), 1);
+  fGreaseMaterial->AddElement(nist->FindOrBuildElement("Si"), 1);
 
   fDetectorMessenger = new DetectorMessenger(this);
 
@@ -104,6 +126,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fSurfaceMPT;
   // Frees the memory of SiPM
   delete fSiPMMPT;
+  delete fGreaseMPT;
   delete fSurface;
   delete fDetectorMessenger;
 }
@@ -112,6 +135,20 @@ DetectorConstruction::~DetectorConstruction()
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
+  fTank = nullptr;
+  fAbsorber = nullptr;
+  fAbsorber_LV = nullptr;
+  fTanks.clear();
+  fAbsorbers.clear();
+  fSiPM = nullptr;
+  fSiPMs.clear();
+  fGrease = nullptr;
+  fGrease_LV = nullptr;
+
+  if (fStackEnabled) {
+    ValidateStackConfiguration();
+  }
+
   fTankMaterial->SetMaterialPropertiesTable(fTankMPT);
   fTankMaterial->GetIonisation()->SetBirksConstant(0.126 * mm / MeV);
 
@@ -119,6 +156,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // SiPM Properties Table
   fSiPMMaterial->SetMaterialPropertiesTable(fSiPMMPT);
+  fGreaseMaterial->SetMaterialPropertiesTable(fGreaseMPT);
 
   // ------------- Volumes --------------
   // The experimental Hall
@@ -178,15 +216,137 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   fTank_LV = new G4LogicalVolume(tank_solid, fTankMaterial, "Tank");
 
-  fTank = new G4PVPlacement(nullptr, G4ThreeVector(), fTank_LV, "Tank", fWorld_LV, false, 0);
+  const auto layerCount = GetStackLayerCount();
+  for (G4int layer = 0; layer < layerCount; ++layer) {
+    const auto center = fStackEnabled ? GetStackTileCenterZ(layer) : 0.;
+    auto placement = new G4PVPlacement(nullptr,
+                                       G4ThreeVector(0., 0., center),
+                                       fTank_LV,
+                                       "Tank",
+                                       fWorld_LV,
+                                       false,
+                                       layer,
+                                       fStackEnabled);
+    fTanks.push_back(placement);
+    if (layer == 0) {
+      fTank = placement;
+    }
+  }
 
-  // The SiPM
+  if (fAbsorberEnabled) {
+    ValidateAbsorberConfiguration();
+
+    auto absorberBox =
+      new G4Box("SteelAbsorber_Box", fAbsorber_x, fAbsorber_y, fAbsorber_z);
+    fAbsorber_LV =
+      new G4LogicalVolume(absorberBox, fAbsorberMaterial, "SteelAbsorber");
+
+    auto absorberVis = new G4VisAttributes(G4Colour(0.45, 0.45, 0.50, 0.75));
+    absorberVis->SetForceSolid(true);
+    fAbsorber_LV->SetVisAttributes(absorberVis);
+
+    for (G4int layer = 0; layer < layerCount; ++layer) {
+      const auto center = fStackEnabled
+        ? GetStackSteelCenterZ(layer)
+        : GetAbsorberCenterZ();
+      auto placement = new G4PVPlacement(nullptr,
+                                         G4ThreeVector(0., 0., center),
+                                         fAbsorber_LV,
+                                         "SteelAbsorber",
+                                         fWorld_LV,
+                                         false,
+                                         layer,
+                                         true);
+      fAbsorbers.push_back(placement);
+      if (layer == 0) {
+        fAbsorber = placement;
+      }
+    }
+
+    G4cout << "Realistic-neutron absorber: material="
+           << fAbsorberMaterial->GetName()
+           << ", density=" << fAbsorberMaterial->GetDensity() / (g / cm3)
+           << " g/cm3, full_size="
+           << 2. * fAbsorber_x / mm << " x "
+           << 2. * fAbsorber_y / mm << " x "
+           << 2. * fAbsorber_z / mm << " mm, center_z="
+           << (fStackEnabled ? GetStackSteelCenterZ(0) : GetAbsorberCenterZ()) / mm
+           << " mm, tile_gap=0 mm, layers=" << layerCount << G4endl;
+  }
+
+  if (fGreaseEnabled) {
+    ValidateGreaseConfiguration();
+
+    G4VSolid* greaseSolid = nullptr;
+    G4ThreeVector greasePos;
+
+    if (fDimpleEnabled) {
+      G4double sipmHx = 0.0;
+      G4double sipmHy = 0.0;
+      G4double sipmHz = 0.0;
+      G4ThreeVector sipmPos;
+      ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+
+      const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+      const G4double clipHz = 0.5 * (fDimpleRadius - localBottom);
+      const G4double clipCenterZ = localBottom + clipHz;
+
+      auto greaseSphere = new G4Sphere("Grease_DimpleSphere",
+                                        0.,
+                                        fDimpleRadius,
+                                        0.,
+                                        360. * deg,
+                                        0.,
+                                        180. * deg);
+      auto greaseClip = new G4Box("Grease_DimpleClip",
+                                   0.5 * GetGreaseActiveU(),
+                                   0.5 * GetGreaseActiveV(),
+                                   clipHz);
+      greaseSolid = new G4IntersectionSolid("Grease_DimpleGap",
+                                             greaseSphere,
+                                             greaseClip,
+                                             nullptr,
+                                             G4ThreeVector(0., 0., clipCenterZ));
+      greasePos = G4ThreeVector(0., 0., -fTank_z);
+    }
+    else {
+      G4double greaseHx = 0.0;
+      G4double greaseHy = 0.0;
+      G4double greaseHz = 0.0;
+      ComputeGreasePlacement(greaseHx, greaseHy, greaseHz, greasePos);
+      greaseSolid = new G4Box("Grease_Box", greaseHx, greaseHy, greaseHz);
+    }
+
+    fGrease_LV = new G4LogicalVolume(greaseSolid, fGreaseMaterial, "Grease");
+
+    auto greaseVis = new G4VisAttributes(G4Colour(0.0, 0.8, 1.0, 0.35));
+    greaseVis->SetForceSolid(true);
+    fGrease_LV->SetVisAttributes(greaseVis);
+
+    fGrease = new G4PVPlacement(nullptr,
+                                greasePos,
+                                fGrease_LV,
+                                "Grease",
+                                fWorld_LV,
+                                false,
+                                0,
+                                true);
+  }
+
+  // The single- or multi-SiPM steel-module layout.
+  ValidateSiPMLayout();
   G4double sipmHx = 0.0;
   G4double sipmHy = 0.0;
   G4double sipmHz = 0.0;
   G4ThreeVector sipmPos;
 
-  ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+  const auto sipmLocalPositions = GetSiPMLocalPositions();
+  ComputeSiPMPlacementFor(fSiPMFace,
+                          sipmLocalPositions.front(),
+                          sipmHx,
+                          sipmHy,
+                          sipmHz,
+                          sipmPos);
 
   auto sipm_box = new G4Box("SiPM_Box", sipmHx, sipmHy, sipmHz);
 
@@ -197,19 +357,79 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   sipmVis->SetForceSolid(true);
   fSiPM_LV->SetVisAttributes(sipmVis);
 
-  fSiPM = new G4PVPlacement(nullptr,
-                            sipmPos,
-                            fSiPM_LV,
-                            "SiPM",
-                            fWorld_LV,
-                            false,
-                            0,
-                            true);        // overlap check
+  for (G4int layer = 0; layer < layerCount; ++layer) {
+    for (std::size_t index = 0; index < sipmLocalPositions.size(); ++index) {
+      G4double placementHx = 0.0;
+      G4double placementHy = 0.0;
+      G4double placementHz = 0.0;
+      G4ThreeVector placementPos;
+      ComputeSiPMPlacementFor(fSiPMFace,
+                              sipmLocalPositions[index],
+                              placementHx,
+                              placementHy,
+                              placementHz,
+                              placementPos);
+      if (fStackEnabled) {
+        placementPos.setZ(placementPos.z() + GetStackTileCenterZ(layer));
+      }
+      const G4int copyNumber = fStackEnabled
+        ? 2 * layer + static_cast<G4int>(index)
+        : static_cast<G4int>(index);
+
+      auto placement = new G4PVPlacement(nullptr,
+                                         placementPos,
+                                         fSiPM_LV,
+                                         "SiPM",
+                                         fWorld_LV,
+                                         false,
+                                         copyNumber,
+                                         true);  // overlap check
+      fSiPMs.push_back(placement);
+      if (layer == 0 && index == 0) {
+        fSiPM = placement;
+      }
+      G4cout << "SiPM placement: layout=" << fSiPMLayout
+             << ", layer=" << layer
+             << ", local_sensor=" << index
+             << ", copy=" << copyNumber
+             << ", face=" << fSiPMFace
+             << ", local=" << sipmLocalPositions[index] / mm
+             << " mm, world=" << placementPos / mm << " mm" << G4endl;
+    }
+  }
 
 
   // ------------- Surface --------------
 
-  auto surface = new G4LogicalBorderSurface("Surface", fTank, world_PV, fSurface);
+  G4LogicalBorderSurface* surface = nullptr;
+  for (G4int layer = 0; layer < layerCount; ++layer) {
+    const auto name = "TankToWorldSurface_" + std::to_string(layer);
+    auto layerSurface =
+      new G4LogicalBorderSurface(name, fTanks[layer], world_PV, fSurface);
+    if (layer == 0) {
+      surface = layerSurface;
+    }
+  }
+
+  // The tile remains painted/wrapped where it touches the steel. Border
+  // surfaces are ordered, so this explicitly covers photons leaving the tile
+  // toward the absorber while the existing tile-to-world boundary remains.
+  if (fAbsorberEnabled) {
+    for (G4int layer = 0; layer < layerCount; ++layer) {
+      new G4LogicalBorderSurface(
+        "TankToUpstreamSteelSurface_" + std::to_string(layer),
+        fTanks[layer],
+        fAbsorbers[layer],
+        fSurface);
+      if (fStackEnabled && layer + 1 < layerCount) {
+        new G4LogicalBorderSurface(
+          "TankToDownstreamSteelSurface_" + std::to_string(layer),
+          fTanks[layer],
+          fAbsorbers[layer + 1],
+          fSurface);
+      }
+    }
+  }
 
   auto opticalSurface =
     dynamic_cast<G4OpticalSurface*>(surface->GetSurface(fTank, world_PV)->GetSurfaceProperty());
@@ -253,6 +473,13 @@ void DetectorConstruction::SetSurfacePreset(const G4String& preset)
   fSurface->SetModel(unified);
   fSurface->SetType(dielectric_dielectric);
 
+  const auto addConstantReflectivity = [&]() {
+    const G4int nEntries = 2;
+    G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
+    G4double reflectivity[nEntries] = {0.95, 0.95};
+    fSurfaceMPT->AddProperty("REFLECTIVITY", photonEnergy, reflectivity, nEntries);
+  };
+
   if (preset == "polished") {
     fSurface->SetFinish(polished);
     fSurface->SetSigmaAlpha(0.0);
@@ -264,16 +491,29 @@ void DetectorConstruction::SetSurfacePreset(const G4String& preset)
   else if (preset == "wrapped") {
     fSurface->SetFinish(polishedfrontpainted);
     fSurface->SetSigmaAlpha(0.0);
-
-    const G4int nEntries = 2;
-    G4double photonEnergy[nEntries] = {2.0 * eV, 3.3 * eV};
-    G4double reflectivity[nEntries] = {0.95, 0.95};
-    fSurfaceMPT->AddProperty("REFLECTIVITY", photonEnergy, reflectivity, nEntries);
+    addConstantReflectivity();
+  }
+  else if (preset == "polishedfrontpainted") {
+    fSurface->SetFinish(polishedfrontpainted);
+    fSurface->SetSigmaAlpha(0.0);
+  }
+  else if (preset == "groundfrontpainted") {
+    fSurface->SetFinish(groundfrontpainted);
+    fSurface->SetSigmaAlpha(0.2);
+  }
+  else if (preset == "polishedbackpainted") {
+    fSurface->SetFinish(polishedbackpainted);
+    fSurface->SetSigmaAlpha(0.0);
+  }
+  else if (preset == "groundbackpainted") {
+    fSurface->SetFinish(groundbackpainted);
+    fSurface->SetSigmaAlpha(0.2);
   }
   else {
     G4ExceptionDescription msg;
     msg << "Invalid surface preset: " << preset
-        << ". Use polished, ground, or wrapped.";
+        << ". Use polished, ground, wrapped, polishedfrontpainted, "
+        << "groundfrontpainted, polishedbackpainted, or groundbackpainted.";
     G4Exception("DetectorConstruction::SetSurfacePreset",
                 "OpNovice2_Surface_001",
                 FatalException,
@@ -343,6 +583,30 @@ void DetectorConstruction::AddSurfaceMPC(const G4String& prop, G4double v)
   fSurfaceMPT->AddConstProperty(prop, v);
   G4cout << "The MPT for the surface is now: " << G4endl;
   fSurfaceMPT->DumpTable();
+  G4cout << "............." << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void DetectorConstruction::AddGreaseMPV(const G4String& prop, G4MaterialPropertyVector* mpv)
+{
+  if (fGreaseMPT->GetProperty(prop) != nullptr) {
+    fGreaseMPT->RemoveProperty(prop);
+  }
+  fGreaseMPT->AddProperty(prop, mpv);
+  G4cout << "The MPT for the grease is now: " << G4endl;
+  fGreaseMPT->DumpTable();
+  G4cout << "............." << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void DetectorConstruction::AddGreaseMPC(const G4String& prop, G4double v)
+{
+  if (fGreaseMPT->ConstPropertyExists(prop)) {
+    fGreaseMPT->RemoveConstProperty(prop);
+  }
+  fGreaseMPT->AddConstProperty(prop, v);
+  G4cout << "The MPT for the grease is now: " << G4endl;
+  fGreaseMPT->DumpTable();
   G4cout << "............." << G4endl;
 }
 
@@ -430,6 +694,110 @@ void DetectorConstruction::SetTankSizePreset(const G4String& preset)
                 FatalException,
                 msg);
   }
+}
+
+void DetectorConstruction::SetAbsorberEnabled(G4bool enabled)
+{
+  fAbsorberEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Steel absorber enabled set to "
+         << (fAbsorberEnabled ? "true" : "false") << G4endl;
+}
+
+void DetectorConstruction::SetAbsorberSize(const G4ThreeVector& fullSize)
+{
+  if (fullSize.x() <= 0. || fullSize.y() <= 0. || fullSize.z() <= 0.) {
+    G4ExceptionDescription msg;
+    msg << "Invalid absorber full size: " << fullSize / mm
+        << " mm. All dimensions must be positive.";
+    G4Exception("DetectorConstruction::SetAbsorberSize",
+                "OpNovice2_Absorber_001",
+                FatalException,
+                msg);
+  }
+
+  fAbsorber_x = 0.5 * fullSize.x();
+  fAbsorber_y = 0.5 * fullSize.y();
+  fAbsorber_z = 0.5 * fullSize.z();
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "Steel absorber full size set to "
+         << 2. * fAbsorber_x / mm << " x "
+         << 2. * fAbsorber_y / mm << " x "
+         << 2. * fAbsorber_z / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetStackEnabled(G4bool enabled)
+{
+  fStackEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+  G4cout << "Longitudinal stack enabled set to "
+         << (fStackEnabled ? "true" : "false") << G4endl;
+}
+
+void DetectorConstruction::SetStackLayers(G4int layers)
+{
+  if (layers <= 0) {
+    G4ExceptionDescription msg;
+    msg << "Invalid stack layer count: " << layers << ". Use a positive integer.";
+    G4Exception("DetectorConstruction::SetStackLayers",
+                "OpNovice2_Stack_001",
+                FatalException,
+                msg);
+  }
+  fStackLayers = layers;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+  G4cout << "Longitudinal stack layer count set to " << fStackLayers << G4endl;
+}
+
+G4double DetectorConstruction::GetStackSteelCenterZ(G4int layer) const
+{
+  const G4double moduleLength = 2. * fAbsorber_z + 2. * fTank_z;
+  return 0.5 * GetStackLength() - layer * moduleLength - fAbsorber_z;
+}
+
+G4double DetectorConstruction::GetStackTileCenterZ(G4int layer) const
+{
+  const G4double moduleLength = 2. * fAbsorber_z + 2. * fTank_z;
+  return 0.5 * GetStackLength() - layer * moduleLength
+         - 2. * fAbsorber_z - fTank_z;
+}
+
+G4int DetectorConstruction::GetTileLayer(const G4VPhysicalVolume* volume) const
+{
+  const auto found = std::find(fTanks.begin(), fTanks.end(), volume);
+  return found == fTanks.end()
+    ? -1
+    : static_cast<G4int>(std::distance(fTanks.begin(), found));
+}
+
+G4int DetectorConstruction::GetAbsorberLayer(const G4VPhysicalVolume* volume) const
+{
+  const auto found = std::find(fAbsorbers.begin(), fAbsorbers.end(), volume);
+  return found == fAbsorbers.end()
+    ? -1
+    : static_cast<G4int>(std::distance(fAbsorbers.begin(), found));
+}
+
+G4int DetectorConstruction::GetSensorLayer(G4int copyNumber) const
+{
+  if (!fStackEnabled) {
+    return copyNumber >= 0 ? 0 : -1;
+  }
+  return copyNumber >= 0 && copyNumber < 2 * fStackLayers
+    ? copyNumber / 2
+    : -1;
+}
+
+G4int DetectorConstruction::GetSensorLocalIndex(G4int copyNumber) const
+{
+  if (!fStackEnabled) {
+    return copyNumber;
+  }
+  return copyNumber >= 0 && copyNumber < 2 * fStackLayers
+    ? copyNumber % 2
+    : -1;
 }
 
 void DetectorConstruction::SetBottomCavityEnabled(G4bool enabled)
@@ -551,6 +919,101 @@ G4double DetectorConstruction::GetSiPMFootprintCornerRadius(G4double u,
   return rMax;
 }
 
+void DetectorConstruction::ValidateAbsorberConfiguration() const
+{
+  if (fAbsorber_x < fTank_x || fAbsorber_y < fTank_y) {
+    G4ExceptionDescription msg;
+    msg << "The steel absorber must cover the tile transversely. "
+        << "absorber full size=" << 2. * fAbsorber_x / mm << " x "
+        << 2. * fAbsorber_y / mm << " mm, tile full size="
+        << 2. * fTank_x / mm << " x " << 2. * fTank_y / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateAbsorberConfiguration",
+                "OpNovice2_Absorber_002",
+                FatalException,
+                msg);
+  }
+
+  if (fAbsorber_x >= fExpHall_x || fAbsorber_y >= fExpHall_y ||
+      GetAbsorberUpstreamFaceZ() >= fExpHall_z) {
+    G4ExceptionDescription msg;
+    msg << "The steel absorber does not fit strictly inside the world. "
+        << "absorber half transverse size=" << fAbsorber_x / mm << " x "
+        << fAbsorber_y / mm << " mm, upstream face z="
+        << GetAbsorberUpstreamFaceZ() / mm << " mm; world half size="
+        << fExpHall_x / mm << " x " << fExpHall_y / mm << " x "
+        << fExpHall_z / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateAbsorberConfiguration",
+                "OpNovice2_Absorber_003",
+                FatalException,
+                msg);
+  }
+
+  if (fSiPMFace == "+Z" || fSiPMFace == "top") {
+    G4ExceptionDescription msg;
+    msg << "A +Z SiPM would overlap the zero-gap steel absorber. "
+        << "Attach the SiPM to another tile face; the neutron study presets "
+        << "use -Z or a lateral face.";
+    G4Exception("DetectorConstruction::ValidateAbsorberConfiguration",
+                "OpNovice2_Absorber_004",
+                FatalException,
+                msg);
+  }
+}
+
+void DetectorConstruction::ValidateStackConfiguration() const
+{
+  const G4double safety = 1.e-6 * mm;
+  if (fStackLayers != 10) {
+    G4ExceptionDescription msg;
+    msg << "steel-module-stack-v1 requires exactly 10 layers; current value is "
+        << fStackLayers << ".";
+    G4Exception("DetectorConstruction::ValidateStackConfiguration",
+                "OpNovice2_Stack_002",
+                FatalException,
+                msg);
+  }
+  if (!fAbsorberEnabled) {
+    G4ExceptionDescription msg;
+    msg << "The longitudinal stack requires the SAE-304 absorber.";
+    G4Exception("DetectorConstruction::ValidateStackConfiguration",
+                "OpNovice2_Stack_003",
+                FatalException,
+                msg);
+  }
+  if (fBottomCavityEnabled || fDimpleEnabled || fGreaseEnabled) {
+    G4ExceptionDescription msg;
+    msg << "The longitudinal stack supports only the undimpled zero-gap "
+        << "coupling proxy; cavity, dimple, and explicit grease must be disabled.";
+    G4Exception("DetectorConstruction::ValidateStackConfiguration",
+                "OpNovice2_Stack_004",
+                FatalException,
+                msg);
+  }
+  if (fSiPMLayout != "edge-two" ||
+      (fSiPMFace != "+X" && fSiPMFace != "right")) {
+    G4ExceptionDescription msg;
+    msg << "The longitudinal stack requires edge-two on the +X face.";
+    G4Exception("DetectorConstruction::ValidateStackConfiguration",
+                "OpNovice2_Stack_005",
+                FatalException,
+                msg);
+  }
+  if (0.5 * GetStackLength() >= fExpHall_z - safety ||
+      fTank_x + fSiPMThickness >= fExpHall_x - safety ||
+      fTank_y >= fExpHall_y - safety) {
+    G4ExceptionDescription msg;
+    msg << "The longitudinal stack does not fit strictly inside the world. "
+        << "stack length=" << GetStackLength() / mm
+        << " mm, tile/SiPM x extent=" << (fTank_x + fSiPMThickness) / mm
+        << " mm, world half sizes=" << fExpHall_x / mm << " x "
+        << fExpHall_y / mm << " x " << fExpHall_z / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateStackConfiguration",
+                "OpNovice2_Stack_006",
+                FatalException,
+                msg);
+  }
+}
+
 void DetectorConstruction::ValidateDimpleConfiguration() const
 {
   const G4double safety = 1.e-6 * mm;
@@ -653,50 +1116,206 @@ void DetectorConstruction::ValidateDimpleConfiguration() const
   }
 }
 
+G4double DetectorConstruction::GetGreaseActiveU() const
+{
+  return fGreaseActiveU > 0.0 ? fGreaseActiveU : fSiPMActiveU;
+}
+
+G4double DetectorConstruction::GetGreaseActiveV() const
+{
+  return fGreaseActiveV > 0.0 ? fGreaseActiveV : fSiPMActiveV;
+}
+
+void DetectorConstruction::ValidateGreaseConfiguration() const
+{
+  const G4double safety = 1.e-6 * mm;
+
+  if (fSiPMFace != "-Z" && fSiPMFace != "bottom") {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling currently supports only -Z SiPM placement. "
+        << "Current /opnovice2/sipm/face is " << fSiPMFace << ".";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_001",
+                FatalException,
+                msg);
+  }
+
+  if (fBottomCavityEnabled) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling cannot be combined with bottom cavity geometry.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_002",
+                FatalException,
+                msg);
+  }
+
+  if (std::abs(fSiPMLocalPosition.x()) > safety ||
+      std::abs(fSiPMLocalPosition.y()) > safety ||
+      std::abs(fSiPMLocalPosition.z()) > safety) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease coupling currently supports only bottom-center SiPM local "
+        << "position 0 0 0. Current local position is "
+        << fSiPMLocalPosition / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_003",
+                FatalException,
+                msg);
+  }
+
+  if (!fDimpleEnabled && fGreaseThickness <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 flat-pad thickness must be positive when grease coupling is enabled.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_004",
+                FatalException,
+                msg);
+  }
+
+  const G4double greaseU = GetGreaseActiveU();
+  const G4double greaseV = GetGreaseActiveV();
+  if (greaseU <= 0.0 || greaseV <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease active size must be positive. Current size is "
+        << greaseU / mm << " x " << greaseV / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_005",
+                FatalException,
+                msg);
+  }
+
+  if (0.5 * greaseU > fTank_x + safety || 0.5 * greaseV > fTank_y + safety) {
+    G4ExceptionDescription msg;
+    msg << "EJ-550 grease pad does not fit on the tile bottom face. "
+        << "grease=" << greaseU / mm << " x " << greaseV / mm
+        << " mm, tile=" << (2.0 * fTank_x) / mm << " x "
+        << (2.0 * fTank_y) / mm << " mm.";
+    G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                "OpNovice2_Grease_006",
+                FatalException,
+                msg);
+  }
+
+  if (fDimpleEnabled) {
+    if (fGreaseThickness > safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap coupling derives its thickness from the curved "
+          << "dimple-to-SiPM gap; do not set /opnovice2/grease/thickness.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_007",
+                  FatalException,
+                  msg);
+    }
+
+    if (greaseU > fSiPMActiveU + safety || greaseV > fSiPMActiveV + safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint cannot exceed the SiPM active face. "
+          << "grease=" << greaseU / mm << " x " << greaseV / mm
+          << " mm, SiPM=" << fSiPMActiveU / mm << " x "
+          << fSiPMActiveV / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_008",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double greaseCornerRadius =
+      std::sqrt(0.25 * greaseU * greaseU + 0.25 * greaseV * greaseV);
+    if (greaseCornerRadius >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap footprint does not fit inside the dimple. "
+          << "corner radius=" << greaseCornerRadius / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_009",
+                  FatalException,
+                  msg);
+    }
+
+    G4double sipmHx = 0.0;
+    G4double sipmHy = 0.0;
+    G4double sipmHz = 0.0;
+    G4ThreeVector sipmPos;
+    ComputeSiPMPlacement(sipmHx, sipmHy, sipmHz, sipmPos);
+    const G4double localBottom = sipmPos.z() + sipmHz + fTank_z;
+    if (localBottom >= fDimpleRadius - safety) {
+      G4ExceptionDescription msg;
+      msg << "EJ-550 dimple-gap has no positive clearance above the SiPM. "
+          << "SiPM top relative to dimple center=" << localBottom / mm
+          << " mm, dimple radius=" << fDimpleRadius / mm << " mm.";
+      G4Exception("DetectorConstruction::ValidateGreaseConfiguration",
+                  "OpNovice2_Grease_010",
+                  FatalException,
+                  msg);
+    }
+  }
+}
+
+void DetectorConstruction::ComputeGreasePlacement(G4double& hx,
+                                                  G4double& hy,
+                                                  G4double& hz,
+                                                  G4ThreeVector& pos) const
+{
+  hx = 0.5 * GetGreaseActiveU();
+  hy = 0.5 * GetGreaseActiveV();
+  hz = 0.5 * fGreaseThickness;
+  pos = G4ThreeVector(0.0, 0.0, -fTank_z - hz);
+}
+
 
 void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
                                                 G4double& hy,
                                                 G4double& hz,
                                                 G4ThreeVector& pos) const
 {
+  ComputeSiPMPlacementFor(fSiPMFace, fSiPMLocalPosition, hx, hy, hz, pos);
+}
+
+void DetectorConstruction::ComputeSiPMPlacementFor(
+  const G4String& face,
+  const G4ThreeVector& localPosition,
+  G4double& hx,
+  G4double& hy,
+  G4double& hz,
+  G4ThreeVector& pos) const
+{
   const G4double hu = 0.5 * fSiPMActiveU;
   const G4double hv = 0.5 * fSiPMActiveV;
   const G4double ht = 0.5 * fSiPMThickness;
 
-  const G4double u = fSiPMLocalPosition.x();
-  const G4double v = fSiPMLocalPosition.y();
+  const G4double u = localPosition.x();
+  const G4double v = localPosition.y();
 
-  if (fSiPMFace == "+X" || fSiPMFace == "right") {
+  if (face == "+X" || face == "right") {
     hx = ht;
     hy = hu;
     hz = hv;
     pos = G4ThreeVector(fTank_x + ht, u, v);
   }
-  else if (fSiPMFace == "-X" || fSiPMFace == "left") {
+  else if (face == "-X" || face == "left") {
     hx = ht;
     hy = hu;
     hz = hv;
     pos = G4ThreeVector(-fTank_x - ht, u, v);
   }
-  else if (fSiPMFace == "+Y" || fSiPMFace == "back") {
+  else if (face == "+Y" || face == "back") {
     hx = hu;
     hy = ht;
     hz = hv;
     pos = G4ThreeVector(u, fTank_y + ht, v);
   }
-  else if (fSiPMFace == "-Y" || fSiPMFace == "front") {
+  else if (face == "-Y" || face == "front") {
     hx = hu;
     hy = ht;
     hz = hv;
     pos = G4ThreeVector(u, -fTank_y - ht, v);
   }
-  else if (fSiPMFace == "+Z" || fSiPMFace == "top") {
+  else if (face == "+Z" || face == "top") {
     hx = hu;
     hy = hv;
     hz = ht;
     pos = G4ThreeVector(u, v, fTank_z + ht);
   }
-  else if (fSiPMFace == "-Z" || fSiPMFace == "bottom") {
+  else if (face == "-Z" || face == "bottom") {
     hx = hu;
     hy = hv;
     hz = ht;
@@ -724,10 +1343,11 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
       }
     }
     else {
-      pos = G4ThreeVector(u, v, -fTank_z - ht);
+      const G4double greaseOffset = fGreaseEnabled ? fGreaseThickness : 0.0;
+      pos = G4ThreeVector(u, v, -fTank_z - greaseOffset - ht);
     }
   }
-  else if (fSiPMFace == "bottomCavity") {
+  else if (face == "bottomCavity") {
     hx = hu;
     hy = hv;
     hz = ht;
@@ -788,13 +1408,140 @@ void DetectorConstruction::ComputeSiPMPlacement(G4double& hx,
   }
   else {
     G4ExceptionDescription msg;
-    msg << "Unknown SiPM face: " << fSiPMFace
+    msg << "Unknown SiPM face: " << face
         << ". Use +X, -X, +Y, -Y, +Z, -Z, bottomCavity.";
     G4Exception("DetectorConstruction::ComputeSiPMPlacement",
                 "OpNovice2_SiPM_001",
                 FatalException,
                 msg);
   }
+}
+
+std::vector<G4ThreeVector> DetectorConstruction::GetSiPMLocalPositions() const
+{
+  if (fSiPMLayout == "edge-two") {
+    const G4double offset = 25. * mm;
+    return {
+      G4ThreeVector(-offset, 0., 0.),
+      G4ThreeVector(offset, 0., 0.)
+    };
+  }
+  if (fSiPMLayout == "back-four") {
+    const G4double offset = 25. * mm;
+    return {
+      G4ThreeVector(-offset, -offset, 0.),
+      G4ThreeVector(-offset, offset, 0.),
+      G4ThreeVector(offset, -offset, 0.),
+      G4ThreeVector(offset, offset, 0.)
+    };
+  }
+  return {fSiPMLocalPosition};
+}
+
+void DetectorConstruction::ValidateSiPMLayout() const
+{
+  if (fSiPMLayout == "single") {
+    return;
+  }
+  if (fSiPMLayout == "edge-two") {
+    if (fSiPMFace != "+X" && fSiPMFace != "right") {
+      G4ExceptionDescription msg;
+      msg << "The edge-two SiPM layout requires face +X; current face is "
+          << fSiPMFace << ".";
+      G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                  "OpNovice2_SiPM_012",
+                  FatalException,
+                  msg);
+    }
+    if (fBottomCavityEnabled || fDimpleEnabled || fGreaseEnabled) {
+      G4ExceptionDescription msg;
+      msg << "The edge-two SiPM layout supports only the undimpled zero-gap "
+          << "coupling proxy; bottom cavity, dimple, and explicit grease must be disabled.";
+      G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                  "OpNovice2_SiPM_013",
+                  FatalException,
+                  msg);
+    }
+
+    const G4double offset = 25. * mm;
+    const G4double safety = 1.e-6 * mm;
+    if (offset + 0.5 * fSiPMActiveU >= fTank_y - safety ||
+        0.5 * fSiPMActiveV >= fTank_z - safety) {
+      G4ExceptionDescription msg;
+      msg << "The edge-two SiPM footprints do not fit on the +X tile face. "
+          << "tile full side size=" << 2. * fTank_y / mm << " x "
+          << 2. * fTank_z / mm << " mm, SiPM active size="
+          << fSiPMActiveU / mm << " x " << fSiPMActiveV / mm
+          << " mm, center offset=25 mm.";
+      G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                  "OpNovice2_SiPM_014",
+                  FatalException,
+                  msg);
+    }
+    return;
+  }
+  if (fSiPMLayout != "back-four") {
+    G4ExceptionDescription msg;
+    msg << "Unknown SiPM layout: " << fSiPMLayout
+        << ". Use single, edge-two, or back-four.";
+    G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                "OpNovice2_SiPM_007",
+                FatalException,
+                msg);
+    return;
+  }
+
+  if (fSiPMFace != "-Z" && fSiPMFace != "bottom") {
+    G4ExceptionDescription msg;
+    msg << "The back-four SiPM layout requires face -Z; current face is "
+        << fSiPMFace << ".";
+    G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                "OpNovice2_SiPM_008",
+                FatalException,
+                msg);
+  }
+  if (fBottomCavityEnabled || fDimpleEnabled || fGreaseEnabled) {
+    G4ExceptionDescription msg;
+    msg << "The back-four SiPM layout supports only the undimpled zero-gap "
+        << "coupling proxy; bottom cavity, dimple, and explicit grease must be disabled.";
+    G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                "OpNovice2_SiPM_009",
+                FatalException,
+                msg);
+  }
+
+  const G4double offset = 25. * mm;
+  const G4double safety = 1.e-6 * mm;
+  if (offset + 0.5 * fSiPMActiveU >= fTank_x - safety ||
+      offset + 0.5 * fSiPMActiveV >= fTank_y - safety) {
+    G4ExceptionDescription msg;
+    msg << "The back-four SiPM footprints do not fit on the -Z tile face. "
+        << "tile full size=" << 2. * fTank_x / mm << " x "
+        << 2. * fTank_y / mm << " mm, SiPM active size="
+        << fSiPMActiveU / mm << " x " << fSiPMActiveV / mm
+        << " mm, center offset=25 mm.";
+    G4Exception("DetectorConstruction::ValidateSiPMLayout",
+                "OpNovice2_SiPM_010",
+                FatalException,
+                msg);
+  }
+}
+
+void DetectorConstruction::SetSiPMLayout(const G4String& layout)
+{
+  if (layout != "single" && layout != "edge-two" && layout != "back-four") {
+    G4ExceptionDescription msg;
+    msg << "Invalid SiPM layout: " << layout
+        << ". Use single, edge-two, or back-four.";
+    G4Exception("DetectorConstruction::SetSiPMLayout",
+                "OpNovice2_SiPM_011",
+                FatalException,
+                msg);
+  }
+
+  fSiPMLayout = layout;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+  G4cout << "SiPM layout set to " << fSiPMLayout << G4endl;
 }
 
 void DetectorConstruction::SetSiPMFace(const G4String& face)
@@ -844,4 +1591,53 @@ void DetectorConstruction::SetSiPMSize(const G4ThreeVector& size)
          << fSiPMActiveU / mm << " mm, activeV="
          << fSiPMActiveV / mm << " mm, thickness="
          << fSiPMThickness / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetGreaseEnabled(G4bool enabled)
+{
+  fGreaseEnabled = enabled;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease coupling "
+         << (fGreaseEnabled ? "enabled" : "disabled") << G4endl;
+}
+
+void DetectorConstruction::SetGreaseThickness(G4double thickness)
+{
+  if (thickness <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "Invalid EJ-550 grease thickness: " << thickness / mm
+        << " mm. Thickness must be positive.";
+    G4Exception("DetectorConstruction::SetGreaseThickness",
+                "OpNovice2_Grease_007",
+                FatalException,
+                msg);
+  }
+
+  fGreaseThickness = thickness;
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease thickness set to "
+         << fGreaseThickness / mm << " mm" << G4endl;
+}
+
+void DetectorConstruction::SetGreaseSize(const G4ThreeVector& size)
+{
+  if (size.x() <= 0.0 || size.y() <= 0.0) {
+    G4ExceptionDescription msg;
+    msg << "Invalid EJ-550 grease size: " << size.x() / mm << " x "
+        << size.y() / mm << " mm. Active dimensions must be positive.";
+    G4Exception("DetectorConstruction::SetGreaseSize",
+                "OpNovice2_Grease_008",
+                FatalException,
+                msg);
+  }
+
+  fGreaseActiveU = size.x();
+  fGreaseActiveV = size.y();
+  G4RunManager::GetRunManager()->GeometryHasBeenModified();
+
+  G4cout << "EJ-550 grease size set to activeU="
+         << fGreaseActiveU / mm << " mm, activeV="
+         << fGreaseActiveV / mm << " mm" << G4endl;
 }

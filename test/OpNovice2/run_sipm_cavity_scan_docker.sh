@@ -6,6 +6,9 @@ cd "${SCRIPT_DIR}"
 
 CONTAINER="${G4_DOCKER_CONTAINER:-g4dev}"
 CONTAINER_WORKDIR="${G4_DOCKER_WORKDIR:-/work/g4optics/test/OpNovice2}"
+CONTAINER_BUILD_DIR="${G4_DOCKER_BUILD_DIR:-build}"
+CONTAINER_BUILD_JOBS="${G4_DOCKER_BUILD_JOBS:-4}"
+FORCE_REBUILD_VALUE="${G4_FORCE_REBUILD:-0}"
 
 N_EVENTS_VALUE="${N_EVENTS:-100}"
 DRY_RUN_VALUE="${DRY_RUN:-0}"
@@ -13,6 +16,7 @@ SOURCE_MODE_VALUE="${SOURCE_MODE:-auto}"
 PLOT_WITH_ROOT_VALUE="${PLOT_WITH_ROOT:-1}"
 ROOT_COMMAND_VALUE="${ROOT_COMMAND:-root}"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM_VALUE="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
+RUN_MANAGER_TYPE_VALUE="${G4RUN_MANAGER_TYPE:-Serial}"
 USER_ARGS=("$@")
 
 HOST_GIT_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo "unknown")"
@@ -38,12 +42,16 @@ All scan options are passed through, including --surface-preset and --dimple.
 Environment:
   G4_DOCKER_CONTAINER=g4dev
   G4_DOCKER_WORKDIR=/work/g4optics/test/OpNovice2
+  G4_DOCKER_BUILD_DIR=build
+  G4_DOCKER_BUILD_JOBS=4
+  G4_FORCE_REBUILD=0
   N_EVENTS=100
   DRY_RUN=0
   SOURCE_MODE=auto
   PLOT_WITH_ROOT=1
   ROOT_COMMAND=root
   ROOT_PLOT_FIDUCIAL_LIMIT_MM=45
+  G4RUN_MANAGER_TYPE=Serial
 USAGE
 }
 
@@ -103,14 +111,44 @@ case "${PLOT_WITH_ROOT_VALUE}" in
     ;;
 esac
 
+case "${FORCE_REBUILD_VALUE}" in
+  1|true|TRUE|yes|YES|on|ON)
+    FORCE_REBUILD_VALUE="1"
+    ;;
+  0|false|FALSE|no|NO|off|OFF)
+    FORCE_REBUILD_VALUE="0"
+    ;;
+  *)
+    echo "Invalid G4_FORCE_REBUILD: ${FORCE_REBUILD_VALUE}. Use 1 or 0." >&2
+    exit 1
+    ;;
+esac
+
+docker exec \
+  "${CONTAINER}" \
+  bash -lc '
+    set -euo pipefail
+    cd "$1"
+    build_dir="$2"
+    build_jobs="$3"
+    force_rebuild="$4"
+    if [[ "${force_rebuild}" == "1" || ! -x "${build_dir}/OpNovice2" ]]; then
+      cmake -S . -B "${build_dir}"
+      cmake --build "${build_dir}" -j"${build_jobs}"
+    fi
+  ' \
+  bash "${CONTAINER_WORKDIR}" "${CONTAINER_BUILD_DIR}" "${CONTAINER_BUILD_JOBS}" "${FORCE_REBUILD_VALUE}"
+
 docker exec \
   -e "N_EVENTS=${N_EVENTS_VALUE}" \
   -e "DRY_RUN=${DRY_RUN_VALUE}" \
   -e "SOURCE_MODE=${SOURCE_MODE_VALUE}" \
+  -e "OPNOVICE2_EXECUTABLE=./${CONTAINER_BUILD_DIR}/OpNovice2" \
   -e "PLOT_WITH_ROOT=${PLOT_WITH_ROOT_VALUE}" \
   -e "ROOT_COMMAND=${ROOT_COMMAND_VALUE}" \
   -e "ROOT_PLOT_SKIP_LOCAL=1" \
   -e "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM_VALUE}" \
+  -e "G4RUN_MANAGER_TYPE=${RUN_MANAGER_TYPE_VALUE}" \
   -e "SCAN_COMMAND_SCRIPT=./run_sipm_cavity_scan_docker.sh" \
   -e "SCAN_GIT_COMMIT=${HOST_GIT_COMMIT}" \
   -e "SCAN_GIT_BRANCH=${HOST_GIT_BRANCH}" \

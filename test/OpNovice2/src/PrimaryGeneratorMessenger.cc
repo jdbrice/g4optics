@@ -63,7 +63,7 @@ PrimaryGeneratorMessenger::PrimaryGeneratorMessenger(PrimaryGeneratorAction* Gun
 
   fElectronEnergyModeCmd = new G4UIcmdWithAString("/opnovice2/gun/electronEnergyMode", this);
   fElectronEnergyModeCmd->SetGuidance("Set electron kinetic energy mode: fixed or sr90Beta.");
-  fElectronEnergyModeCmd->SetGuidance("fixed uses /gun/energy; sr90Beta samples one beta energy per event.");
+  fElectronEnergyModeCmd->SetGuidance("sr90Beta is the legacy empirical Sr-90/Y-90 proxy.");
   fElectronEnergyModeCmd->AvailableForStates(G4State_Idle, G4State_PreInit);
 }
 

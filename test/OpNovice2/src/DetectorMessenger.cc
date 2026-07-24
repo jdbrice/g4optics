@@ -73,7 +73,8 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
 
   fSurfacePresetCmd = new G4UIcmdWithAString("/opnovice2/surfacePreset", this);
   fSurfacePresetCmd->SetGuidance("Apply a Week 7 surface preset.");
-  fSurfacePresetCmd->SetGuidance("Options: polished, ground, wrapped.");
+  fSurfacePresetCmd->SetGuidance("Options: polished, ground, wrapped, polishedfrontpainted,");
+  fSurfacePresetCmd->SetGuidance("groundfrontpainted, polishedbackpainted, groundbackpainted.");
   fSurfacePresetCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fSurfacePresetCmd->SetToBeBroadcasted(false);
 
@@ -138,6 +139,40 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fTankBottomCavityCmd->AvailableForStates(G4State_PreInit);
   fTankBottomCavityCmd->SetToBeBroadcasted(false);
 
+  fAbsorberEnabledCmd =
+    new G4UIcmdWithABool("/opnovice2/absorber/enabled", this);
+  fAbsorberEnabledCmd->SetGuidance(
+    "Enable the fixed-composition SAE 304 steel absorber in front of the tile.");
+  fAbsorberEnabledCmd->SetDefaultValue(false);
+  fAbsorberEnabledCmd->AvailableForStates(G4State_PreInit);
+  fAbsorberEnabledCmd->SetToBeBroadcasted(false);
+
+  fAbsorberSizeCmd =
+    new G4UIcmdWith3VectorAndUnit("/opnovice2/absorber/size", this);
+  fAbsorberSizeCmd->SetGuidance(
+    "Set full steel absorber size: transverse_x transverse_y thickness.");
+  fAbsorberSizeCmd->SetParameterName("x", "y", "thickness", false);
+  fAbsorberSizeCmd->SetUnitCategory("Length");
+  fAbsorberSizeCmd->SetDefaultUnit("mm");
+  fAbsorberSizeCmd->AvailableForStates(G4State_PreInit);
+  fAbsorberSizeCmd->SetToBeBroadcasted(false);
+
+  fStackEnabledCmd =
+    new G4UIcmdWithABool("/opnovice2/stack/enabled", this);
+  fStackEnabledCmd->SetGuidance(
+    "Enable the repeated steel/tile longitudinal stack geometry.");
+  fStackEnabledCmd->SetDefaultValue(false);
+  fStackEnabledCmd->AvailableForStates(G4State_PreInit);
+  fStackEnabledCmd->SetToBeBroadcasted(false);
+
+  fStackLayersCmd =
+    new G4UIcmdWithAnInteger("/opnovice2/stack/layers", this);
+  fStackLayersCmd->SetGuidance(
+    "Set the repeated longitudinal stack layer count; stack-v1 requires 10.");
+  fStackLayersCmd->SetParameterName("layers", false);
+  fStackLayersCmd->AvailableForStates(G4State_PreInit);
+  fStackLayersCmd->SetToBeBroadcasted(false);
+
   fDimpleEnabledCmd = new G4UIcmdWithABool("/opnovice2/dimple/enabled", this);
   fDimpleEnabledCmd->SetGuidance("Enable the Week 8.1 bottom-center hemispherical dimple.");
   fDimpleEnabledCmd->SetDefaultValue(false);
@@ -179,6 +214,13 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fWorldMaterialCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   fWorldMaterialCmd->SetToBeBroadcasted(false);
 
+  fSiPMLayoutCmd = new G4UIcmdWithAString("/opnovice2/sipm/layout", this);
+  fSiPMLayoutCmd->SetGuidance(
+    "Set SiPM layout: single, edge-two (two +X sensors at local u=+/-25 mm), "
+    "or back-four (four -Z sensors at x,y=+/-25 mm).");
+  fSiPMLayoutCmd->AvailableForStates(G4State_PreInit);
+  fSiPMLayoutCmd->SetToBeBroadcasted(false);
+
   fSiPMFaceCmd = new G4UIcmdWithAString("/opnovice2/sipm/face", this);
   fSiPMFaceCmd->SetGuidance("Set SiPM attached face: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.");
   fSiPMFaceCmd->AvailableForStates(G4State_PreInit);
@@ -209,6 +251,41 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det) : G4UImessenger(
   fSiPMSizeCmd->SetDefaultUnit("mm");
   fSiPMSizeCmd->AvailableForStates(G4State_PreInit);
   fSiPMSizeCmd->SetToBeBroadcasted(false);
+
+  fGreaseEnabledCmd = new G4UIcmdWithABool("/opnovice2/grease/enabled", this);
+  fGreaseEnabledCmd->SetGuidance(
+    "Enable EJ-550 coupling between tile and SiPM (flat pad or curved dimple gap).");
+  fGreaseEnabledCmd->SetDefaultValue(false);
+  fGreaseEnabledCmd->AvailableForStates(G4State_PreInit);
+  fGreaseEnabledCmd->SetToBeBroadcasted(false);
+
+  fGreaseThicknessCmd =
+    new G4UIcmdWithADoubleAndUnit("/opnovice2/grease/thickness", this);
+  fGreaseThicknessCmd->SetGuidance(
+    "Set EJ-550 flat-pad thickness; omit for curved dimple-gap coupling.");
+  fGreaseThicknessCmd->SetParameterName("thickness", false);
+  fGreaseThicknessCmd->SetUnitCategory("Length");
+  fGreaseThicknessCmd->SetDefaultUnit("mm");
+  fGreaseThicknessCmd->AvailableForStates(G4State_PreInit);
+  fGreaseThicknessCmd->SetToBeBroadcasted(false);
+
+  fGreaseSizeCmd = new G4UIcmdWith3VectorAndUnit("/opnovice2/grease/size", this);
+  fGreaseSizeCmd->SetGuidance("Set EJ-550 grease pad active size: activeU activeV unused.");
+  fGreaseSizeCmd->SetParameterName("activeU", "activeV", "unused", false);
+  fGreaseSizeCmd->SetUnitCategory("Length");
+  fGreaseSizeCmd->SetDefaultUnit("mm");
+  fGreaseSizeCmd->AvailableForStates(G4State_PreInit);
+  fGreaseSizeCmd->SetToBeBroadcasted(false);
+
+  fGreaseMatPropVectorCmd = new G4UIcmdWithAString("/opnovice2/greaseProperty", this);
+  fGreaseMatPropVectorCmd->SetGuidance("Set material property vector for EJ-550 grease.");
+  fGreaseMatPropVectorCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fGreaseMatPropVectorCmd->SetToBeBroadcasted(false);
+
+  fGreaseMatPropConstCmd = new G4UIcmdWithAString("/opnovice2/greaseConstProperty", this);
+  fGreaseMatPropConstCmd->SetGuidance("Set material constant property for EJ-550 grease.");
+  fGreaseMatPropConstCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fGreaseMatPropConstCmd->SetToBeBroadcasted(false);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -230,6 +307,10 @@ DetectorMessenger::~DetectorMessenger()
   delete fTankSizeCmd;
   delete fTankSizePresetCmd;
   delete fTankBottomCavityCmd;
+  delete fAbsorberEnabledCmd;
+  delete fAbsorberSizeCmd;
+  delete fStackEnabledCmd;
+  delete fStackLayersCmd;
   delete fDimpleEnabledCmd;
   delete fDimpleRadiusCmd;
   delete fDimpleModeCmd;
@@ -237,10 +318,16 @@ DetectorMessenger::~DetectorMessenger()
   delete fWorldMatPropVectorCmd;
   delete fWorldMatPropConstCmd;
   delete fWorldMaterialCmd;
+  delete fSiPMLayoutCmd;
   delete fSiPMFaceCmd;
   delete fSiPMCavityModeCmd;
   delete fSiPMLocalPositionCmd;
   delete fSiPMSizeCmd;
+  delete fGreaseEnabledCmd;
+  delete fGreaseThicknessCmd;
+  delete fGreaseSizeCmd;
+  delete fGreaseMatPropVectorCmd;
+  delete fGreaseMatPropConstCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -495,6 +582,27 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
     }
     fDetector->AddSurfaceMPV(prop, mpv);
   }
+  else if (command == fGreaseMatPropVectorCmd) {
+    // Convert string to physics vector
+    // string format is property name, then pairs of energy, value
+    auto mpv = new G4MaterialPropertyVector();
+    G4cout << newValue << G4endl;
+    std::istringstream instring(newValue);
+    G4String prop;
+    instring >> prop;
+    while (instring) {
+      G4String tmp;
+      instring >> tmp;
+      if (tmp == "") {
+        break;
+      }
+      G4double en = G4UIcommand::ConvertToDouble(tmp);
+      instring >> tmp;
+      G4double val = G4UIcommand::ConvertToDouble(tmp);
+      mpv->InsertValues(en, val);
+    }
+    fDetector->AddGreaseMPV(prop, mpv);
+  }
 
   else if (command == fTankMatPropConstCmd) {
     // Convert string to physics vector
@@ -532,6 +640,18 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
     G4double val = G4UIcommand::ConvertToDouble(tmp);
     fDetector->AddSurfaceMPC(prop, val);
   }
+  else if (command == fGreaseMatPropConstCmd) {
+    // Convert string to physics vector
+    // string format is property name, then value
+    // space delimited
+    std::istringstream instring(newValue);
+    G4String prop;
+    G4String tmp;
+    instring >> prop;
+    instring >> tmp;
+    G4double val = G4UIcommand::ConvertToDouble(tmp);
+    fDetector->AddGreaseMPC(prop, val);
+  }
   else if (command == fWorldMaterialCmd) {
     fDetector->SetWorldMaterial(newValue);
   }
@@ -547,6 +667,18 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   else if (command == fTankBottomCavityCmd) {
     fDetector->SetBottomCavityEnabled(fTankBottomCavityCmd->GetNewBoolValue(newValue));
   }
+  else if (command == fAbsorberEnabledCmd) {
+    fDetector->SetAbsorberEnabled(fAbsorberEnabledCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fAbsorberSizeCmd) {
+    fDetector->SetAbsorberSize(fAbsorberSizeCmd->GetNew3VectorValue(newValue));
+  }
+  else if (command == fStackEnabledCmd) {
+    fDetector->SetStackEnabled(fStackEnabledCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fStackLayersCmd) {
+    fDetector->SetStackLayers(fStackLayersCmd->GetNewIntValue(newValue));
+  }
   else if (command == fDimpleEnabledCmd) {
     fDetector->SetDimpleEnabled(fDimpleEnabledCmd->GetNewBoolValue(newValue));
   }
@@ -561,6 +693,9 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   }
 
   // --- SiPM commands ---
+  else if (command == fSiPMLayoutCmd) {
+    fDetector->SetSiPMLayout(newValue);
+  }
   else if (command == fSiPMFaceCmd) {
     fDetector->SetSiPMFace(newValue);
   }
@@ -574,6 +709,16 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   else if (command == fSiPMSizeCmd) {
     fDetector->SetSiPMSize(
       fSiPMSizeCmd->GetNew3VectorValue(newValue));
+  }
+  else if (command == fGreaseEnabledCmd) {
+    fDetector->SetGreaseEnabled(fGreaseEnabledCmd->GetNewBoolValue(newValue));
+  }
+  else if (command == fGreaseThicknessCmd) {
+    fDetector->SetGreaseThickness(fGreaseThicknessCmd->GetNewDoubleValue(newValue));
+  }
+  else if (command == fGreaseSizeCmd) {
+    fDetector->SetGreaseSize(
+      fGreaseSizeCmd->GetNew3VectorValue(newValue));
   }
 }
 

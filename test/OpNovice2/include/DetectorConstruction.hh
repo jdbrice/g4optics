@@ -42,6 +42,8 @@
 
 #include <CLHEP/Units/SystemOfUnits.h>
 
+#include <vector>
+
 class DetectorMessenger;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -54,8 +56,36 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     G4VPhysicalVolume* Construct() override;
 
-    G4VPhysicalVolume* GetTank() { return fTank; }
-    G4double GetTankXSize() { return fTank_x; }
+    G4VPhysicalVolume* GetTank() const { return fTank; }
+    G4double GetTankXSize() const { return fTank_x; }
+    G4bool IsStackEnabled() const { return fStackEnabled; }
+    G4int GetStackLayerCount() const { return fStackEnabled ? fStackLayers : 1; }
+    G4double GetStackLength() const
+    {
+      return GetStackLayerCount() * (2. * fAbsorber_z + 2. * fTank_z);
+    }
+    G4double GetStackSteelCenterZ(G4int layer) const;
+    G4double GetStackTileCenterZ(G4int layer) const;
+    G4int GetTileLayer(const G4VPhysicalVolume* volume) const;
+    G4int GetAbsorberLayer(const G4VPhysicalVolume* volume) const;
+    G4int GetSensorLayer(G4int copyNumber) const;
+    G4int GetSensorLocalIndex(G4int copyNumber) const;
+
+    G4VPhysicalVolume* GetAbsorber() const { return fAbsorber; }
+    G4LogicalVolume* GetAbsorberLogicalVolume() const { return fAbsorber_LV; }
+    G4Material* GetAbsorberMaterial() const { return fAbsorberMaterial; }
+    G4bool IsAbsorberEnabled() const { return fAbsorberEnabled; }
+    G4ThreeVector GetAbsorberFullSize() const
+    {
+      return G4ThreeVector(2. * fAbsorber_x,
+                           2. * fAbsorber_y,
+                           2. * fAbsorber_z);
+    }
+    G4double GetAbsorberCenterZ() const { return fTank_z + fAbsorber_z; }
+    G4double GetAbsorberUpstreamFaceZ() const
+    {
+      return fTank_z + 2. * fAbsorber_z;
+    }
 
     G4OpticalSurface* GetSurface(void) { return fSurface; }
 
@@ -95,12 +125,23 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     void AddSurfaceMPC(const G4String& prop, G4double v);
     G4MaterialPropertiesTable* GetSurfaceMaterialPropertiesTable() { return fSurfaceMPT; }
 
+    void SetGreaseEnabled(G4bool enabled);
+    void SetGreaseThickness(G4double thickness);
+    void SetGreaseSize(const G4ThreeVector& size);
+    void AddGreaseMPV(const G4String& prop, G4MaterialPropertyVector* mpv);
+    void AddGreaseMPC(const G4String& prop, G4double v);
+    G4MaterialPropertiesTable* GetGreaseMaterialPropertiesTable() { return fGreaseMPT; }
+
     void SetWorldMaterial(const G4String&);
     G4Material* GetWorldMaterial() const { return fWorldMaterial; }
     void SetTankMaterial(const G4String&);
     G4Material* GetTankMaterial() const { return fTankMaterial; }
     void SetTankSize(const G4ThreeVector& fullSize);
     void SetTankSizePreset(const G4String& preset);
+    void SetAbsorberEnabled(G4bool enabled);
+    void SetAbsorberSize(const G4ThreeVector& fullSize);
+    void SetStackEnabled(G4bool enabled);
+    void SetStackLayers(G4int layers);
     void SetBottomCavityEnabled(G4bool enabled);
     void SetDimpleEnabled(G4bool enabled);
     void SetDimpleRadius(G4double radius);
@@ -108,6 +149,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     void SetDimpleSiPMMode(const G4String& mode);
 
     // setting SiPM
+    void SetSiPMLayout(const G4String& layout);
     void SetSiPMFace(const G4String& face);
     void SetSiPMCavityMode(const G4String& mode);
     void SetSiPMLocalPosition(const G4ThreeVector& pos);
@@ -119,10 +161,19 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     G4double fExpHall_z = 50. * CLHEP::cm;
 
     G4VPhysicalVolume* fTank = nullptr;
+    G4VPhysicalVolume* fAbsorber = nullptr;
+    std::vector<G4VPhysicalVolume*> fTanks;
+    std::vector<G4VPhysicalVolume*> fAbsorbers;
 
     G4double fTank_x = 5. * CLHEP::cm;
     G4double fTank_y = 5. * CLHEP::cm;
     G4double fTank_z = .25 * CLHEP::cm;
+    G4bool fAbsorberEnabled = false;
+    G4double fAbsorber_x = 25. * CLHEP::cm;
+    G4double fAbsorber_y = 25. * CLHEP::cm;
+    G4double fAbsorber_z = 2. * CLHEP::cm;
+    G4bool fStackEnabled = false;
+    G4int fStackLayers = 10;
     G4bool fBottomCavityEnabled = false;
     G4bool fDimpleEnabled = false;
     G4double fDimpleRadius = 3. * CLHEP::mm;
@@ -132,9 +183,11 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     G4LogicalVolume* fWorld_LV = nullptr;
     G4LogicalVolume* fTank_LV = nullptr;
+    G4LogicalVolume* fAbsorber_LV = nullptr;
 
     G4Material* fWorldMaterial = nullptr;
     G4Material* fTankMaterial = nullptr;
+    G4Material* fAbsorberMaterial = nullptr;
 
     G4OpticalSurface* fSurface = nullptr;
 
@@ -147,13 +200,29 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     /// Adding SiPM
     // Physical Volume & Logical Volume
     G4VPhysicalVolume* fSiPM = nullptr;
+    std::vector<G4VPhysicalVolume*> fSiPMs;
     G4LogicalVolume* fSiPM_LV = nullptr;
 
     // Material & Properties Table
     G4Material* fSiPMMaterial = nullptr;
     G4MaterialPropertiesTable* fSiPMMPT = nullptr;
 
+    // Optional EJ-550 coupling: flat pad or curved dimple-to-SiPM gap.
+    G4VPhysicalVolume* fGrease = nullptr;
+    G4LogicalVolume* fGrease_LV = nullptr;
+    G4Material* fGreaseMaterial = nullptr;
+    G4MaterialPropertiesTable* fGreaseMPT = nullptr;
+    G4bool fGreaseEnabled = false;
+    G4double fGreaseThickness = 0.0;
+    G4double fGreaseActiveU = 0.0;
+    G4double fGreaseActiveV = 0.0;
+
     // General SiPM placement.
+    // fSiPMLayout is "single" for the legacy one-SiPM geometry,
+    // "edge-two" for two fixed +X placements, or "back-four" for the
+    // steel-module scan's four fixed -Z placements.
+    G4String fSiPMLayout = "single";
+
     // fSiPMFace controls which tile face the SiPM is attached to.
     // Accepted values: +X, -X, +Y, -Y, +Z, -Z, bottomCavity.
     G4String fSiPMFace = "+X";
@@ -179,13 +248,30 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                               G4double& hy,
                               G4double& hz,
                               G4ThreeVector& pos) const;
+    void ComputeSiPMPlacementFor(const G4String& face,
+                                 const G4ThreeVector& localPosition,
+                                 G4double& hx,
+                                 G4double& hy,
+                                 G4double& hz,
+                                 G4ThreeVector& pos) const;
+    std::vector<G4ThreeVector> GetSiPMLocalPositions() const;
+    void ValidateSiPMLayout() const;
     G4double GetBottomCavityRadius() const;
     G4String GetEffectiveDimpleSiPMMode() const;
     G4double GetSiPMFootprintCornerRadius(G4double u,
                                           G4double v,
                                           G4double hu,
                                           G4double hv) const;
+    G4double GetGreaseActiveU() const;
+    G4double GetGreaseActiveV() const;
+    void ComputeGreasePlacement(G4double& hx,
+                                G4double& hy,
+                                G4double& hz,
+                                G4ThreeVector& pos) const;
     void ValidateDimpleConfiguration() const;
+    void ValidateGreaseConfiguration() const;
+    void ValidateAbsorberConfiguration() const;
+    void ValidateStackConfiguration() const;
     void ResetSurfaceMaterialPropertiesTable();
 };
 

@@ -1,0 +1,21 @@
+# EJ-550 optical-grade silicone grease empirical transmission points.
+# Source: https://eljentechnology.com/images/products/spectra/EJ-550_trans.png
+# Product page: https://eljentechnology.com/products/accessories/ej-550-ej-552
+# Digitized 2026-07-09 from the manufacturer plot; approximate, not tabulated data.
+# The source plot is explicitly for a 0.1 mm thick EJ-550 sample.
+# Values are rounded to about 0.01 to match the source image precision.
+# Wavelengths are in nm; transmission is dimensionless, 0..1.
+wavelength_nm,transmission
+280,0.60
+285,0.77
+290,0.83
+300,0.90
+310,0.93
+325,0.96
+350,0.97
+375,0.97
+400,0.98
+425,0.98
+450,0.98
+475,0.98
+500,0.98

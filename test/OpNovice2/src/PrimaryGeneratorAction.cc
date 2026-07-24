@@ -40,11 +40,28 @@
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
+#include "G4SingleParticleSource.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
 
 #include <algorithm>
 #include <cmath>
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+namespace
+{
+void SetGpsParticleMomentumDirection(G4GeneralParticleSource* source,
+                                     const G4ThreeVector& direction)
+{
+  source->GetCurrentSource()->GetAngDist()->SetParticleMomentumDirection(direction.unit());
+}
+
+void SetGpsParticleEnergy(G4GeneralParticleSource* source, G4double energy)
+{
+  source->GetCurrentSource()->GetEneDist()->SetMonoEnergy(energy);
+}
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -70,14 +87,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
   // fParticleGun->SetParticlePosition(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
   fGeneralParticleSource->SetParticlePosition(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
   // fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1., 0., 0.));
-  // If problematic, check out https://geant4-forum.web.cern.ch/t/setparticlemomentumdirection-for-gps-is-not-working-properly/937
-  // Also check out https://geant4-forum.web.cern.ch/t/it-is-not-convenient-that-g4generalparticlesource-class-can-not-set-particle-energy-moment-direction/9878
-  // I implemented two helper functions, see `G4GeneralParticleSource.hh`, so I can use a similar syntax as `G4ParticleGun` here.
-    // fGeneralParticleSource->GetCurrentSource()->GetAngDist()->SetParticleMomentumDirection(G4ThreeVector(0.0 * cm, 0.0 * cm, 0.0 * cm));
-  fGeneralParticleSource->SetParticleMomentumDirection(G4ThreeVector(1., 0., 0.));
+  SetGpsParticleMomentumDirection(fGeneralParticleSource, G4ThreeVector(1., 0., 0.));
   // fParticleGun->SetParticleEnergy(500.0 * keV);
-    // fGeneralParticleSource->GetCurrentSource()->GetEneDist()->SetMonoEnergy(500.0 * keV);
-  fGeneralParticleSource->SetParticleEnergy(500.0 * keV);
+  SetGpsParticleEnergy(fGeneralParticleSource, 500.0 * keV);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -96,13 +108,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     auto particle = fGeneralParticleSource->GetParticleDefinition();
     if (!particle || particle->GetParticleName() != "e-") {
       G4ExceptionDescription msg;
-      msg << "Electron energy mode sr90Beta requires /gun/particle e-.";
+      msg << "Electron energy mode sr90Beta requires primary particle e-.";
       G4Exception("PrimaryGeneratorAction::GeneratePrimaries",
                   "OpNovice2_Gun_001",
                   FatalException,
                   msg);
     }
-    fGeneralParticleSource->SetParticleEnergy(SampleSr90BetaEnergy());
+    SetGpsParticleEnergy(fGeneralParticleSource, SampleSr90BetaEnergy());
   }
 
   if (fRandomDirection) {
@@ -112,7 +124,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     G4double y = std::sin(theta) * std::sin(phi);
     G4double z = std::sin(theta) * std::cos(phi);
     G4ThreeVector dir(x, y, z);
-    fGeneralParticleSource->SetParticleMomentumDirection(dir);
+    SetGpsParticleMomentumDirection(fGeneralParticleSource, dir);
   }
   if (fGeneralParticleSource->GetParticleDefinition() == G4OpticalPhoton::OpticalPhotonDefinition()) {
     if (fPolarized)

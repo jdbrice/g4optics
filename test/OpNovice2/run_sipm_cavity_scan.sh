@@ -13,19 +13,72 @@ ROOT_COMMAND="${ROOT_COMMAND:-root}"
 ROOT_PLOT_MACRO="plot_efficiency_map.C"
 ROOT_PLOT_FIDUCIAL_LIMIT_MM="${ROOT_PLOT_FIDUCIAL_LIMIT_MM:-45}"
 ROOT_PLOT_SKIP_LOCAL="${ROOT_PLOT_SKIP_LOCAL:-0}"
+OPNOVICE2_EXECUTABLE="${OPNOVICE2_EXECUTABLE:-./build/OpNovice2}"
+SCAN_LOG_TAIL_LINES="${SCAN_LOG_TAIL_LINES:-120}"
+SCAN_RUN_ID_SUFFIX="${SCAN_RUN_ID_SUFFIX:-}"
 MACRO_GENERATOR="generate_scan_macro.py"
 
 MODE="surface"
 GRID="near5"
 SOURCE_MODE="${SOURCE_MODE:-auto}"
+SOURCE_MODE_SET="0"
+STUDY_PRESET=""
+TILE_THICKNESS_MM=""
+ABSORBER_TRANSVERSE_MM=""
+SIPM_STUDY_LAYOUT=""
+DETECTOR_SIPM_LAYOUT="single"
+ABSORBER_THICKNESS_MM="40"
+NEUTRON_MOMENTUM_GEV_C="1"
+NEUTRON_KINETIC_ENERGY_MEV="432.58"
+NEUTRON_TOTAL_ENERGY_GEV="1.372145"
+STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV="1000"
+STEEL_MODULE_NEUTRON_TOTAL_ENERGY_GEV="1.939565421"
+STEEL_MODULE_NEUTRON_MOMENTUM_GEV_C="1.696800177"
+SOURCE_CLEARANCE_MM="1.5"
+RANDOM_SEED_1=""
+RANDOM_SEED_2=""
+CAMPAIGN_ID=""
+CAMPAIGN_STAGE=""
+LOGICAL_TASK_ID=""
+CONFIGURATION_HASH=""
+SEED_BLOCK=""
 TEMPLATE_MACRO_OVERRIDE=""
+PRIMARY_ENERGY_OVERRIDE=""
+SOURCE_MODEL_OVERRIDE=""
 SIPM_FACE_OVERRIDE=""
 SIPM_CAVITY_MODE_OVERRIDE=""
 SIPM_LOCAL_POSITION_OVERRIDE=""
+SIPM_SIZE_OVERRIDE=""
 TANK_SIZE_OVERRIDE=""
 TANK_SIZE_PRESET_OVERRIDE=""
 ELECTRON_ENERGY_MODE_OVERRIDE=""
 SURFACE_PRESET_OVERRIDE=""
+SURFACE_REFLECTIVITY_MODEL_OVERRIDE=""
+SURFACE_REFLECTIVITY_VALUE_OVERRIDE=""
+SURFACE_REFLECTIVITY_CSV_OVERRIDE=""
+SURFACE_RINDEX_OVERRIDE=""
+SURFACE_RINDEX_CSV_OVERRIDE=""
+EJ510_REFLECTIVITY_CSV="optical_data/ej510_reflectivity_empirical.csv"
+EJ510_REFLECTIVITY_SOURCE_URL="https://eljentechnology.com/images/products/spectra/EJ-510_ref.png"
+EJ510_COATING_REFERENCE_THICKNESS_MM="0.11"
+BACKPAINTED_AIR_RINDEX="1.0003"
+BACKPAINTED_AIR_GAP_CAVEAT="Backpainted is an air-gap sensitivity proxy with RINDEX=1.0003; observed lab EJ-510 appears directly applied, so frontpainted is more physically representative."
+BACKPAINTED_MODEL_CAVEAT="Backpainted is a sensitivity model; observed lab EJ-510 appears directly applied, so frontpainted is more physically representative."
+OPTICAL_COUPLING="none"
+OPTICAL_COUPLING_SET="0"
+GREASE_THICKNESS_OVERRIDE=""
+GREASE_SIZE_OVERRIDE=""
+GREASE_RINDEX_OVERRIDE=""
+GREASE_RINDEX_CSV_OVERRIDE=""
+GREASE_ABSORPTION_MODEL_OVERRIDE=""
+GREASE_TRANSMISSION_CSV_OVERRIDE=""
+GREASE_ABS_LENGTH_OVERRIDE="1000 mm"
+GREASE_ABS_LENGTH_SET="0"
+EJ550_OFFICIAL_RINDEX="1.46"
+EJ550_DENSITY_G_CM3="1.06"
+EJ550_TRANSMISSION_CSV="optical_data/ej550_transmission_empirical.csv"
+EJ550_TRANSMISSION_SOURCE_URL="https://eljentechnology.com/images/products/spectra/EJ-550_trans.png"
+EJ550_TRANSMISSION_REFERENCE_THICKNESS_MM="0.1"
 DIMPLE_ENABLED="0"
 DIMPLE_RADIUS=""
 DIMPLE_UNIT="mm"
@@ -40,14 +93,36 @@ CUSTOM_Y_MAX=""
 CUSTOM_STEP=""
 CUSTOM_GRID_UNIT=""
 CUSTOM_BEAM_Z=""
+CUSTOM_BEAM_SIGMA=""
+CUSTOM_BEAM_DIVERGENCE_MRAD=""
 BEAM_Z_INFERRED="0"
+BEAM_PROFILE="point"
+BEAM_SIGMA=""
+BEAM_ANGULAR_MODEL="pencil"
+BEAM_DIVERGENCE_MRAD=""
+MIN_ABSORBER_EDGE_DISTANCE_MM=""
 
 BEAM_DIRECTION="0 0 -1"
-SCAN_RUNS_DIR="scan_runs"
-LATEST_RUN_LINK="scan_latest"
-LATEST_POINTS_CSV="points.csv"
-LATEST_RUN_CONFIG="run_config.json"
-LATEST_EFFICIENCY_MAP="efficiency_map.csv"
+SCAN_RUNS_DIR="${SCAN_RUNS_DIR:-scan_runs}"
+LATEST_RUN_LINK="${LATEST_RUN_LINK:-scan_latest}"
+LATEST_POINTS_CSV="${LATEST_POINTS_CSV:-points.csv}"
+LATEST_RUN_CONFIG="${LATEST_RUN_CONFIG:-run_config.json}"
+LATEST_EFFICIENCY_MAP="${LATEST_EFFICIENCY_MAP:-efficiency_map.csv}"
+
+SR90_SPECTRUM_MODEL="sr90_allowed_beta_v1"
+SR90_SPECTRUM_TABLE="spectra/sr90_allowed_beta_v1.csv"
+SR90_SPECTRUM_GPS_MACRO="spectra/sr90_allowed_beta_v1_gps.mac"
+SR90_ENDPOINT_MEV="0.546"
+Y90_ENDPOINT_MEV="2.28"
+SR90_ACTIVITY_WEIGHT="1.0"
+Y90_ACTIVITY_WEIGHT="1.0"
+SR90_FERMI_CORRECTION="true"
+SR90_INCIDENT_MODEL="bare_sr90_y90_beta_emission_no_encapsulation_air_or_collimator"
+SR90_DECAY_MODEL="geant4_radioactive_decay_sr90_chain_v1"
+SR90_DECAY_PRIMARY_ION="Sr-90"
+SR90_DECAY_GPS_ION="38 90 0 0"
+SR90_DECAY_RDM_TIME_THRESHOLD="1000 year"
+SR90_DECAY_EXPECTED_CHAIN="Sr-90 -> Y-90 -> Zr-90"
 
 usage() {
   cat <<'USAGE'
@@ -62,16 +137,43 @@ Usage:
 
 Source options:
   --source-mode MODE                  auto, gun, or gps
+  --source-model MODEL                fixed-electron, sr90-spectrum,
+                                      sr90-empirical, or sr90-decay
   --template-macro FILE               override the selected template macro
-  --electron-energy-mode MODE         fixed or sr90Beta
+  --primary-energy "VALUE UNIT"       override primary energy, e.g. "0.5 MeV"
+  --electron-energy-mode MODE         fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical
 
 Surface options:
-  --surface-preset PRESET             polished, ground, or wrapped
+  --surface-preset PRESET             polished, ground, wrapped,
+                                      polishedfrontpainted, groundfrontpainted,
+                                      polishedbackpainted, or groundbackpainted
+  --surface-reflectivity-model MODEL  ej510-empirical, constant, or none
+  --surface-reflectivity VALUE        constant reflectivity value, e.g. 0.95
+  --surface-reflectivity-csv FILE     wavelength_nm,reflectivity CSV for
+                                      ej510-empirical
+  --surface-rindex VALUE              override backpainted surface-layer RINDEX;
+                                      default air-gap proxy is 1.0003
+  --surface-rindex-csv FILE           wavelength_nm,rindex CSV for backpainted
+                                      surface-layer sensitivity studies
 
 Geometry options:
   --sipm-face FACE                    +X, -X, +Y, -Y, +Z, -Z, or bottomCavity
   --sipm-cavity-mode MODE             surface or opening
   --sipm-local-position "x y z unit"  override /opnovice2/sipm/localPosition
+  --sipm-size "u v t unit"            override /opnovice2/sipm/size
+  --optical-coupling MODEL            none or ej550-grease
+  --grease-thickness "VALUE UNIT"     EJ-550 flat-pad thickness; required for
+                                      grease without --dimple, omitted for the
+                                      curved dimple-to-SiPM gap
+  --grease-size "u v unit"            grease footprint; defaults to SiPM area
+  --grease-rindex VALUE               override official EJ-550 RINDEX=1.46
+  --grease-rindex-csv FILE            wavelength_nm,rindex CSV for EJ-550
+  --grease-absorption-model MODEL     transparent, constant, or
+                                      ej550-transmission-derived
+  --grease-transmission-csv FILE      wavelength_nm,transmission CSV for the
+                                      derived effective absorption model
+  --grease-abs-length "VALUE UNIT"    constant grease absorption length;
+                                      alone infers the constant model
   --tank-size "x y z unit"            override full tank size, e.g. "10 10 0.8 cm"
   --tank-size-preset PRESET           5x5x0p4, 5x5x0p8, 5x5x1p6,
                                       10x10x0p4, 10x10x0p8, or 10x10x1p6
@@ -89,8 +191,28 @@ Grid / beam options:
   --grid-unit UNIT                    mm or cm
   --beam-z VALUE                      beam z coordinate in --grid-unit units;
                                       custom defaults to thickness/2 + 1.5 mm
+  --beam-sigma VALUE                  circular Gaussian GPS beam sigma in
+                                      --grid-unit units; 0 or omitted keeps
+                                      the point-source GPS position
+  --beam-divergence-mrad VALUE        GPS beam2d angular sigma_x=sigma_y
+                                      in mrad; 0 or omitted keeps the
+                                      pencil beam
 
 Output / execution options:
+  --study-preset PRESET              locked scientific preset;
+                                      realistic-neutron-v1, steel-module-scan-v1,
+                                      or steel-module-stack-v1
+  --tile-thickness-mm VALUE          preset-controlled tile thickness
+  --sipm-layout LAYOUT               steel-module-scan-v1: back-center,
+                                      edge-center, edge-two, or back-four
+  --absorber-transverse-mm VALUE     neutron presets: 200, 300, or 500
+  --seed1 N                          first explicit Geant4 random seed
+  --seed2 N                          second explicit Geant4 random seed
+  --campaign-id ID                   campaign provenance identifier
+  --campaign-stage STAGE             campaign stage provenance
+  --logical-task-id ID               stable logical task identifier
+  --configuration-hash SHA256        resolved task configuration hash
+  --seed-block N                     independent seed-block index
   --events N                          events per scan point; overrides N_EVENTS
   --dry-run                           generate macros/config only
   --no-root-plots                     skip ROOT quick-look plot generation
@@ -100,9 +222,13 @@ Environment:
   N_EVENTS=100                        events per scan point
   DRY_RUN=1                           generate macros/config only
   SOURCE_MODE=auto                    source command mode: auto, gun, or gps
+  OPNOVICE2_EXECUTABLE=./build/OpNovice2
+                                      executable used for each generated macro
   PLOT_WITH_ROOT=1                    generate ROOT macro plots after scan if ROOT is available
   ROOT_COMMAND=root                   ROOT executable used for plot generation
   ROOT_PLOT_FIDUCIAL_LIMIT_MM=45      fiducial box half-width shown by ROOT plots
+  SCAN_LOG_TAIL_LINES=120             lines printed from a failed point log
+  SCAN_RUN_ID_SUFFIX=value            optional suffix appended to the run directory
 
 Output:
   scan_runs/<UTC timestamp>_<mode>_<grid>/
@@ -129,6 +255,138 @@ while [[ $# -gt 0 ]]; do
       ;;
     --events=*)
       N_EVENTS="${1#*=}"
+      shift
+      ;;
+    --study-preset)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --study-preset" >&2
+        exit 1
+      fi
+      STUDY_PRESET="$2"
+      shift 2
+      ;;
+    --study-preset=*)
+      STUDY_PRESET="${1#*=}"
+      shift
+      ;;
+    --tile-thickness-mm)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --tile-thickness-mm" >&2
+        exit 1
+      fi
+      TILE_THICKNESS_MM="$2"
+      shift 2
+      ;;
+    --tile-thickness-mm=*)
+      TILE_THICKNESS_MM="${1#*=}"
+      shift
+      ;;
+    --absorber-transverse-mm)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --absorber-transverse-mm" >&2
+        exit 1
+      fi
+      ABSORBER_TRANSVERSE_MM="$2"
+      shift 2
+      ;;
+    --absorber-transverse-mm=*)
+      ABSORBER_TRANSVERSE_MM="${1#*=}"
+      shift
+      ;;
+    --sipm-layout)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --sipm-layout" >&2
+        exit 1
+      fi
+      SIPM_STUDY_LAYOUT="$2"
+      shift 2
+      ;;
+    --sipm-layout=*)
+      SIPM_STUDY_LAYOUT="${1#*=}"
+      shift
+      ;;
+    --seed1)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --seed1" >&2
+        exit 1
+      fi
+      RANDOM_SEED_1="$2"
+      shift 2
+      ;;
+    --seed1=*)
+      RANDOM_SEED_1="${1#*=}"
+      shift
+      ;;
+    --seed2)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --seed2" >&2
+        exit 1
+      fi
+      RANDOM_SEED_2="$2"
+      shift 2
+      ;;
+    --seed2=*)
+      RANDOM_SEED_2="${1#*=}"
+      shift
+      ;;
+    --campaign-id)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --campaign-id" >&2
+        exit 1
+      fi
+      CAMPAIGN_ID="$2"
+      shift 2
+      ;;
+    --campaign-id=*)
+      CAMPAIGN_ID="${1#*=}"
+      shift
+      ;;
+    --campaign-stage)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --campaign-stage" >&2
+        exit 1
+      fi
+      CAMPAIGN_STAGE="$2"
+      shift 2
+      ;;
+    --campaign-stage=*)
+      CAMPAIGN_STAGE="${1#*=}"
+      shift
+      ;;
+    --logical-task-id)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --logical-task-id" >&2
+        exit 1
+      fi
+      LOGICAL_TASK_ID="$2"
+      shift 2
+      ;;
+    --logical-task-id=*)
+      LOGICAL_TASK_ID="${1#*=}"
+      shift
+      ;;
+    --configuration-hash)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --configuration-hash" >&2
+        exit 1
+      fi
+      CONFIGURATION_HASH="$2"
+      shift 2
+      ;;
+    --configuration-hash=*)
+      CONFIGURATION_HASH="${1#*=}"
+      shift
+      ;;
+    --seed-block)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --seed-block" >&2
+        exit 1
+      fi
+      SEED_BLOCK="$2"
+      shift 2
+      ;;
+    --seed-block=*)
+      SEED_BLOCK="${1#*=}"
       shift
       ;;
     --dry-run)
@@ -169,10 +427,24 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       SOURCE_MODE="$2"
+      SOURCE_MODE_SET="1"
       shift 2
       ;;
     --source-mode=*)
       SOURCE_MODE="${1#*=}"
+      SOURCE_MODE_SET="1"
+      shift
+      ;;
+    --source-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --source-model" >&2
+        exit 1
+      fi
+      SOURCE_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --source-model=*)
+      SOURCE_MODEL_OVERRIDE="${1#*=}"
       shift
       ;;
     --template-macro)
@@ -185,6 +457,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --template-macro=*)
       TEMPLATE_MACRO_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --primary-energy)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --primary-energy" >&2
+        exit 1
+      fi
+      PRIMARY_ENERGY_OVERRIDE="$2"
+      shift 2
+      ;;
+    --primary-energy=*)
+      PRIMARY_ENERGY_OVERRIDE="${1#*=}"
       shift
       ;;
     --sipm-cavity-mode)
@@ -209,6 +493,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --sipm-local-position=*)
       SIPM_LOCAL_POSITION_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --sipm-size)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --sipm-size" >&2
+        exit 1
+      fi
+      SIPM_SIZE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --sipm-size=*)
+      SIPM_SIZE_OVERRIDE="${1#*=}"
       shift
       ;;
     --tank-size)
@@ -257,6 +553,166 @@ while [[ $# -gt 0 ]]; do
       ;;
     --surface-preset=*)
       SURFACE_PRESET_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity-model" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity-model=*)
+      SURFACE_REFLECTIVITY_MODEL_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_VALUE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity=*)
+      SURFACE_REFLECTIVITY_VALUE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-reflectivity-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-reflectivity-csv" >&2
+        exit 1
+      fi
+      SURFACE_REFLECTIVITY_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-reflectivity-csv=*)
+      SURFACE_REFLECTIVITY_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-rindex)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-rindex" >&2
+        exit 1
+      fi
+      SURFACE_RINDEX_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-rindex=*)
+      SURFACE_RINDEX_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --surface-rindex-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --surface-rindex-csv" >&2
+        exit 1
+      fi
+      SURFACE_RINDEX_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --surface-rindex-csv=*)
+      SURFACE_RINDEX_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --optical-coupling)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --optical-coupling" >&2
+        exit 1
+      fi
+      OPTICAL_COUPLING="$2"
+      OPTICAL_COUPLING_SET="1"
+      shift 2
+      ;;
+    --optical-coupling=*)
+      OPTICAL_COUPLING="${1#*=}"
+      OPTICAL_COUPLING_SET="1"
+      shift
+      ;;
+    --grease-thickness)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-thickness" >&2
+        exit 1
+      fi
+      GREASE_THICKNESS_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-thickness=*)
+      GREASE_THICKNESS_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-size)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-size" >&2
+        exit 1
+      fi
+      GREASE_SIZE_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-size=*)
+      GREASE_SIZE_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-rindex)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-rindex" >&2
+        exit 1
+      fi
+      GREASE_RINDEX_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-rindex=*)
+      GREASE_RINDEX_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-rindex-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-rindex-csv" >&2
+        exit 1
+      fi
+      GREASE_RINDEX_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-rindex-csv=*)
+      GREASE_RINDEX_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-absorption-model)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-absorption-model" >&2
+        exit 1
+      fi
+      GREASE_ABSORPTION_MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-absorption-model=*)
+      GREASE_ABSORPTION_MODEL_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-transmission-csv)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-transmission-csv" >&2
+        exit 1
+      fi
+      GREASE_TRANSMISSION_CSV_OVERRIDE="$2"
+      shift 2
+      ;;
+    --grease-transmission-csv=*)
+      GREASE_TRANSMISSION_CSV_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --grease-abs-length)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --grease-abs-length" >&2
+        exit 1
+      fi
+      GREASE_ABS_LENGTH_OVERRIDE="$2"
+      GREASE_ABS_LENGTH_SET="1"
+      shift 2
+      ;;
+    --grease-abs-length=*)
+      GREASE_ABS_LENGTH_OVERRIDE="${1#*=}"
+      GREASE_ABS_LENGTH_SET="1"
       shift
       ;;
     --dimple)
@@ -389,6 +845,30 @@ while [[ $# -gt 0 ]]; do
       CUSTOM_BEAM_Z="${1#*=}"
       shift
       ;;
+    --beam-sigma)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --beam-sigma" >&2
+        exit 1
+      fi
+      CUSTOM_BEAM_SIGMA="$2"
+      shift 2
+      ;;
+    --beam-sigma=*)
+      CUSTOM_BEAM_SIGMA="${1#*=}"
+      shift
+      ;;
+    --beam-divergence-mrad)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --beam-divergence-mrad" >&2
+        exit 1
+      fi
+      CUSTOM_BEAM_DIVERGENCE_MRAD="$2"
+      shift 2
+      ;;
+    --beam-divergence-mrad=*)
+      CUSTOM_BEAM_DIVERGENCE_MRAD="${1#*=}"
+      shift
+      ;;
     --)
       shift
       while [[ $# -gt 0 ]]; do
@@ -418,6 +898,302 @@ if [[ "${#POSITIONAL[@]}" -ge 1 ]]; then
 fi
 if [[ "${#POSITIONAL[@]}" -ge 2 ]]; then
   GRID="${POSITIONAL[1]}"
+fi
+
+if [[ -z "${STUDY_PRESET}" ]]; then
+  if [[ -n "${TILE_THICKNESS_MM}" || -n "${ABSORBER_TRANSVERSE_MM}" ||
+        -n "${SIPM_STUDY_LAYOUT}" ]]; then
+    echo "--tile-thickness-mm, --absorber-transverse-mm, and --sipm-layout require a neutron --study-preset." >&2
+    exit 1
+  fi
+else
+  case "${STUDY_PRESET}" in
+    realistic-neutron-v1|steel-module-scan-v1|steel-module-stack-v1)
+      ;;
+    *)
+      echo "Unknown --study-preset: ${STUDY_PRESET}. Use realistic-neutron-v1, steel-module-scan-v1, or steel-module-stack-v1." >&2
+      exit 1
+      ;;
+  esac
+
+  if [[ "${MODE}" != "full" || "${GRID}" != "custom" ]]; then
+    echo "--study-preset ${STUDY_PRESET} requires MODE=full and GRID=custom." >&2
+    exit 1
+  fi
+
+  locked_conflicts=()
+  [[ "${SOURCE_MODE_SET}" == "1" ]] && locked_conflicts+=(--source-mode)
+  [[ -n "${SOURCE_MODEL_OVERRIDE}" ]] && locked_conflicts+=(--source-model)
+  [[ -n "${TEMPLATE_MACRO_OVERRIDE}" ]] && locked_conflicts+=(--template-macro)
+  [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]] && locked_conflicts+=(--primary-energy)
+  [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]] && locked_conflicts+=(--electron-energy-mode)
+  [[ -n "${SIPM_FACE_OVERRIDE}" ]] && locked_conflicts+=(--sipm-face)
+  [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]] && locked_conflicts+=(--sipm-cavity-mode)
+  [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]] && locked_conflicts+=(--sipm-local-position)
+  [[ -n "${SIPM_SIZE_OVERRIDE}" ]] && locked_conflicts+=(--sipm-size)
+  [[ -n "${TANK_SIZE_OVERRIDE}" ]] && locked_conflicts+=(--tank-size)
+  [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]] && locked_conflicts+=(--tank-size-preset)
+  [[ -n "${SURFACE_PRESET_OVERRIDE}" ]] && locked_conflicts+=(--surface-preset)
+  [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" ]] && locked_conflicts+=(--surface-reflectivity-model)
+  [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]] && locked_conflicts+=(--surface-reflectivity)
+  [[ -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]] && locked_conflicts+=(--surface-reflectivity-csv)
+  [[ -n "${SURFACE_RINDEX_OVERRIDE}" ]] && locked_conflicts+=(--surface-rindex)
+  [[ -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]] && locked_conflicts+=(--surface-rindex-csv)
+  [[ "${OPTICAL_COUPLING_SET}" == "1" ]] && locked_conflicts+=(--optical-coupling)
+  [[ -n "${GREASE_THICKNESS_OVERRIDE}" ]] && locked_conflicts+=(--grease-thickness)
+  [[ -n "${GREASE_SIZE_OVERRIDE}" ]] && locked_conflicts+=(--grease-size)
+  [[ -n "${GREASE_RINDEX_OVERRIDE}" ]] && locked_conflicts+=(--grease-rindex)
+  [[ -n "${GREASE_RINDEX_CSV_OVERRIDE}" ]] && locked_conflicts+=(--grease-rindex-csv)
+  [[ -n "${GREASE_ABSORPTION_MODEL_OVERRIDE}" ]] && locked_conflicts+=(--grease-absorption-model)
+  [[ -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]] && locked_conflicts+=(--grease-transmission-csv)
+  [[ "${GREASE_ABS_LENGTH_SET}" == "1" ]] && locked_conflicts+=(--grease-abs-length)
+  [[ "${DIMPLE_ENABLED}" == "1" ]] && locked_conflicts+=(--dimple)
+  [[ "${DIMPLE_RADIUS_SET}" == "1" ]] && locked_conflicts+=(--dimple-radius)
+  [[ "${DIMPLE_UNIT_SET}" == "1" ]] && locked_conflicts+=(--dimple-unit)
+  [[ "${DIMPLE_SIPM_MODE_SET}" == "1" ]] && locked_conflicts+=(--dimple-sipm-mode)
+  [[ -n "${CUSTOM_BEAM_Z}" ]] && locked_conflicts+=(--beam-z)
+  [[ -n "${CUSTOM_BEAM_SIGMA}" ]] && locked_conflicts+=(--beam-sigma)
+  [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]] && locked_conflicts+=(--beam-divergence-mrad)
+
+  if [[ "${#locked_conflicts[@]}" -gt 0 ]]; then
+    echo "The ${STUDY_PRESET} preset locks these options: ${locked_conflicts[*]}" >&2
+    exit 1
+  fi
+
+  if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+    if [[ -n "${SIPM_STUDY_LAYOUT}" ]]; then
+      echo "--sipm-layout is an axis only for --study-preset steel-module-scan-v1." >&2
+      exit 1
+    fi
+    case "${TILE_THICKNESS_MM}" in
+      4|16)
+        ;;
+      "")
+        echo "--study-preset realistic-neutron-v1 requires --tile-thickness-mm 4 or 16." >&2
+        exit 1
+        ;;
+      *)
+        echo "Invalid --tile-thickness-mm: ${TILE_THICKNESS_MM}. Use 4 or 16." >&2
+        exit 1
+        ;;
+    esac
+  elif [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ]]; then
+    case "${TILE_THICKNESS_MM}" in
+      4|8|12|16|20|24)
+        ;;
+      "")
+        echo "--study-preset steel-module-scan-v1 requires --tile-thickness-mm 4, 8, 12, 16, 20, or 24." >&2
+        exit 1
+        ;;
+      *)
+        echo "Invalid --tile-thickness-mm: ${TILE_THICKNESS_MM}. Use 4, 8, 12, 16, 20, or 24." >&2
+        exit 1
+        ;;
+    esac
+    case "${SIPM_STUDY_LAYOUT}" in
+      back-center|edge-center|edge-two|back-four)
+        ;;
+      "")
+        echo "--study-preset steel-module-scan-v1 requires --sipm-layout back-center, edge-center, edge-two, or back-four." >&2
+        exit 1
+        ;;
+      *)
+        echo "Invalid --sipm-layout: ${SIPM_STUDY_LAYOUT}. Use back-center, edge-center, edge-two, or back-four." >&2
+        exit 1
+        ;;
+    esac
+  else
+    case "${TILE_THICKNESS_MM}" in
+      4|8|12|16|20|24)
+        ;;
+      "")
+        echo "--study-preset steel-module-stack-v1 requires --tile-thickness-mm 4, 8, 12, 16, 20, or 24." >&2
+        exit 1
+        ;;
+      *)
+        echo "Invalid --tile-thickness-mm: ${TILE_THICKNESS_MM}. Use 4, 8, 12, 16, 20, or 24." >&2
+        exit 1
+        ;;
+    esac
+    if [[ -n "${SIPM_STUDY_LAYOUT}" ]]; then
+      echo "--study-preset steel-module-stack-v1 locks the layout to edge-two; do not pass --sipm-layout." >&2
+      exit 1
+    fi
+    if [[ -n "${ABSORBER_TRANSVERSE_MM}" ]]; then
+      echo "--study-preset steel-module-stack-v1 locks the steel transverse size to 500 mm; do not pass --absorber-transverse-mm." >&2
+      exit 1
+    fi
+    SIPM_STUDY_LAYOUT="edge-two"
+  fi
+
+  if [[ -z "${ABSORBER_TRANSVERSE_MM}" ]]; then
+    ABSORBER_TRANSVERSE_MM="500"
+  fi
+  case "${ABSORBER_TRANSVERSE_MM}" in
+    200|300|500)
+      ;;
+    *)
+      echo "Invalid --absorber-transverse-mm: ${ABSORBER_TRANSVERSE_MM}. Use 200, 300, or 500." >&2
+      exit 1
+      ;;
+  esac
+
+  SOURCE_MODE="gps"
+  SOURCE_MODEL_OVERRIDE="${STUDY_PRESET}"
+  SIPM_SIZE_OVERRIDE="2.4 2.4 0.5 mm"
+  SURFACE_PRESET_OVERRIDE="polishedfrontpainted"
+  SURFACE_REFLECTIVITY_MODEL_OVERRIDE="ej510-empirical"
+  OPTICAL_COUPLING="none"
+  if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+    SIPM_FACE_OVERRIDE="-Z"
+    SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+    DETECTOR_SIPM_LAYOUT="single"
+    TANK_SIZE_OVERRIDE="50 50 ${TILE_THICKNESS_MM} mm"
+    CUSTOM_BEAM_DIVERGENCE_MRAD="55"
+  elif [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ]]; then
+    TANK_SIZE_OVERRIDE="100 100 ${TILE_THICKNESS_MM} mm"
+    CUSTOM_BEAM_DIVERGENCE_MRAD=""
+    case "${SIPM_STUDY_LAYOUT}" in
+      back-center)
+        DETECTOR_SIPM_LAYOUT="single"
+        SIPM_FACE_OVERRIDE="-Z"
+        SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+        ;;
+      edge-center)
+        DETECTOR_SIPM_LAYOUT="single"
+        SIPM_FACE_OVERRIDE="+X"
+        SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+        ;;
+      edge-two)
+        DETECTOR_SIPM_LAYOUT="edge-two"
+        SIPM_FACE_OVERRIDE="+X"
+        SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+        ;;
+      back-four)
+        DETECTOR_SIPM_LAYOUT="back-four"
+        SIPM_FACE_OVERRIDE="-Z"
+        SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+        ;;
+    esac
+  else
+    DETECTOR_SIPM_LAYOUT="edge-two"
+    SIPM_FACE_OVERRIDE="+X"
+    SIPM_LOCAL_POSITION_OVERRIDE="0 0 0 mm"
+    TANK_SIZE_OVERRIDE="100 100 ${TILE_THICKNESS_MM} mm"
+    CUSTOM_BEAM_DIVERGENCE_MRAD=""
+  fi
+fi
+
+IS_NEUTRON_STUDY_PRESET="false"
+RUN_CONFIG_SCHEMA_VERSION="opnovice2-run-config-v3"
+EVENT_SCHEMA_VERSION="opnovice2-scan-event-v2"
+if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ||
+      "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+      "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+  IS_NEUTRON_STUDY_PRESET="true"
+fi
+if [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ]]; then
+  RUN_CONFIG_SCHEMA_VERSION="opnovice2-run-config-v4"
+  EVENT_SCHEMA_VERSION="opnovice2-scan-event-v3"
+fi
+if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+  RUN_CONFIG_SCHEMA_VERSION="opnovice2-run-config-v5"
+  EVENT_SCHEMA_VERSION="opnovice2-stack-event-v1"
+fi
+
+if [[ -n "${RANDOM_SEED_1}" || -n "${RANDOM_SEED_2}" ]]; then
+  if [[ -z "${RANDOM_SEED_1}" || -z "${RANDOM_SEED_2}" ]]; then
+    echo "Use --seed1 and --seed2 together." >&2
+    exit 1
+  fi
+  for random_seed in "${RANDOM_SEED_1}" "${RANDOM_SEED_2}"; do
+    if [[ ! "${random_seed}" =~ ^[0-9]+$ || "${random_seed}" -le 0 ||
+          "${random_seed}" -ge 2147483647 ]]; then
+      echo "Invalid Geant4 random seed: ${random_seed}. Use an integer in [1, 2147483646]." >&2
+      exit 1
+    fi
+  done
+  if [[ "${RANDOM_SEED_1}" == "${RANDOM_SEED_2}" ]]; then
+    echo "--seed1 and --seed2 must be distinct." >&2
+    exit 1
+  fi
+elif [[ -n "${STUDY_PRESET}" ]]; then
+  echo "--study-preset ${STUDY_PRESET} requires explicit --seed1 and --seed2." >&2
+  exit 1
+fi
+
+campaign_metadata_count=0
+for campaign_value in \
+  "${CAMPAIGN_ID}" "${CAMPAIGN_STAGE}" "${LOGICAL_TASK_ID}" \
+  "${CONFIGURATION_HASH}" "${SEED_BLOCK}"; do
+  [[ -n "${campaign_value}" ]] && campaign_metadata_count=$((campaign_metadata_count + 1))
+done
+if [[ "${campaign_metadata_count}" -ne 0 ]]; then
+  if [[ "${STUDY_PRESET}" != "realistic-neutron-v1" &&
+        "${STUDY_PRESET}" != "steel-module-scan-v1" &&
+        "${STUDY_PRESET}" != "steel-module-stack-v1" ]]; then
+    echo "Campaign provenance options require a supported neutron --study-preset." >&2
+    exit 1
+  fi
+  if [[ "${campaign_metadata_count}" -ne 5 ]]; then
+    echo "Use --campaign-id, --campaign-stage, --logical-task-id, --configuration-hash, and --seed-block together." >&2
+    exit 1
+  fi
+  for campaign_identifier in "${CAMPAIGN_ID}" "${CAMPAIGN_STAGE}" "${LOGICAL_TASK_ID}"; do
+    if [[ ! "${campaign_identifier}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+      echo "Invalid campaign identifier: ${campaign_identifier}. Use letters, numbers, dot, underscore, or hyphen." >&2
+      exit 1
+    fi
+  done
+  if [[ ! "${CONFIGURATION_HASH}" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "Invalid --configuration-hash: expected a lowercase SHA-256 hex digest." >&2
+    exit 1
+  fi
+  if [[ ! "${SEED_BLOCK}" =~ ^[0-9]+$ ]]; then
+    echo "Invalid --seed-block: ${SEED_BLOCK}. Expected a non-negative integer." >&2
+    exit 1
+  fi
+fi
+
+execution_metadata_count=0
+for execution_value in \
+  "${RN_ATTEMPT_ID:-}" "${RN_LOGICAL_TASK_INDEX:-}" \
+  "${RN_LOGICAL_TASK_ID:-}" "${RN_PLAN_HASH:-}" \
+  "${RN_GIT_COMMIT:-}" "${RN_ENVIRONMENT_MODE:-}" \
+  "${RN_ENVIRONMENT_IDENTITY:-}" "${RN_IMAGE_SHA256:-}" \
+  "${RN_G4_DATA_MANIFEST_SHA256:-}" "${RN_EXECUTABLE_SHA256:-}"; do
+  [[ -n "${execution_value}" ]] && execution_metadata_count=$((execution_metadata_count + 1))
+done
+if [[ "${execution_metadata_count}" -ne 0 ]]; then
+  if [[ "${campaign_metadata_count}" -ne 5 || "${execution_metadata_count}" -ne 10 ]]; then
+    echo "Formal campaign execution metadata is incomplete; use the campaign submission wrapper." >&2
+    exit 1
+  fi
+  if [[ ! "${RN_ATTEMPT_ID}" =~ ^[A-Za-z0-9._-]+$ ||
+        ! "${RN_LOGICAL_TASK_INDEX}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Invalid formal campaign attempt or logical task index." >&2
+    exit 1
+  fi
+  if [[ "${RN_LOGICAL_TASK_ID}" != "${LOGICAL_TASK_ID}" ]]; then
+    echo "Execution logical task ID does not match --logical-task-id." >&2
+    exit 1
+  fi
+  if [[ "${RN_ENVIRONMENT_MODE}" != "osc-production" ]]; then
+    echo "Formal realistic-neutron campaign tasks require RN_ENVIRONMENT_MODE=osc-production." >&2
+    exit 1
+  fi
+  if [[ ! "${RN_GIT_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "Invalid RN_GIT_COMMIT: expected a lowercase 40-character commit." >&2
+    exit 1
+  fi
+  for execution_digest in \
+    "${RN_PLAN_HASH}" "${RN_ENVIRONMENT_IDENTITY}" "${RN_IMAGE_SHA256}" \
+    "${RN_G4_DATA_MANIFEST_SHA256}" "${RN_EXECUTABLE_SHA256}"; do
+    if [[ ! "${execution_digest}" =~ ^[0-9a-f]{64}$ ]]; then
+      echo "Invalid formal campaign SHA-256 identity: ${execution_digest}" >&2
+      exit 1
+    fi
+  done
 fi
 
 case "${PLOT_WITH_ROOT}" in
@@ -502,6 +1278,34 @@ case "${SOURCE_MODE}" in
     ;;
 esac
 
+if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
+  case "${SOURCE_MODEL_OVERRIDE}" in
+    fixed-electron|sr90-spectrum|sr90-empirical|sr90-decay|realistic-neutron-v1|steel-module-scan-v1|steel-module-stack-v1)
+      ;;
+    *)
+      echo "Invalid --source-model: ${SOURCE_MODEL_OVERRIDE}. Use fixed-electron, sr90-spectrum, sr90-empirical, sr90-decay, realistic-neutron-v1, steel-module-scan-v1, or steel-module-stack-v1." >&2
+      exit 1
+      ;;
+  esac
+fi
+if [[ ( "${SOURCE_MODEL_OVERRIDE}" == "realistic-neutron-v1" ||
+        "${SOURCE_MODEL_OVERRIDE}" == "steel-module-scan-v1" ||
+        "${SOURCE_MODEL_OVERRIDE}" == "steel-module-stack-v1" ) &&
+      "${STUDY_PRESET}" != "${SOURCE_MODEL_OVERRIDE}" ]]; then
+  echo "The ${SOURCE_MODEL_OVERRIDE} source model is available only through its matching --study-preset." >&2
+  exit 1
+fi
+
+if [[ -n "${CUSTOM_BEAM_SIGMA}" && "${SOURCE_MODE}" != "gps" ]]; then
+  echo "--beam-sigma requires --source-mode gps." >&2
+  exit 1
+fi
+
+if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" && "${SOURCE_MODE}" != "gps" ]]; then
+  echo "--beam-divergence-mrad requires --source-mode gps." >&2
+  exit 1
+fi
+
 if [[ -n "${TEMPLATE_MACRO_OVERRIDE}" ]]; then
   TEMPLATE_MACRO="${TEMPLATE_MACRO_OVERRIDE}"
 elif [[ "${SOURCE_MODE}" == "gps" ]]; then
@@ -547,6 +1351,35 @@ if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then
   fi
 fi
 
+if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then
+  read -r sipm_size_u sipm_size_v sipm_size_t sipm_size_unit sipm_size_extra <<< "${SIPM_SIZE_OVERRIDE}"
+  if [[ -z "${sipm_size_u:-}" || -z "${sipm_size_v:-}" || -z "${sipm_size_t:-}" || -z "${sipm_size_unit:-}" || -n "${sipm_size_extra:-}" ]]; then
+    echo "Invalid --sipm-size: ${SIPM_SIZE_OVERRIDE}. Use quoted form like \"2.4 2.4 0.5 mm\"." >&2
+    exit 1
+  fi
+  for sipm_size_value in "${sipm_size_u}" "${sipm_size_v}" "${sipm_size_t}"; do
+    if [[ ! "${sipm_size_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --sipm-size value: ${sipm_size_value}. Expected a positive number." >&2
+      exit 1
+    fi
+  done
+  awk -v u="${sipm_size_u}" -v v="${sipm_size_v}" -v t="${sipm_size_t}" '
+    BEGIN {
+      if (u <= 0 || v <= 0 || t <= 0) {
+        printf "Invalid --sipm-size dimensions: %s %s %s. Expected positive values.\n", u, v, t > "/dev/stderr"
+        exit 1
+      }
+    }'
+  case "${sipm_size_unit}" in
+    mm|cm)
+      ;;
+    *)
+      echo "Invalid --sipm-size unit: ${sipm_size_unit}. Use mm or cm." >&2
+      exit 1
+      ;;
+  esac
+fi
+
 if [[ -n "${TANK_SIZE_OVERRIDE}" && -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then
   echo "Use either --tank-size or --tank-size-preset, not both." >&2
   exit 1
@@ -574,10 +1407,37 @@ fi
 
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
   case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
-    fixed|sr90Beta|sr90)
+    fixed|sr90Spectrum|sr90Beta|sr90|sr90Empirical)
       ;;
     *)
-      echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed or sr90Beta." >&2
+      echo "Invalid --electron-energy-mode: ${ELECTRON_ENERGY_MODE_OVERRIDE}. Use fixed, sr90Spectrum, sr90Beta, sr90, or sr90Empirical." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+  read -r primary_energy_value primary_energy_unit primary_energy_extra <<< "${PRIMARY_ENERGY_OVERRIDE}"
+  if [[ -z "${primary_energy_value:-}" || -z "${primary_energy_unit:-}" || -n "${primary_energy_extra:-}" ]]; then
+    echo "Invalid --primary-energy: ${PRIMARY_ENERGY_OVERRIDE}. Use quoted form like \"0.5 MeV\"." >&2
+    exit 1
+  fi
+  if [[ ! "${primary_energy_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --primary-energy value: ${primary_energy_value}. Expected a positive number." >&2
+    exit 1
+  fi
+  awk -v value="${primary_energy_value}" '
+    BEGIN {
+      if (value <= 0) {
+        printf "Invalid --primary-energy value: %s. Expected a positive number.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+  case "${primary_energy_unit}" in
+    eV|keV|MeV|GeV)
+      ;;
+    *)
+      echo "Invalid --primary-energy unit: ${primary_energy_unit}. Use eV, keV, MeV, or GeV." >&2
       exit 1
       ;;
   esac
@@ -585,13 +1445,241 @@ fi
 
 if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then
   case "${SURFACE_PRESET_OVERRIDE}" in
-    polished|ground|wrapped)
+    polished|ground|wrapped|polishedfrontpainted|groundfrontpainted|polishedbackpainted|groundbackpainted)
       ;;
     *)
-      echo "Invalid --surface-preset: ${SURFACE_PRESET_OVERRIDE}. Use polished, ground, or wrapped." >&2
+      echo "Invalid --surface-preset: ${SURFACE_PRESET_OVERRIDE}. Use polished, ground, wrapped, polishedfrontpainted, groundfrontpainted, polishedbackpainted, or groundbackpainted." >&2
       exit 1
       ;;
   esac
+fi
+
+if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" ]]; then
+  case "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" in
+    ej510-empirical|constant|none)
+      ;;
+    *)
+      echo "Invalid --surface-reflectivity-model: ${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}. Use ej510-empirical, constant, or none." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+  if [[ ! "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --surface-reflectivity: ${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}. Expected a number between 0 and 1." >&2
+    exit 1
+  fi
+  awk -v value="${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" '
+    BEGIN {
+      if (value < 0 || value > 1) {
+        printf "Invalid --surface-reflectivity: %s. Expected a number between 0 and 1.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+fi
+
+if [[ -n "${SURFACE_RINDEX_OVERRIDE}" && -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+  echo "Use either --surface-rindex or --surface-rindex-csv, not both." >&2
+  exit 1
+fi
+if [[ -n "${SURFACE_RINDEX_OVERRIDE}" ]]; then
+  if [[ ! "${SURFACE_RINDEX_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+    echo "Invalid --surface-rindex: ${SURFACE_RINDEX_OVERRIDE}. Expected a positive number." >&2
+    exit 1
+  fi
+  awk -v value="${SURFACE_RINDEX_OVERRIDE}" '
+    BEGIN {
+      if (value <= 0) {
+        printf "Invalid --surface-rindex: %s. Expected a positive number.\n", value > "/dev/stderr"
+        exit 1
+      }
+    }'
+fi
+if [[ -n "${SURFACE_RINDEX_CSV_OVERRIDE}" && ! -f "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+  echo "Missing --surface-rindex-csv file: ${SURFACE_RINDEX_CSV_OVERRIDE}" >&2
+  exit 1
+fi
+
+case "${OPTICAL_COUPLING}" in
+  none|ej550-grease)
+    ;;
+  *)
+    echo "Invalid --optical-coupling: ${OPTICAL_COUPLING}. Use none or ej550-grease." >&2
+    exit 1
+    ;;
+esac
+
+grease_absorption_model="${GREASE_ABSORPTION_MODEL_OVERRIDE}"
+if [[ -z "${grease_absorption_model}" ]]; then
+  if [[ -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+    grease_absorption_model="ej550-transmission-derived"
+  elif [[ "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+    grease_absorption_model="constant"
+  else
+    grease_absorption_model="transparent"
+  fi
+fi
+case "${grease_absorption_model}" in
+  transparent|constant|ej550-transmission-derived)
+    ;;
+  *)
+    echo "Invalid --grease-absorption-model: ${grease_absorption_model}. Use transparent, constant, or ej550-transmission-derived." >&2
+    exit 1
+    ;;
+esac
+
+if [[ "${OPTICAL_COUPLING}" == "none" ]]; then
+  if [[ -n "${GREASE_THICKNESS_OVERRIDE}" || -n "${GREASE_SIZE_OVERRIDE}" ||
+        -n "${GREASE_RINDEX_OVERRIDE}" || -n "${GREASE_RINDEX_CSV_OVERRIDE}" ||
+        -n "${GREASE_ABSORPTION_MODEL_OVERRIDE}" ||
+        -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ||
+        "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+    echo "Grease options require --optical-coupling ej550-grease." >&2
+    exit 1
+  fi
+else
+  if [[ "${DIMPLE_ENABLED}" == "1" && -n "${GREASE_THICKNESS_OVERRIDE}" ]]; then
+    echo "--grease-thickness is not used with --dimple; the curved gap determines the grease depth." >&2
+    exit 1
+  fi
+  if [[ "${DIMPLE_ENABLED}" != "1" && -z "${GREASE_THICKNESS_OVERRIDE}" ]]; then
+    echo "--optical-coupling ej550-grease requires --grease-thickness \"VALUE UNIT\"." >&2
+    exit 1
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" && -n "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    echo "Use either --grease-rindex or --grease-rindex-csv, not both." >&2
+    exit 1
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" ]]; then
+    if [[ ! "${GREASE_RINDEX_OVERRIDE}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-rindex: ${GREASE_RINDEX_OVERRIDE}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${GREASE_RINDEX_OVERRIDE}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-rindex: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+  fi
+  if [[ -n "${GREASE_RINDEX_CSV_OVERRIDE}" && ! -f "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    echo "Missing --grease-rindex-csv file: ${GREASE_RINDEX_CSV_OVERRIDE}" >&2
+    exit 1
+  fi
+
+  case "${grease_absorption_model}" in
+    transparent)
+      if [[ "${GREASE_ABS_LENGTH_SET}" == "1" || -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+        echo "--grease-absorption-model transparent cannot be combined with --grease-abs-length or --grease-transmission-csv." >&2
+        exit 1
+      fi
+      ;;
+    constant)
+      if [[ "${GREASE_ABS_LENGTH_SET}" != "1" ]]; then
+        echo "--grease-absorption-model constant requires --grease-abs-length \"VALUE UNIT\"." >&2
+        exit 1
+      fi
+      if [[ -n "${GREASE_TRANSMISSION_CSV_OVERRIDE}" ]]; then
+        echo "--grease-absorption-model constant cannot be combined with --grease-transmission-csv." >&2
+        exit 1
+      fi
+      ;;
+    ej550-transmission-derived)
+      if [[ "${GREASE_ABS_LENGTH_SET}" == "1" ]]; then
+        echo "--grease-absorption-model ej550-transmission-derived cannot be combined with --grease-abs-length." >&2
+        exit 1
+      fi
+      grease_transmission_csv_for_validation="${GREASE_TRANSMISSION_CSV_OVERRIDE:-${EJ550_TRANSMISSION_CSV}}"
+      if [[ ! -f "${grease_transmission_csv_for_validation}" ]]; then
+        echo "Missing EJ-550 transmission CSV: ${grease_transmission_csv_for_validation}." >&2
+        exit 1
+      fi
+      ;;
+  esac
+  if [[ "${DIMPLE_ENABLED}" != "1" ]]; then
+    read -r grease_thickness_value grease_thickness_unit grease_thickness_extra <<< "${GREASE_THICKNESS_OVERRIDE}"
+    if [[ -z "${grease_thickness_value:-}" || -z "${grease_thickness_unit:-}" || -n "${grease_thickness_extra:-}" ]]; then
+      echo "Invalid --grease-thickness: ${GREASE_THICKNESS_OVERRIDE}. Use quoted form like \"0.1 mm\"." >&2
+      exit 1
+    fi
+    if [[ ! "${grease_thickness_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-thickness value: ${grease_thickness_value}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${grease_thickness_value}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-thickness value: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_thickness_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-thickness unit: ${grease_thickness_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
+    read -r grease_size_u grease_size_v grease_size_unit grease_size_extra <<< "${GREASE_SIZE_OVERRIDE}"
+    if [[ -z "${grease_size_u:-}" || -z "${grease_size_v:-}" || -z "${grease_size_unit:-}" || -n "${grease_size_extra:-}" ]]; then
+      echo "Invalid --grease-size: ${GREASE_SIZE_OVERRIDE}. Use quoted form like \"2.4 2.4 mm\"." >&2
+      exit 1
+    fi
+    for grease_size_value in "${grease_size_u}" "${grease_size_v}"; do
+      if [[ ! "${grease_size_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+        echo "Invalid --grease-size value: ${grease_size_value}. Expected a positive number." >&2
+        exit 1
+      fi
+    done
+    awk -v u="${grease_size_u}" -v v="${grease_size_v}" '
+      BEGIN {
+        if (u <= 0 || v <= 0) {
+          printf "Invalid --grease-size dimensions: %s %s. Expected positive values.\n", u, v > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_size_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-size unit: ${grease_size_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  if [[ "${grease_absorption_model}" != "ej550-transmission-derived" ]]; then
+    read -r grease_abs_length_value grease_abs_length_unit grease_abs_length_extra <<< "${GREASE_ABS_LENGTH_OVERRIDE}"
+    if [[ -z "${grease_abs_length_value:-}" || -z "${grease_abs_length_unit:-}" || -n "${grease_abs_length_extra:-}" ]]; then
+      echo "Invalid --grease-abs-length: ${GREASE_ABS_LENGTH_OVERRIDE}. Use quoted form like \"1000 mm\"." >&2
+      exit 1
+    fi
+    if [[ ! "${grease_abs_length_value}" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+      echo "Invalid --grease-abs-length value: ${grease_abs_length_value}. Expected a positive number." >&2
+      exit 1
+    fi
+    awk -v value="${grease_abs_length_value}" '
+      BEGIN {
+        if (value <= 0) {
+          printf "Invalid --grease-abs-length value: %s. Expected a positive number.\n", value > "/dev/stderr"
+          exit 1
+        }
+      }'
+    case "${grease_abs_length_unit}" in
+      mm|cm)
+        ;;
+      *)
+        echo "Invalid --grease-abs-length unit: ${grease_abs_length_unit}. Use mm or cm." >&2
+        exit 1
+        ;;
+    esac
+  fi
 fi
 
 if [[ "${DIMPLE_ENABLED}" != "1" &&
@@ -654,8 +1742,8 @@ if [[ ! -f "${MACRO_GENERATOR}" ]]; then
   exit 1
 fi
 
-if [[ "${DRY_RUN}" != "1" && ! -x "./build/OpNovice2" ]]; then
-  echo "Missing executable: ./build/OpNovice2" >&2
+if [[ "${DRY_RUN}" != "1" && ! -x "${OPNOVICE2_EXECUTABLE}" ]]; then
+  echo "Missing executable: ${OPNOVICE2_EXECUTABLE}" >&2
   echo "Build first with: cmake -S . -B build && cmake --build build -j\$(nproc)" >&2
   exit 1
 fi
@@ -750,6 +1838,12 @@ shell_join() {
   done
 }
 
+sanitize_run_id_part() {
+  local value="$1"
+  value="${value//[^A-Za-z0-9_.-]/_}"
+  echo "${value}"
+}
+
 require_number() {
   local option="$1"
   local value="$2"
@@ -757,6 +1851,19 @@ require_number() {
     echo "Invalid ${option}: ${value}. Expected a number." >&2
     exit 1
   fi
+}
+
+require_nonnegative_number() {
+  local option="$1"
+  local value="$2"
+  require_number "${option}" "${value}"
+  awk -v option="${option}" -v value="${value}" '
+    BEGIN {
+      if (value < 0) {
+        printf "Invalid %s: %s. Expected a non-negative number.\n", option, value > "/dev/stderr"
+        exit 1
+      }
+    }'
 }
 
 require_number "ROOT_PLOT_FIDUCIAL_LIMIT_MM" "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
@@ -831,6 +1938,116 @@ length_to_unit() {
     }'
 }
 
+property_vector_from_wavelength_csv() {
+  local path="$1"
+  local value_column="$2"
+  local property_name="$3"
+  python3 - "$path" "$value_column" "$property_name" <<'PY'
+import csv
+import math
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+value_column = sys.argv[2]
+property_name = sys.argv[3]
+rows = []
+seen_wavelengths = set()
+with path.open(newline="", encoding="utf-8") as handle:
+    reader = csv.DictReader(row for row in handle if not row.lstrip().startswith("#"))
+    if reader.fieldnames is None:
+        raise SystemExit(f"{path} is missing a CSV header")
+    required = {"wavelength_nm", value_column}
+    missing = required.difference(reader.fieldnames)
+    if missing:
+        raise SystemExit(f"{path} is missing columns: {', '.join(sorted(missing))}")
+    for row in reader:
+        wavelength_text = (row.get("wavelength_nm") or "").strip()
+        value_text = (row.get(value_column) or "").strip()
+        if not wavelength_text and not value_text:
+            continue
+        wavelength_nm = float(wavelength_text)
+        value = float(value_text)
+        if wavelength_nm <= 0:
+            raise SystemExit(f"{path}: wavelength_nm must be positive")
+        if wavelength_nm in seen_wavelengths:
+            raise SystemExit(f"{path}: duplicate wavelength_nm {wavelength_nm:g}")
+        seen_wavelengths.add(wavelength_nm)
+        if not math.isfinite(value):
+            raise SystemExit(f"{path}: {value_column} must be finite")
+        if value_column == "reflectivity" and not (0.0 <= value <= 1.0):
+            raise SystemExit(f"{path}: reflectivity must be between 0 and 1")
+        if value_column == "rindex" and value <= 0.0:
+            raise SystemExit(f"{path}: rindex must be positive")
+        energy_mev = 1.239841984e-3 / wavelength_nm
+        rows.append((energy_mev, value))
+if len(rows) < 2:
+    raise SystemExit(f"{path}: expected at least two data rows")
+rows.sort(key=lambda item: item[0])
+parts = [property_name]
+for energy_mev, value in rows:
+    parts.extend((f"{energy_mev:.10g}", f"{value:.10g}"))
+print(" ".join(parts))
+PY
+}
+
+effective_abs_length_vector_from_transmission_csv() {
+  local path="$1"
+  local reference_thickness_mm="$2"
+  python3 - "$path" "$reference_thickness_mm" <<'PY'
+import csv
+import math
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+reference_thickness_mm = float(sys.argv[2])
+if not math.isfinite(reference_thickness_mm) or reference_thickness_mm <= 0.0:
+    raise SystemExit("reference transmission thickness must be positive")
+
+rows = []
+seen_wavelengths = set()
+with path.open(newline="", encoding="utf-8") as handle:
+    reader = csv.DictReader(row for row in handle if not row.lstrip().startswith("#"))
+    if reader.fieldnames is None:
+        raise SystemExit(f"{path} is missing a CSV header")
+    required = {"wavelength_nm", "transmission"}
+    missing = required.difference(reader.fieldnames)
+    if missing:
+        raise SystemExit(f"{path} is missing columns: {', '.join(sorted(missing))}")
+    for row in reader:
+        wavelength_text = (row.get("wavelength_nm") or "").strip()
+        transmission_text = (row.get("transmission") or "").strip()
+        if not wavelength_text and not transmission_text:
+            continue
+        wavelength_nm = float(wavelength_text)
+        transmission = float(transmission_text)
+        if wavelength_nm <= 0.0:
+            raise SystemExit(f"{path}: wavelength_nm must be positive")
+        if wavelength_nm in seen_wavelengths:
+            raise SystemExit(f"{path}: duplicate wavelength_nm {wavelength_nm:g}")
+        seen_wavelengths.add(wavelength_nm)
+        if not math.isfinite(transmission) or not (0.0 < transmission < 1.0):
+            raise SystemExit(f"{path}: transmission must be strictly between 0 and 1")
+        energy_mev = 1.239841984e-3 / wavelength_nm
+        abs_length_mm = -reference_thickness_mm / math.log(transmission)
+        rows.append((energy_mev, abs_length_mm))
+if len(rows) < 2:
+    raise SystemExit(f"{path}: expected at least two data rows")
+rows.sort(key=lambda item: item[0])
+parts = ["ABSLENGTH"]
+for energy_mev, abs_length_mm in rows:
+    parts.extend((f"{energy_mev:.10g}", f"{abs_length_mm:.10g}"))
+print(" ".join(parts))
+PY
+}
+
+constant_property_vector() {
+  local property_name="$1"
+  local value="$2"
+  printf '%s 0.0000020 %s 0.0000033 %s' "${property_name}" "${value}" "${value}"
+}
+
 infer_custom_beam_z() {
   local thickness_value thickness_unit thickness_grid offset_grid
 
@@ -860,7 +2077,18 @@ infer_custom_beam_z() {
   fi
 
   thickness_grid="$(length_to_unit "${thickness_value}" "${thickness_unit}" "${GRID_UNIT}")"
-  offset_grid="$(length_to_unit "1.5" "mm" "${GRID_UNIT}")"
+  if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+    offset_grid="$(length_to_unit "${ABSORBER_THICKNESS_MM}" "mm" "${GRID_UNIT}")"
+    awk -v t="${thickness_grid}" -v steel="${offset_grid}" \
+      -v clearance="$(length_to_unit "${SOURCE_CLEARANCE_MM}" "mm" "${GRID_UNIT}")" \
+      'BEGIN { printf "%.10g", 0.5 * 10 * (steel + t) + clearance }'
+    return
+  elif [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+    offset_grid="$(length_to_unit "${ABSORBER_THICKNESS_MM}" "mm" "${GRID_UNIT}")"
+    offset_grid="$(awk -v steel="${offset_grid}" -v clearance="$(length_to_unit "${SOURCE_CLEARANCE_MM}" "mm" "${GRID_UNIT}")" 'BEGIN { printf "%.10g", steel + clearance }')"
+  else
+    offset_grid="$(length_to_unit "1.5" "mm" "${GRID_UNIT}")"
+  fi
   awk -v t="${thickness_grid}" -v dz="${offset_grid}" 'BEGIN { printf "%.10g", 0.5 * t + dz }'
 }
 
@@ -874,12 +2102,6 @@ if [[ "${SOURCE_MODE}" == "auto" ]]; then
     echo "Expected /gps/pos/centre or /gun/position." >&2
     exit 1
   fi
-fi
-
-if [[ "${SOURCE_MODE}" == "gps" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" &&
-      "${ELECTRON_ENERGY_MODE_OVERRIDE}" != "fixed" ]]; then
-  echo "GPS scan mode currently supports fixed energy only; Sr-90 GPS is a Week 10 task." >&2
-  exit 1
 fi
 
 case "${SOURCE_MODE}" in
@@ -898,6 +2120,9 @@ case "${SOURCE_MODE}" in
 esac
 
 sipm_size="$(macro_value_after "/opnovice2/sipm/size")"
+if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then
+  sipm_size="${SIPM_SIZE_OVERRIDE}"
+fi
 read -r sipm_active_u sipm_active_v sipm_thickness sipm_unit _ <<< "${sipm_size}"
 
 if [[ -z "${sipm_active_u:-}" || -z "${sipm_active_v:-}" || -z "${sipm_unit:-}" ]]; then
@@ -970,11 +2195,88 @@ case "${GRID}" in
     ;;
 esac
 
+if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then
+  require_nonnegative_number "--beam-sigma" "${CUSTOM_BEAM_SIGMA}"
+  if awk -v sigma="${CUSTOM_BEAM_SIGMA}" 'BEGIN { exit(sigma > 0 ? 0 : 1) }'; then
+    BEAM_PROFILE="gaussian"
+    BEAM_SIGMA="${CUSTOM_BEAM_SIGMA}"
+  else
+    BEAM_PROFILE="point"
+    BEAM_SIGMA=""
+  fi
+fi
+
+if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]]; then
+  require_nonnegative_number "--beam-divergence-mrad" "${CUSTOM_BEAM_DIVERGENCE_MRAD}"
+  if awk -v sigma="${CUSTOM_BEAM_DIVERGENCE_MRAD}" 'BEGIN { exit(sigma > 0 ? 0 : 1) }'; then
+    BEAM_ANGULAR_MODEL="beam2d"
+    BEAM_DIVERGENCE_MRAD="${CUSTOM_BEAM_DIVERGENCE_MRAD}"
+  else
+    BEAM_ANGULAR_MODEL="pencil"
+    BEAM_DIVERGENCE_MRAD=""
+  fi
+fi
+
 X_MIN_VALUE="${XS[0]}"
 X_MAX_VALUE="${XS[$((${#XS[@]} - 1))]}"
 Y_MIN_VALUE="${YS[0]}"
 Y_MAX_VALUE="${YS[$((${#YS[@]} - 1))]}"
 POINT_COUNT=$(( ${#XS[@]} * ${#YS[@]} ))
+
+if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+  if [[ "${POINT_COUNT}" -ne 1 ]]; then
+    echo "--study-preset ${STUDY_PRESET} requires exactly one scan point per invocation so each physical point has its own explicit random stream." >&2
+    exit 1
+  fi
+
+  x_min_mm="$(length_to_unit "${X_MIN_VALUE}" "${GRID_UNIT}" "mm")"
+  x_max_mm="$(length_to_unit "${X_MAX_VALUE}" "${GRID_UNIT}" "mm")"
+  y_min_mm="$(length_to_unit "${Y_MIN_VALUE}" "${GRID_UNIT}" "mm")"
+  y_max_mm="$(length_to_unit "${Y_MAX_VALUE}" "${GRID_UNIT}" "mm")"
+  if [[ ( "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+          "${STUDY_PRESET}" == "steel-module-stack-v1" ) ]] &&
+      ! awk -v xmin="${x_min_mm}" -v xmax="${x_max_mm}" \
+        -v ymin="${y_min_mm}" -v ymax="${y_max_mm}" \
+        'BEGIN { exit(xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 ? 0 : 1) }'; then
+    echo "--study-preset ${STUDY_PRESET} locks the source to tile center x=0, y=0." >&2
+    exit 1
+  fi
+  max_abs_coordinate_mm="$(awk \
+    -v xmin="${x_min_mm}" -v xmax="${x_max_mm}" \
+    -v ymin="${y_min_mm}" -v ymax="${y_max_mm}" '
+      function abs(v) { return v < 0 ? -v : v }
+      BEGIN {
+        m = abs(xmin)
+        if (abs(xmax) > m) m = abs(xmax)
+        if (abs(ymin) > m) m = abs(ymin)
+        if (abs(ymax) > m) m = abs(ymax)
+        printf "%.10g", m
+      }')"
+  MIN_ABSORBER_EDGE_DISTANCE_MM="$(awk \
+    -v size="${ABSORBER_TRANSVERSE_MM}" -v maxabs="${max_abs_coordinate_mm}" \
+    'BEGIN { printf "%.10g", 0.5 * size - maxabs }')"
+  if ! awk -v margin="${MIN_ABSORBER_EDGE_DISTANCE_MM}" \
+      'BEGIN { exit(margin > 0 ? 0 : 1) }'; then
+    echo "Requested source positions extend outside the absorber footprint; nominal edge distance is ${MIN_ABSORBER_EDGE_DISTANCE_MM} mm." >&2
+    exit 1
+  fi
+
+  source_z_mm="$(length_to_unit "${Z0}" "${GRID_UNIT}" "mm")"
+  if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+    absorber_upstream_z_mm="$(awk \
+      -v tile="${TILE_THICKNESS_MM}" -v steel="${ABSORBER_THICKNESS_MM}" \
+      'BEGIN { printf "%.10g", 0.5 * 10 * (tile + steel) }')"
+  else
+    absorber_upstream_z_mm="$(awk \
+      -v tile="${TILE_THICKNESS_MM}" -v steel="${ABSORBER_THICKNESS_MM}" \
+      'BEGIN { printf "%.10g", 0.5 * tile + steel }')"
+  fi
+  if ! awk -v source="${source_z_mm}" -v upstream="${absorber_upstream_z_mm}" \
+      'BEGIN { exit(source > upstream && source < 500 ? 0 : 1) }'; then
+    echo "Resolved neutron source z=${source_z_mm} mm must be strictly upstream of the steel at z=${absorber_upstream_z_mm} mm and inside the world." >&2
+    exit 1
+  fi
+fi
 
 if [[ "${SOURCE_MODE}" == "gps" ]]; then
   SCAN_NAME="${SCAN_NAME} (GPS source)"
@@ -983,12 +2285,19 @@ else
   PREFIX="${PREFIX_ROOT}_${GRID}"
 fi
 RUN_TIMESTAMP="$(date -u +"%Y%m%d_%H%M%SZ")"
-RUN_ID="${RUN_TIMESTAMP}_${PREFIX}"
-RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
-if [[ -e "${RUN_DIR}" ]]; then
-  RUN_ID="${RUN_ID}_$$"
-  RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+RUN_ID_BASE="${RUN_TIMESTAMP}_${PREFIX}"
+if [[ -n "${SCAN_RUN_ID_SUFFIX}" ]]; then
+  RUN_ID_BASE="${RUN_ID_BASE}_$(sanitize_run_id_part "${SCAN_RUN_ID_SUFFIX}")"
 fi
+RUN_ID="${RUN_ID_BASE}"
+RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+mkdir -p "${SCAN_RUNS_DIR}"
+run_id_attempt=0
+while ! mkdir "${RUN_DIR}" 2>/dev/null; do
+  run_id_attempt=$((run_id_attempt + 1))
+  RUN_ID="${RUN_ID_BASE}_$$_${run_id_attempt}"
+  RUN_DIR="${SCAN_RUNS_DIR}/${RUN_ID}"
+done
 MACRO_DIR="${RUN_DIR}/macros"
 ROOT_DIR="${RUN_DIR}/outputs"
 LOG_DIR="${RUN_DIR}/logs"
@@ -1013,12 +2322,111 @@ if [[ "${SOURCE_MODE}" == "gps" ]]; then
 elif [[ -z "${electron_energy_mode}" ]]; then
   electron_energy_mode="fixed"
 fi
+source_model="fixed-electron"
+if [[ "${electron_energy_mode}" == "sr90Beta" ]]; then
+  source_model="sr90-empirical"
+fi
+if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then
+  source_model="${SOURCE_MODEL_OVERRIDE}"
+  case "${source_model}" in
+    fixed-electron|sr90-spectrum|sr90-decay|realistic-neutron-v1|steel-module-scan-v1|steel-module-stack-v1)
+      electron_energy_mode="fixed"
+      ;;
+    sr90-empirical)
+      electron_energy_mode="sr90Beta"
+      ;;
+  esac
+fi
+if [[ "${source_model}" == "sr90-decay" && -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
+  echo "--electron-energy-mode is incompatible with --source-model sr90-decay; decay mode uses a Sr-90 ion primary." >&2
+  exit 1
+fi
+if [[ "${source_model}" == "sr90-decay" && "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+  echo "--beam-divergence-mrad is incompatible with --source-model sr90-decay; decay beta directions come from radioactive decay physics." >&2
+  exit 1
+fi
 if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then
-  if [[ "${ELECTRON_ENERGY_MODE_OVERRIDE}" == "sr90" ]]; then
-    electron_energy_mode="sr90Beta"
-  else
-    electron_energy_mode="${ELECTRON_ENERGY_MODE_OVERRIDE}"
+  case "${ELECTRON_ENERGY_MODE_OVERRIDE}" in
+    fixed)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" == "sr90-empirical" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode fixed." >&2
+        exit 1
+      fi
+      if [[ -z "${SOURCE_MODEL_OVERRIDE}" ]]; then
+        source_model="fixed-electron"
+      fi
+      electron_energy_mode="fixed"
+      ;;
+    sr90Spectrum)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" != "sr90-spectrum" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode sr90Spectrum." >&2
+        exit 1
+      fi
+      source_model="sr90-spectrum"
+      electron_energy_mode="fixed"
+      ;;
+    sr90Beta|sr90|sr90Empirical)
+      if [[ -n "${SOURCE_MODEL_OVERRIDE}" && "${source_model}" != "sr90-empirical" ]]; then
+        echo "Conflicting source options: --source-model ${source_model} with --electron-energy-mode ${ELECTRON_ENERGY_MODE_OVERRIDE}." >&2
+        exit 1
+      fi
+      source_model="sr90-empirical"
+      electron_energy_mode="sr90Beta"
+      ;;
+  esac
+fi
+if [[ "${source_model}" == "sr90-spectrum" ]]; then
+  if [[ "${SOURCE_MODE}" != "gps" ]]; then
+    echo "--source-model sr90-spectrum requires --source-mode gps." >&2
+    exit 1
   fi
+  if [[ "${primary_particle}" != "e-" ]]; then
+    echo "--source-model sr90-spectrum requires primary particle e-, but template resolves ${primary_particle}." >&2
+    exit 1
+  fi
+  if [[ ! -f "${SR90_SPECTRUM_TABLE}" ]]; then
+    echo "Missing Sr-90 spectrum table: ${SR90_SPECTRUM_TABLE}. Run python3 generate_sr90_spectrum.py first." >&2
+    exit 1
+  fi
+  if [[ ! -f "${SR90_SPECTRUM_GPS_MACRO}" ]]; then
+    echo "Missing Sr-90 GPS histogram fragment: ${SR90_SPECTRUM_GPS_MACRO}. Run python3 generate_sr90_spectrum.py first." >&2
+    exit 1
+  fi
+  if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+    echo "--primary-energy is incompatible with --source-model sr90-spectrum; the GPS histogram defines the energy spectrum." >&2
+    exit 1
+  fi
+  primary_energy="${SR90_SPECTRUM_MODEL} spectrum"
+fi
+if [[ "${source_model}" == "sr90-decay" ]]; then
+  if [[ "${SOURCE_MODE}" != "gps" ]]; then
+    echo "--source-model sr90-decay requires --source-mode gps." >&2
+    exit 1
+  fi
+  if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+    echo "--primary-energy is incompatible with --source-model sr90-decay; the GPS ion is created at rest." >&2
+    exit 1
+  fi
+  primary_particle="ion"
+  primary_energy="${SR90_DECAY_PRIMARY_ION} ion at rest"
+fi
+if [[ "${source_model}" == "realistic-neutron-v1" ||
+      "${source_model}" == "steel-module-scan-v1" ||
+      "${source_model}" == "steel-module-stack-v1" ]]; then
+  if [[ "${SOURCE_MODE}" != "gps" ]]; then
+    echo "--study-preset ${STUDY_PRESET} requires the GPS source." >&2
+    exit 1
+  fi
+  primary_particle="neutron"
+  if [[ "${source_model}" == "realistic-neutron-v1" ]]; then
+    primary_energy="${NEUTRON_KINETIC_ENERGY_MEV} MeV"
+  else
+    primary_energy="${STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV} MeV"
+  fi
+  electron_energy_mode="fixed"
+fi
+if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then
+  primary_energy="${PRIMARY_ENERGY_OVERRIDE}"
 fi
 if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then
   sipm_face="${SIPM_FACE_OVERRIDE}"
@@ -1047,6 +2455,17 @@ surface_sigma_alpha="${template_surface_sigma_alpha}"
 surface_reflectivity=""
 surface_reflectivity_energy_min=""
 surface_reflectivity_energy_max=""
+surface_reflectivity_model="none"
+surface_reflectivity_csv=""
+surface_reflectivity_vector=""
+surface_reflectivity_source=""
+surface_reflectivity_digitization=""
+surface_layer_rindex_model="none"
+surface_layer_rindex_source=""
+surface_layer_rindex=""
+surface_layer_rindex_csv=""
+surface_layer_rindex_vector=""
+surface_layer_rindex_caveat=""
 if [[ -n "${surface_preset}" ]]; then
   surface_model="unified"
   surface_type="dielectric_dielectric"
@@ -1065,6 +2484,243 @@ if [[ -n "${surface_preset}" ]]; then
       surface_reflectivity="0.95"
       surface_reflectivity_energy_min="0.0000020 MeV"
       surface_reflectivity_energy_max="0.0000033 MeV"
+      ;;
+    polishedfrontpainted)
+      surface_finish="polishedfrontpainted"
+      surface_sigma_alpha="0.0"
+      ;;
+    groundfrontpainted)
+      surface_finish="groundfrontpainted"
+      surface_sigma_alpha="0.2"
+      ;;
+    polishedbackpainted)
+      surface_finish="polishedbackpainted"
+      surface_sigma_alpha="0.0"
+      ;;
+    groundbackpainted)
+      surface_finish="groundbackpainted"
+      surface_sigma_alpha="0.2"
+      ;;
+  esac
+fi
+if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" ]]; then
+  surface_reflectivity_model="${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}"
+elif [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+  surface_reflectivity_model="constant"
+elif [[ -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+  surface_reflectivity_model="ej510-empirical"
+else
+  case "${surface_preset}" in
+    wrapped)
+      surface_reflectivity_model="constant"
+      ;;
+    polishedfrontpainted|groundfrontpainted|polishedbackpainted|groundbackpainted)
+      surface_reflectivity_model="ej510-empirical"
+      ;;
+    *)
+      surface_reflectivity_model="none"
+      ;;
+  esac
+fi
+case "${surface_reflectivity_model}" in
+  none)
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model none cannot be combined with --surface-reflectivity or --surface-reflectivity-csv." >&2
+      exit 1
+    fi
+    surface_reflectivity=""
+    surface_reflectivity_energy_min=""
+    surface_reflectivity_energy_max=""
+    surface_reflectivity_vector=""
+    ;;
+  constant)
+    if [[ -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model constant cannot be combined with --surface-reflectivity-csv." >&2
+      exit 1
+    fi
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+      surface_reflectivity="${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}"
+    elif [[ "${surface_preset}" == "wrapped" ]]; then
+      surface_reflectivity="0.95"
+    else
+      echo "--surface-reflectivity-model constant requires --surface-reflectivity VALUE." >&2
+      exit 1
+    fi
+    surface_reflectivity_energy_min="0.0000020 MeV"
+    surface_reflectivity_energy_max="0.0000033 MeV"
+    surface_reflectivity_vector="$(constant_property_vector REFLECTIVITY "${surface_reflectivity}")"
+    ;;
+  ej510-empirical)
+    if [[ -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" ]]; then
+      echo "--surface-reflectivity-model ej510-empirical cannot be combined with --surface-reflectivity." >&2
+      exit 1
+    fi
+    surface_reflectivity_csv="${SURFACE_REFLECTIVITY_CSV_OVERRIDE:-${EJ510_REFLECTIVITY_CSV}}"
+    if [[ ! -f "${surface_reflectivity_csv}" ]]; then
+      echo "Missing EJ-510 reflectivity CSV: ${surface_reflectivity_csv}. Pass --surface-reflectivity-csv or fill the default optical data file." >&2
+      exit 1
+    fi
+    surface_reflectivity=""
+    surface_reflectivity_energy_min=""
+    surface_reflectivity_energy_max=""
+    surface_reflectivity_vector="$(property_vector_from_wavelength_csv "${surface_reflectivity_csv}" reflectivity REFLECTIVITY)"
+    if [[ "${surface_reflectivity_csv}" == "${EJ510_REFLECTIVITY_CSV}" ]]; then
+      surface_reflectivity_source="${EJ510_REFLECTIVITY_SOURCE_URL}"
+      surface_reflectivity_digitization="manufacturer_plot_digitized_approximate"
+    else
+      surface_reflectivity_source="user_csv"
+      surface_reflectivity_digitization="unspecified"
+    fi
+    ;;
+esac
+
+case "${surface_finish}" in
+  polishedbackpainted|groundbackpainted)
+    if [[ -n "${SURFACE_RINDEX_OVERRIDE}" ]]; then
+      surface_layer_rindex="${SURFACE_RINDEX_OVERRIDE}"
+      if [[ "${surface_layer_rindex}" == "${BACKPAINTED_AIR_RINDEX}" ]]; then
+        surface_layer_rindex_model="air-gap-proxy-explicit"
+        surface_layer_rindex_source="lab_setup_assumption"
+        surface_layer_rindex_caveat="${BACKPAINTED_AIR_GAP_CAVEAT}"
+      else
+        surface_layer_rindex_model="constant-override"
+        surface_layer_rindex_source="cli"
+        surface_layer_rindex_caveat="${BACKPAINTED_MODEL_CAVEAT}"
+      fi
+      surface_layer_rindex_vector="$(constant_property_vector RINDEX "${surface_layer_rindex}")"
+    elif [[ -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+      surface_layer_rindex_model="csv-override"
+      surface_layer_rindex_source="user_csv"
+      surface_layer_rindex_caveat="${BACKPAINTED_MODEL_CAVEAT}"
+      surface_layer_rindex_csv="${SURFACE_RINDEX_CSV_OVERRIDE}"
+      surface_layer_rindex_vector="$(property_vector_from_wavelength_csv "${surface_layer_rindex_csv}" rindex RINDEX)"
+    else
+      surface_layer_rindex_model="air-gap-proxy"
+      surface_layer_rindex_source="lab_setup_assumption"
+      surface_layer_rindex_caveat="${BACKPAINTED_AIR_GAP_CAVEAT}"
+      surface_layer_rindex="${BACKPAINTED_AIR_RINDEX}"
+      surface_layer_rindex_vector="$(constant_property_vector RINDEX "${surface_layer_rindex}")"
+    fi
+    ;;
+  *)
+    if [[ -n "${SURFACE_RINDEX_OVERRIDE}" || -n "${SURFACE_RINDEX_CSV_OVERRIDE}" ]]; then
+      echo "--surface-rindex and --surface-rindex-csv are supported only for polishedbackpainted or groundbackpainted surfaces." >&2
+      exit 1
+    fi
+    ;;
+esac
+grease_enabled=false
+grease_geometry_model="none"
+grease_geometry_caveat=""
+grease_thickness=""
+grease_size=""
+grease_size_macro=""
+grease_rindex_model="none"
+grease_rindex_source=""
+grease_rindex_csv=""
+grease_rindex=""
+grease_rindex_vector=""
+grease_absorption_model_resolved="none"
+grease_abs_length=""
+grease_abs_length_mm=""
+grease_abs_length_vector=""
+grease_transmission_csv=""
+grease_transmission_source=""
+grease_transmission_reference_thickness_mm=""
+grease_abs_length_derivation=""
+if [[ ( "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+        "${STUDY_PRESET}" == "steel-module-stack-v1" ) &&
+      "${OPTICAL_COUPLING}" == "none" ]]; then
+  grease_geometry_model="undimpled-zero-gap-ej550-proxy"
+  grease_geometry_caveat="No explicit grease solid; this intentionally reproduces the previous lab-optimization coupling proxy because the physical EJ-550 layer thickness is not fixed."
+fi
+if [[ "${OPTICAL_COUPLING}" == "ej550-grease" ]]; then
+  grease_enabled=true
+  grease_absorption_model_resolved="${grease_absorption_model}"
+  if [[ "${MODE}" != "full" ]]; then
+    echo "--optical-coupling ej550-grease is supported only with MODE=full geometry." >&2
+    exit 1
+  fi
+  if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
+    grease_geometry_model="dimple-gap"
+    grease_geometry_caveat="curved_spherical_gap_clipped_to_sipm_active_footprint"
+  else
+    grease_geometry_model="flat-pad"
+    grease_geometry_caveat="uniform_thickness_pad_between_flat_tile_and_sipm"
+  fi
+  if [[ "${sipm_face}" != "-Z" ]]; then
+    echo "--optical-coupling ej550-grease supports only bottom-center --sipm-face -Z; resolved face is ${sipm_face}." >&2
+    exit 1
+  fi
+  read -r grease_sipm_local_x grease_sipm_local_y grease_sipm_local_z grease_sipm_local_unit grease_sipm_local_extra <<< "${sipm_local}"
+  if [[ -z "${grease_sipm_local_x:-}" || -z "${grease_sipm_local_y:-}" ||
+        -z "${grease_sipm_local_z:-}" || -z "${grease_sipm_local_unit:-}" ||
+        -n "${grease_sipm_local_extra:-}" ]]; then
+    echo "Could not parse resolved SiPM local position for grease validation: ${sipm_local}" >&2
+    exit 1
+  fi
+  require_number "resolved SiPM local x" "${grease_sipm_local_x}"
+  require_number "resolved SiPM local y" "${grease_sipm_local_y}"
+  require_number "resolved SiPM local z" "${grease_sipm_local_z}"
+  grease_sipm_local_x_mm="$(length_to_unit "${grease_sipm_local_x}" "${grease_sipm_local_unit}" "mm")"
+  grease_sipm_local_y_mm="$(length_to_unit "${grease_sipm_local_y}" "${grease_sipm_local_unit}" "mm")"
+  grease_sipm_local_z_mm="$(length_to_unit "${grease_sipm_local_z}" "${grease_sipm_local_unit}" "mm")"
+  awk -v x="${grease_sipm_local_x_mm}" -v y="${grease_sipm_local_y_mm}" -v z="${grease_sipm_local_z_mm}" '
+    BEGIN {
+      if (x < 0) x = -x
+      if (y < 0) y = -y
+      if (z < 0) z = -z
+      if (x > 1e-9 || y > 1e-9 || z > 1e-9) {
+        printf "EJ-550 grease coupling supports only --sipm-local-position \"0 0 0 unit\".\n" > "/dev/stderr"
+        exit 1
+      }
+    }'
+
+  if [[ "${grease_geometry_model}" == "flat-pad" ]]; then
+    grease_thickness="${GREASE_THICKNESS_OVERRIDE}"
+  fi
+  if [[ -n "${GREASE_SIZE_OVERRIDE}" ]]; then
+    grease_size="${grease_size_u} ${grease_size_v} ${grease_size_unit}"
+    grease_size_macro="${grease_size_u} ${grease_size_v} 0 ${grease_size_unit}"
+  fi
+  if [[ -n "${GREASE_RINDEX_OVERRIDE}" ]]; then
+    grease_rindex_model="constant-override"
+    grease_rindex_source="cli"
+    grease_rindex="${GREASE_RINDEX_OVERRIDE}"
+    grease_rindex_vector="$(constant_property_vector RINDEX "${grease_rindex}")"
+  elif [[ -n "${GREASE_RINDEX_CSV_OVERRIDE}" ]]; then
+    grease_rindex_model="csv-override"
+    grease_rindex_source="user_csv"
+    grease_rindex_csv="${GREASE_RINDEX_CSV_OVERRIDE}"
+    grease_rindex_vector="$(property_vector_from_wavelength_csv "${grease_rindex_csv}" rindex RINDEX)"
+  else
+    grease_rindex_model="ej550-official-constant"
+    grease_rindex_source="https://eljentechnology.com/images/products/data_sheets/EJ-550_EJ-552.pdf"
+    grease_rindex="${EJ550_OFFICIAL_RINDEX}"
+    grease_rindex_vector="$(constant_property_vector RINDEX "${grease_rindex}")"
+  fi
+  case "${grease_absorption_model_resolved}" in
+    transparent)
+      grease_abs_length="${GREASE_ABS_LENGTH_OVERRIDE}"
+      grease_abs_length_mm="$(length_to_unit "${grease_abs_length_value}" "${grease_abs_length_unit}" "mm")"
+      grease_abs_length_vector="$(constant_property_vector ABSLENGTH "${grease_abs_length_mm}")"
+      ;;
+    constant)
+      grease_abs_length="${GREASE_ABS_LENGTH_OVERRIDE}"
+      grease_abs_length_mm="$(length_to_unit "${grease_abs_length_value}" "${grease_abs_length_unit}" "mm")"
+      grease_abs_length_vector="$(constant_property_vector ABSLENGTH "${grease_abs_length_mm}")"
+      ;;
+    ej550-transmission-derived)
+      grease_transmission_csv="${GREASE_TRANSMISSION_CSV_OVERRIDE:-${EJ550_TRANSMISSION_CSV}}"
+      if [[ "${grease_transmission_csv}" == "${EJ550_TRANSMISSION_CSV}" ]]; then
+        grease_transmission_source="${EJ550_TRANSMISSION_SOURCE_URL}"
+      else
+        grease_transmission_source="user_csv"
+      fi
+      grease_transmission_reference_thickness_mm="${EJ550_TRANSMISSION_REFERENCE_THICKNESS_MM}"
+      grease_abs_length_derivation="beer_lambert_L=-reference_thickness/ln(transmission)"
+      grease_abs_length_vector="$(effective_abs_length_vector_from_transmission_csv \
+        "${grease_transmission_csv}" "${grease_transmission_reference_thickness_mm}")"
       ;;
   esac
 fi
@@ -1219,9 +2875,12 @@ COMMAND_ENV=(
   "N_EVENTS=${N_EVENTS}"
   "DRY_RUN=${DRY_RUN}"
   "SOURCE_MODE=${SOURCE_MODE}"
+  "OPNOVICE2_EXECUTABLE=${OPNOVICE2_EXECUTABLE}"
   "PLOT_WITH_ROOT=${PLOT_WITH_ROOT}"
   "ROOT_COMMAND=${ROOT_COMMAND}"
   "ROOT_PLOT_FIDUCIAL_LIMIT_MM=${ROOT_PLOT_FIDUCIAL_LIMIT_MM}"
+  "G4RUN_MANAGER_TYPE=${G4RUN_MANAGER_TYPE:-}"
+  "SCAN_RUN_ID_SUFFIX=${SCAN_RUN_ID_SUFFIX}"
 )
 COMMAND_SHELL="$(shell_join "${COMMAND_ENV[@]}" "${COMMAND_ARGV[@]}")"
 
@@ -1247,6 +2906,62 @@ mkdir -p "${MACRO_DIR}" "${ROOT_DIR}" "${LOG_DIR}"
 write_run_config() {
   {
     printf '{\n'
+    printf '  "schema_version": "%s",\n' "${RUN_CONFIG_SCHEMA_VERSION}"
+    printf '  "event_schema_version": "%s",\n' "${EVENT_SCHEMA_VERSION}"
+    printf '  "study_preset": '
+    if [[ -n "${STUDY_PRESET}" ]]; then
+      printf '"%s"' "$(json_string "${STUDY_PRESET}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '  "campaign": {\n'
+    printf '    "campaign_id": '
+    if [[ -n "${CAMPAIGN_ID}" ]]; then printf '"%s"' "$(json_string "${CAMPAIGN_ID}")"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "stage": '
+    if [[ -n "${CAMPAIGN_STAGE}" ]]; then printf '"%s"' "$(json_string "${CAMPAIGN_STAGE}")"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "logical_task_id": '
+    if [[ -n "${LOGICAL_TASK_ID}" ]]; then printf '"%s"' "$(json_string "${LOGICAL_TASK_ID}")"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "configuration_hash": '
+    if [[ -n "${CONFIGURATION_HASH}" ]]; then printf '"%s"' "${CONFIGURATION_HASH}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "seed_block": '
+    if [[ -n "${SEED_BLOCK}" ]]; then printf '%s' "${SEED_BLOCK}"; else printf 'null'; fi
+    printf '\n'
+    printf '  },\n'
+    printf '  "execution": {\n'
+    printf '    "formal_campaign_task": %s,\n' "$(if [[ "${execution_metadata_count}" -eq 10 ]]; then echo true; else echo false; fi)"
+    printf '    "attempt_id": '
+    if [[ -n "${RN_ATTEMPT_ID:-}" ]]; then printf '"%s"' "$(json_string "${RN_ATTEMPT_ID}")"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "logical_task_index": '
+    if [[ -n "${RN_LOGICAL_TASK_INDEX:-}" ]]; then printf '%s' "${RN_LOGICAL_TASK_INDEX}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "plan_hash": '
+    if [[ -n "${RN_PLAN_HASH:-}" ]]; then printf '"%s"' "${RN_PLAN_HASH}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "git_commit": '
+    if [[ -n "${RN_GIT_COMMIT:-}" ]]; then printf '"%s"' "${RN_GIT_COMMIT}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "environment_mode": '
+    if [[ -n "${RN_ENVIRONMENT_MODE:-}" ]]; then printf '"%s"' "$(json_string "${RN_ENVIRONMENT_MODE}")"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "environment_identity": '
+    if [[ -n "${RN_ENVIRONMENT_IDENTITY:-}" ]]; then printf '"%s"' "${RN_ENVIRONMENT_IDENTITY}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "image_sha256": '
+    if [[ -n "${RN_IMAGE_SHA256:-}" ]]; then printf '"%s"' "${RN_IMAGE_SHA256}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "g4_data_manifest_sha256": '
+    if [[ -n "${RN_G4_DATA_MANIFEST_SHA256:-}" ]]; then printf '"%s"' "${RN_G4_DATA_MANIFEST_SHA256}"; else printf 'null'; fi
+    printf ',\n'
+    printf '    "executable_sha256": '
+    if [[ -n "${RN_EXECUTABLE_SHA256:-}" ]]; then printf '"%s"' "${RN_EXECUTABLE_SHA256}"; else printf 'null'; fi
+    printf '\n'
+    printf '  },\n'
     printf '  "generated_at_utc": "%s",\n' "$(json_string "${generated_at}")"
     printf '  "command": {\n'
     printf '    "argv": '
@@ -1259,7 +2974,9 @@ write_run_config() {
     printf '      "SOURCE_MODE": "%s",\n' "$(json_string "${SOURCE_MODE}")"
     printf '      "PLOT_WITH_ROOT": "%s",\n' "$(json_string "${PLOT_WITH_ROOT}")"
     printf '      "ROOT_COMMAND": "%s",\n' "$(json_string "${ROOT_COMMAND}")"
-    printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s"\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '      "ROOT_PLOT_FIDUCIAL_LIMIT_MM": "%s",\n' "$(json_string "${ROOT_PLOT_FIDUCIAL_LIMIT_MM}")"
+    printf '      "G4RUN_MANAGER_TYPE": "%s",\n' "$(json_string "${G4RUN_MANAGER_TYPE:-}")"
+    printf '      "SCAN_RUN_ID_SUFFIX": "%s"\n' "$(json_string "${SCAN_RUN_ID_SUFFIX}")"
     printf '    }\n'
     printf '  },\n'
     printf '  "scan_name": "%s",\n' "$(json_string "${SCAN_NAME}")"
@@ -1272,13 +2989,21 @@ write_run_config() {
     printf '  "run_dir": "%s",\n' "$(json_string "${RUN_DIR}")"
     printf '  "dry_run": %s,\n' "$(if [[ "${DRY_RUN}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  "overrides": {\n'
+    printf '    "sipm_study_layout": %s,\n' "$(if [[ -n "${SIPM_STUDY_LAYOUT}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_face": %s,\n' "$(if [[ -n "${SIPM_FACE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_cavity_mode": %s,\n' "$(if [[ -n "${SIPM_CAVITY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "sipm_local_position": %s,\n' "$(if [[ -n "${SIPM_LOCAL_POSITION_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "sipm_size": %s,\n' "$(if [[ -n "${SIPM_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size": %s,\n' "$(if [[ -n "${TANK_SIZE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "tank_size_preset": %s,\n' "$(if [[ -n "${TANK_SIZE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "primary_energy": %s,\n' "$(if [[ -n "${PRIMARY_ENERGY_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "source_model": %s,\n' "$(if [[ -n "${SOURCE_MODEL_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "electron_energy_mode": %s,\n' "$(if [[ -n "${ELECTRON_ENERGY_MODE_OVERRIDE}" ]]; then echo true; else echo false; fi)"
     printf '    "surface_preset": %s,\n' "$(if [[ -n "${SURFACE_PRESET_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "surface_reflectivity": %s,\n' "$(if [[ -n "${SURFACE_REFLECTIVITY_MODEL_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_VALUE_OVERRIDE}" || -n "${SURFACE_REFLECTIVITY_CSV_OVERRIDE}" ]]; then echo true; else echo false; fi)"
+    printf '    "optical_coupling": %s,\n' "$(if [[ "${OPTICAL_COUPLING}" != "none" ]]; then echo true; else echo false; fi)"
+    printf '    "beam_sigma": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_SIGMA}" ]]; then echo true; else echo false; fi)"
+    printf '    "beam_divergence_mrad": %s,\n' "$(if [[ -n "${CUSTOM_BEAM_DIVERGENCE_MRAD}" ]]; then echo true; else echo false; fi)"
     printf '    "dimple": %s\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
     printf '  "git": {\n'
@@ -1289,6 +3014,165 @@ write_run_config() {
     printf '  "simulation": {\n'
     printf '    "events_per_point": %s,\n' "${N_EVENTS}"
     printf '    "scintillation_yield_per_mev": %s,\n' "${scint_yield}"
+    printf '    "source_model": "%s",\n' "$(json_string "${source_model}")"
+    printf '    "authoritative_source_quantity": '
+    if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+      printf '"momentum"'
+    elif [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+            "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '"kinetic_energy"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "authoritative_momentum_gev_c": '
+    if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+      printf '%s' "${NEUTRON_MOMENTUM_GEV_C}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "authoritative_kinetic_energy_mev": '
+    if [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+          "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '%s' "${STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "derived_momentum_gev_c": '
+    if [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+          "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '%s' "${STEEL_MODULE_NEUTRON_MOMENTUM_GEV_C}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "derived_total_energy_gev": '
+    if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+      printf '%s' "${NEUTRON_TOTAL_ENERGY_GEV}"
+    elif [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+            "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '%s' "${STEEL_MODULE_NEUTRON_TOTAL_ENERGY_GEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "gps_kinetic_energy_mev": '
+    if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+      printf '%s' "${NEUTRON_KINETIC_ENERGY_MEV}"
+    elif [[ "${STUDY_PRESET}" == "steel-module-scan-v1" ||
+            "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '%s' "${STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "derived_gps_kinetic_energy_mev": '
+    if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+      printf '%s' "${NEUTRON_KINETIC_ENERGY_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "spectrum_model": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "spectrum_table_path": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_TABLE}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "spectrum_gps_fragment_path": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_SPECTRUM_GPS_MACRO}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "sr90_endpoint_mev": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_ENDPOINT_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "y90_endpoint_mev": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${Y90_ENDPOINT_MEV}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "sr90_activity_weight": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_ACTIVITY_WEIGHT}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "y90_activity_weight": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${Y90_ACTIVITY_WEIGHT}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "fermi_correction": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '%s' "${SR90_FERMI_CORRECTION}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "incident_transport_model": '
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      printf '"%s"' "$(json_string "${SR90_INCIDENT_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_model": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_MODEL}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_primary_ion": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_PRIMARY_ION}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_gps_ion": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_GPS_ION}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_rdm_threshold_for_very_long_decay_time": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_RDM_TIME_THRESHOLD}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "decay_expected_chain": '
+    if [[ "${source_model}" == "sr90-decay" ]]; then
+      printf '"%s"' "$(json_string "${SR90_DECAY_EXPECTED_CHAIN}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
     printf '    "primary_particle": "%s",\n' "$(json_string "${primary_particle}")"
     printf '    "primary_energy": "%s",\n' "$(json_string "${primary_energy}")"
     printf '    "electron_energy_mode": "%s",\n' "$(json_string "${electron_energy_mode}")"
@@ -1296,7 +3180,80 @@ write_run_config() {
     printf '    "beam_z": "%s %s",\n' "$(format_num "${Z0}")" "$(json_string "${GRID_UNIT}")"
     printf '    "beam_z_inferred": %s\n' "$(if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then echo true; else echo false; fi)"
     printf '  },\n'
+    printf '  "random": {\n'
+    printf '    "explicit_seed_pair": %s,\n' "$(if [[ -n "${RANDOM_SEED_1}" ]]; then echo true; else echo false; fi)"
+    printf '    "seed1": '
+    if [[ -n "${RANDOM_SEED_1}" ]]; then
+      printf '%s' "${RANDOM_SEED_1}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "seed2": '
+    if [[ -n "${RANDOM_SEED_2}" ]]; then
+      printf '%s' "${RANDOM_SEED_2}"
+    else
+      printf 'null'
+    fi
+    printf '\n'
+    printf '  },\n'
+    printf '  "beam": {\n'
+    printf '    "profile": "%s",\n' "$(json_string "${BEAM_PROFILE}")"
+    printf '    "sigma": '
+    if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+      printf '%s' "$(format_num "${BEAM_SIGMA}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "unit": "%s",\n' "$(json_string "${GRID_UNIT}")"
+    printf '    "angular_model": "%s",\n' "$(json_string "${BEAM_ANGULAR_MODEL}")"
+    printf '    "divergence_parameter": '
+    if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+      printf '"sigma_x=sigma_y"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "divergence_mrad": '
+    if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+      printf '%s' "$(format_num "${BEAM_DIVERGENCE_MRAD}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "direction": "%s"\n' "$(json_string "${BEAM_DIRECTION}")"
+    printf '  },\n'
     printf '  "sipm": {\n'
+    printf '    "study_layout": '
+    if [[ -n "${SIPM_STUDY_LAYOUT}" ]]; then
+      printf '"%s"' "$(json_string "${SIPM_STUDY_LAYOUT}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "detector_layout": "%s",\n' "$(json_string "${DETECTOR_SIPM_LAYOUT}")"
+    printf '    "sensor_count": %s,\n' "$(if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then echo 20; elif [[ "${DETECTOR_SIPM_LAYOUT}" == "back-four" ]]; then echo 4; elif [[ "${DETECTOR_SIPM_LAYOUT}" == "edge-two" ]]; then echo 2; else echo 1; fi)"
+    printf '    "copy_number_order": '
+    if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      printf '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]'
+    elif [[ "${DETECTOR_SIPM_LAYOUT}" == "back-four" ]]; then
+      printf '[0, 1, 2, 3]'
+    elif [[ "${DETECTOR_SIPM_LAYOUT}" == "edge-two" ]]; then
+      printf '[0, 1]'
+    else
+      printf '[0]'
+    fi
+    printf ',\n'
+    printf '    "fixed_local_positions_mm": '
+    if [[ "${SIPM_STUDY_LAYOUT}" == "back-four" ]]; then
+      printf '[[-25, -25, 0], [-25, 25, 0], [25, -25, 0], [25, 25, 0]]'
+    elif [[ "${SIPM_STUDY_LAYOUT}" == "edge-two" ]]; then
+      printf '[[-25, 0, 0], [25, 0, 0]]'
+    else
+      printf '[[0, 0, 0]]'
+    fi
+    printf ',\n'
     printf '    "face": "%s",\n' "$(json_string "${sipm_face}")"
     printf '    "cavity_mode": '
     if [[ -n "${sipm_cavity_mode}" ]]; then
@@ -1307,11 +3264,182 @@ write_run_config() {
     printf ',\n'
     printf '    "local_position": "%s",\n' "$(json_string "${sipm_local}")"
     printf '    "size": "%s",\n' "$(json_string "${sipm_size}")"
+    printf '    "per_sensor_event_fields": ["sipm_sensor_0_detected_photons", "sipm_sensor_1_detected_photons", "sipm_sensor_2_detected_photons", "sipm_sensor_3_detected_photons"],\n'
     if [[ "${GRID}" == "near5" && -n "${GRID_STEP:-}" ]]; then
       printf '    "near_field_step": "%s %s"\n' "$(format_num "${GRID_STEP}")" "$(json_string "${GRID_UNIT}")"
     else
       printf '    "near_field_step": null\n'
     fi
+    printf '  },\n'
+    printf '  "stack": {\n'
+    printf '    "enabled": %s,\n' "$(if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then echo true; else echo false; fi)"
+    if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+      stack_length_mm="$(awk -v t="${TILE_THICKNESS_MM}" -v steel="${ABSORBER_THICKNESS_MM}" 'BEGIN { printf "%.10g", 10 * (steel + t) }')"
+      printf '    "schema_version": "steel-module-stack-v1",\n'
+      printf '    "layers": 10,\n'
+      printf '    "module_order": ["steel", "tile"],\n'
+      printf '    "layer_zero": "upstream",\n'
+      printf '    "axis": "-Z",\n'
+      printf '    "stack_length_mm": %s,\n' "${stack_length_mm}"
+      printf '    "source_z_mm": %s,\n' "$(format_num "${source_z_mm}")"
+      printf '    "steel_center_formula": "L/2-i*(40+t)-20 mm",\n'
+      printf '    "tile_center_formula": "L/2-i*(40+t)-40-t/2 mm",\n'
+      printf '    "layers_tree": "stack_layers",\n'
+      printf '    "transfers_tree": "stack_transfers",\n'
+      printf '    "optical_origin_rule": "first_tile_layer_with_WLS_inheritance",\n'
+      printf '    "primary_collection_definition": "same_origin_layer_to_same_destination_layer_ratio_of_sums",\n'
+      printf '    "unknown_origin_allowed_for_accepted_evidence": false\n'
+    else
+      printf '    "schema_version": null,\n'
+      printf '    "layers": 1,\n'
+      printf '    "module_order": null,\n'
+      printf '    "layer_zero": null,\n'
+      printf '    "axis": null,\n'
+      printf '    "stack_length_mm": null,\n'
+      printf '    "source_z_mm": null,\n'
+      printf '    "steel_center_formula": null,\n'
+      printf '    "tile_center_formula": null,\n'
+      printf '    "layers_tree": null,\n'
+      printf '    "transfers_tree": null,\n'
+      printf '    "optical_origin_rule": null,\n'
+      printf '    "primary_collection_definition": null,\n'
+      printf '    "unknown_origin_allowed_for_accepted_evidence": null\n'
+    fi
+    printf '  },\n'
+    printf '  "optical_coupling": {\n'
+    printf '    "model": "%s",\n' "$(json_string "${OPTICAL_COUPLING}")"
+    printf '    "geometry_model": "%s",\n' "$(json_string "${grease_geometry_model}")"
+    printf '    "geometry_caveat": '
+    if [[ -n "${grease_geometry_caveat}" ]]; then
+      printf '"%s"' "$(json_string "${grease_geometry_caveat}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_enabled": %s,\n' "$(if [[ "${grease_enabled}" == "true" ]]; then echo true; else echo false; fi)"
+    printf '    "grease_material": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"EJ-550 optical grade silicone grease"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_density_g_cm3": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '%s' "${EJ550_DENSITY_G_CM3}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_composition_model": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"silicone_like_C2H6OSi_proxy"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_material_source": '
+    if [[ "${grease_enabled}" == "true" ]]; then
+      printf '"https://eljentechnology.com/images/products/data_sheets/EJ-550_EJ-552.pdf"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_thickness": '
+    if [[ -n "${grease_thickness}" ]]; then
+      printf '"%s"' "$(json_string "${grease_thickness}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_size": '
+    if [[ -n "${grease_size}" ]]; then
+      printf '"%s"' "$(json_string "${grease_size}")"
+    elif [[ "${grease_enabled}" == "true" ]]; then
+      printf '"follow_sipm_active_area"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_model": "%s",\n' "$(json_string "${grease_rindex_model}")"
+    printf '    "grease_rindex_source": '
+    if [[ -n "${grease_rindex_source}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex": '
+    if [[ -n "${grease_rindex}" ]]; then
+      printf '%s' "$(format_num "${grease_rindex}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_csv": '
+    if [[ -n "${grease_rindex_csv}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_absorption_model": "%s",\n' "$(json_string "${grease_absorption_model_resolved}")"
+    printf '    "grease_abs_length": '
+    if [[ -n "${grease_abs_length}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_mm": '
+    if [[ -n "${grease_abs_length_mm}" ]]; then
+      printf '%s' "$(format_num "${grease_abs_length_mm}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_csv": '
+    if [[ -n "${grease_transmission_csv}" ]]; then
+      printf '"%s"' "$(json_string "${grease_transmission_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_source": '
+    if [[ -n "${grease_transmission_source}" ]]; then
+      printf '"%s"' "$(json_string "${grease_transmission_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_transmission_reference_thickness_mm": '
+    if [[ -n "${grease_transmission_reference_thickness_mm}" ]]; then
+      printf '%s' "$(format_num "${grease_transmission_reference_thickness_mm}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_derivation": '
+    if [[ -n "${grease_abs_length_derivation}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length_derivation}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_rindex_vector": '
+    if [[ -n "${grease_rindex_vector}" ]]; then
+      printf '"%s"' "$(json_string "${grease_rindex_vector}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "grease_abs_length_vector": '
+    if [[ -n "${grease_abs_length_vector}" ]]; then
+      printf '"%s"' "$(json_string "${grease_abs_length_vector}")"
+    else
+      printf 'null'
+    fi
+    printf '\n'
     printf '  },\n'
     printf '  "dimple": {\n'
     printf '    "enabled": %s,\n' "$(if [[ "${DIMPLE_ENABLED}" == "1" ]]; then echo true; else echo false; fi)"
@@ -1343,6 +3471,39 @@ write_run_config() {
     printf '    "size_preset": '
     if [[ -n "${tank_size_preset}" ]]; then
       printf '"%s"' "$(json_string "${tank_size_preset}")"
+    else
+      printf 'null'
+    fi
+    printf '\n'
+    printf '  },\n'
+    printf '  "absorber": {\n'
+    printf '    "enabled": %s,\n' "$(if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then echo true; else echo false; fi)"
+    printf '    "shape": "box",\n'
+    printf '    "physical_volume_name": "SteelAbsorber",\n'
+    printf '    "material": "StainlessSteelSAE304",\n'
+    printf '    "density_g_cm3": 7.9,\n'
+    printf '    "mass_fractions": {"Fe": 0.74, "Cr": 0.18, "Ni": 0.08},\n'
+    printf '    "epic_geometry_release_reference": "26.07.0",\n'
+    printf '    "full_size_mm": '
+    if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+      printf '[%s, %s, %s]' \
+        "${ABSORBER_TRANSVERSE_MM}" "${ABSORBER_TRANSVERSE_MM}" "${ABSORBER_THICKNESS_MM}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "tile_gap_mm": 0,\n'
+    printf '    "tile_to_steel_surface": "shared_EJ510_polishedfrontpainted_proxy",\n'
+    printf '    "source_clearance_upstream_mm": '
+    if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+      printf '%s' "${SOURCE_CLEARANCE_MM}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "nominal_min_source_to_edge_mm": '
+    if [[ -n "${MIN_ABSORBER_EDGE_DISTANCE_MM}" ]]; then
+      printf '%s' "$(format_num "${MIN_ABSORBER_EDGE_DISTANCE_MM}")"
     else
       printf 'null'
     fi
@@ -1400,7 +3561,86 @@ write_run_config() {
     printf ',\n'
     printf '    "reflectivity_energy_max": '
     if [[ -n "${surface_reflectivity_energy_max}" ]]; then
-      printf '"%s"\n' "$(json_string "${surface_reflectivity_energy_max}")"
+      printf '"%s"' "$(json_string "${surface_reflectivity_energy_max}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_model": "%s",\n' "$(json_string "${surface_reflectivity_model}")"
+    printf '    "reflectivity_source": '
+    if [[ -n "${surface_reflectivity_source}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_digitization": '
+    if [[ -n "${surface_reflectivity_digitization}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_digitization}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "paint_volume_model": '
+    if [[ "${surface_reflectivity_model}" == "ej510-empirical" ]]; then
+      printf '"optical_surface_proxy"'
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "ej510_three_layer_reference_thickness_mm": '
+    if [[ "${surface_reflectivity_model}" == "ej510-empirical" ]]; then
+      printf '%s' "${EJ510_COATING_REFERENCE_THICKNESS_MM}"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_csv": '
+    if [[ -n "${surface_reflectivity_csv}" ]]; then
+      printf '"%s"' "$(json_string "${surface_reflectivity_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_model": "%s",\n' "$(json_string "${surface_layer_rindex_model}")"
+    printf '    "surface_layer_rindex_source": '
+    if [[ -n "${surface_layer_rindex_source}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_source}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex": '
+    if [[ -n "${surface_layer_rindex}" ]]; then
+      printf '%s' "$(format_num "${surface_layer_rindex}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_csv": '
+    if [[ -n "${surface_layer_rindex_csv}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_csv}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_vector": '
+    if [[ -n "${surface_layer_rindex_vector}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_vector}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "surface_layer_rindex_caveat": '
+    if [[ -n "${surface_layer_rindex_caveat}" ]]; then
+      printf '"%s"' "$(json_string "${surface_layer_rindex_caveat}")"
+    else
+      printf 'null'
+    fi
+    printf ',\n'
+    printf '    "reflectivity_vector": '
+    if [[ -n "${surface_reflectivity_vector}" ]]; then
+      printf '"%s"\n' "$(json_string "${surface_reflectivity_vector}")"
     else
       printf 'null\n'
     fi
@@ -1441,31 +3681,37 @@ write_run_config() {
 
 write_efficiency_map() {
   {
-    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,summary_csv,root,log\n'
+    printf 'tag,x,y,z,unit,events,generated_optical_photons,scintillation_photons,sipm_detected_photons,collection_efficiency,shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,scint_centroid_z_mm,primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,primary_energy_min_mev,primary_energy_max_mev,decay_beta_count,decay_beta_energy_mean_mev,decay_beta_energy_rms_mev,decay_beta_energy_min_mev,decay_beta_energy_max_mev,summary_csv,root,log\n'
     read -r _points_header
     while IFS=, read -r tag x y z unit macro root log; do
       summary="${root%.root}_summary.csv"
       if [[ ! -f "${summary}" ]]; then
         echo "Missing scan summary CSV: ${summary}" >&2
         echo "Point: ${tag}" >&2
+        if [[ -f "${log}" ]]; then
+          echo "Last ${SCAN_LOG_TAIL_LINES} lines from ${log}:" >&2
+          tail -n "${SCAN_LOG_TAIL_LINES}" "${log}" >&2 || true
+        fi
         exit 1
       fi
       read -r _summary_header < "${summary}"
-      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z < <(
+      read -r events generated scint detected efficiency shoot_events shoot_x shoot_y shoot_z hit_events hit_x hit_y hit_z scint_centroid_events scint_centroid_x scint_centroid_y scint_centroid_z primary_energy_events primary_energy_mean primary_energy_rms primary_energy_min primary_energy_max decay_beta_count decay_beta_mean decay_beta_rms decay_beta_min decay_beta_max < <(
         awk -F, 'NR == 2 {
-          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+          print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
         }' "${summary}"
       )
       if [[ -z "${events:-}" || -z "${generated:-}" || -z "${scint:-}" || -z "${detected:-}" || -z "${efficiency:-}" ]]; then
         echo "Could not parse scan summary CSV: ${summary}" >&2
         exit 1
       fi
-      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
         "${tag}" "${x}" "${y}" "${z}" "${unit}" \
         "${events}" "${generated}" "${scint}" "${detected}" "${efficiency}" \
         "${shoot_events}" "${shoot_x}" "${shoot_y}" "${shoot_z}" \
         "${hit_events}" "${hit_x}" "${hit_y}" "${hit_z}" \
         "${scint_centroid_events}" "${scint_centroid_x}" "${scint_centroid_y}" "${scint_centroid_z}" \
+        "${primary_energy_events}" "${primary_energy_mean}" "${primary_energy_rms}" "${primary_energy_min}" "${primary_energy_max}" \
+        "${decay_beta_count}" "${decay_beta_mean}" "${decay_beta_rms}" "${decay_beta_min}" "${decay_beta_max}" \
         "${summary}" "${root}" "${log}"
     done
   } < "${POINTS_CSV}" > "${EFFICIENCY_MAP_CSV}"
@@ -1496,17 +3742,52 @@ generate_root_plots() {
 }
 
 write_run_config
+
+SURFACE_PROPERTIES_FRAGMENT=""
+if [[ -n "${surface_reflectivity_vector}" || -n "${surface_layer_rindex_vector}" ]]; then
+  SURFACE_PROPERTIES_FRAGMENT="${RUN_DIR}/surface_properties.mac"
+  {
+    if [[ -n "${surface_reflectivity_vector}" ]]; then
+      printf '/opnovice2/surfaceProperty %s\n' "${surface_reflectivity_vector}"
+    fi
+    if [[ -n "${surface_layer_rindex_vector}" ]]; then
+      printf '/opnovice2/surfaceProperty %s\n' "${surface_layer_rindex_vector}"
+    fi
+  } > "${SURFACE_PROPERTIES_FRAGMENT}"
+fi
+
+GREASE_PROPERTIES_FRAGMENT=""
+if [[ "${grease_enabled}" == "true" ]]; then
+  GREASE_PROPERTIES_FRAGMENT="${RUN_DIR}/grease_properties.mac"
+  {
+    printf '/opnovice2/greaseProperty %s\n' "${grease_rindex_vector}"
+    printf '/opnovice2/greaseProperty %s\n' "${grease_abs_length_vector}"
+  } > "${GREASE_PROPERTIES_FRAGMENT}"
+fi
+
 cp "${RUN_CONFIG}" "${LATEST_RUN_CONFIG}"
 cp "${POINTS_CSV}" "${LATEST_POINTS_CSV}"
 if [[ -L "${LATEST_RUN_LINK}" || ! -e "${LATEST_RUN_LINK}" ]]; then
-  ln -sfn "${RUN_DIR}" "${LATEST_RUN_LINK}"
+  if ! ln -sfn "${RUN_DIR}" "${LATEST_RUN_LINK}"; then
+    echo "Warning: not updating ${LATEST_RUN_LINK}; another scan task likely updated it concurrently." >&2
+  fi
 else
   echo "Not updating ${LATEST_RUN_LINK}: it exists and is not a symlink." >&2
 fi
 
 echo "Scan: ${SCAN_NAME}"
+if [[ -n "${STUDY_PRESET}" ]]; then
+  echo "Study preset: ${STUDY_PRESET}"
+fi
 echo "Template: ${TEMPLATE_MACRO}"
 echo "Source mode: ${SOURCE_MODE}"
+echo "Source model: ${source_model}"
+if [[ "${source_model}" == "sr90-spectrum" ]]; then
+  echo "Spectrum model: ${SR90_SPECTRUM_MODEL} (${SR90_SPECTRUM_TABLE})"
+fi
+if [[ "${source_model}" == "sr90-decay" ]]; then
+  echo "Decay model: ${SR90_DECAY_MODEL}; GPS ion ${SR90_DECAY_GPS_ION}; RDM threshold ${SR90_DECAY_RDM_TIME_THRESHOLD}"
+fi
 echo "Run directory: ${RUN_DIR}"
 echo "Grid unit: ${GRID_UNIT}; x=($(json_number_array "${XS[@]}")); y=($(json_number_array "${YS[@]}"))"
 if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then
@@ -1514,7 +3795,20 @@ if [[ "${BEAM_Z_INFERRED}" == "1" ]]; then
 else
   echo "Beam z: $(format_num "${Z0}") ${GRID_UNIT}"
 fi
+if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+  echo "Beam profile: Gaussian sigma=$(format_num "${BEAM_SIGMA}") ${GRID_UNIT}"
+else
+  echo "Beam profile: point"
+fi
+if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+  echo "Beam angular divergence: beam2d sigma_x=sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+else
+  echo "Beam angular divergence: pencil"
+fi
 echo "Events per point: ${N_EVENTS}"
+if [[ -n "${RANDOM_SEED_1}" ]]; then
+  echo "Random seeds: ${RANDOM_SEED_1} ${RANDOM_SEED_2}"
+fi
 echo "Electron energy mode: ${electron_energy_mode}"
 if [[ -n "${tank_size}" ]]; then
   echo "Tank size: ${tank_size}"
@@ -1522,12 +3816,37 @@ fi
 if [[ -n "${tank_size_preset}" ]]; then
   echo "Tank size preset: ${tank_size_preset}"
 fi
+if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+  echo "Steel absorber: ${ABSORBER_TRANSVERSE_MM} x ${ABSORBER_TRANSVERSE_MM} x ${ABSORBER_THICKNESS_MM} mm SAE 304, zero tile gap"
+  if [[ "${STUDY_PRESET}" == "realistic-neutron-v1" ]]; then
+    echo "Neutron source: authoritative p=${NEUTRON_MOMENTUM_GEV_C} GeV/c, derived kinetic energy=${NEUTRON_KINETIC_ENERGY_MEV} MeV, clearance=${SOURCE_CLEARANCE_MM} mm"
+  else
+    echo "Neutron source: authoritative kinetic energy=${STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV} MeV, derived p=${STEEL_MODULE_NEUTRON_MOMENTUM_GEV_C} GeV/c, clearance=${SOURCE_CLEARANCE_MM} mm"
+    echo "SiPM study layout: ${SIPM_STUDY_LAYOUT} (detector layout=${DETECTOR_SIPM_LAYOUT}, face=${sipm_face})"
+  fi
+  echo "Nominal minimum absorber-edge distance: ${MIN_ABSORBER_EDGE_DISTANCE_MM} mm"
+fi
 if [[ -n "${surface_preset}" ]]; then
   echo "Surface preset: ${surface_preset} (finish=${surface_finish}, sigma_alpha=${surface_sigma_alpha})"
+fi
+echo "Surface reflectivity model: ${surface_reflectivity_model}"
+if [[ -n "${surface_reflectivity}" ]]; then
+  echo "Surface reflectivity: ${surface_reflectivity}"
+fi
+if [[ -n "${surface_reflectivity_csv}" ]]; then
+  echo "Surface reflectivity CSV: ${surface_reflectivity_csv}"
+fi
+if [[ "${surface_layer_rindex_model}" != "none" ]]; then
+  echo "Surface-layer RINDEX: model=${surface_layer_rindex_model}, value=${surface_layer_rindex:-csv}, caveat=${surface_layer_rindex_caveat}"
+fi
+echo "Optical coupling: ${OPTICAL_COUPLING}"
+if [[ "${grease_enabled}" == "true" ]]; then
+  echo "Grease: geometry=${grease_geometry_model}, thickness=${grease_thickness:-derived_from_geometry}, size=${grease_size:-follow_sipm_active_area}, rindex_model=${grease_rindex_model}, absorption_model=${grease_absorption_model_resolved}, abs_length=${grease_abs_length:-derived_from_transmission}"
 fi
 if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
   echo "Dimple: hemisphere radius=$(format_num "${DIMPLE_RADIUS}") ${DIMPLE_UNIT} (${DIMPLE_SIPM_MODE}, radius_mm=$(format_num "${DIMPLE_RADIUS_MM}"))"
 fi
+echo "SiPM size: ${sipm_size}"
 echo "Metadata: ${RUN_CONFIG}, ${POINTS_CSV}"
 echo "Latest pointers: ${LATEST_RUN_LINK}, ${LATEST_RUN_CONFIG}, ${LATEST_POINTS_CSV}"
 
@@ -1541,15 +3860,67 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     --set "${position_cmd}=${x} ${y} ${z} ${unit}"
     --set "${direction_cmd}=${BEAM_DIRECTION}"
     --set "/run/beamOn=${N_EVENTS}"
+    --set "/opnovice2/sipm/layout=${DETECTOR_SIPM_LAYOUT}"
     --set "/opnovice2/sipm/face=${sipm_face}"
     --set "/opnovice2/sipm/localPosition=${sipm_local}"
+    --set "/opnovice2/sipm/size=${sipm_size}"
     --require "/analysis/setFileName"
     --require "${position_cmd}"
     --require "${direction_cmd}"
     --require "/run/beamOn"
+    --require "/opnovice2/sipm/layout"
     --require "/opnovice2/sipm/face"
     --require "/opnovice2/sipm/localPosition"
+    --require "/opnovice2/sipm/size"
   )
+
+  if [[ "${source_model}" == "realistic-neutron-v1" ||
+        "${source_model}" == "steel-module-scan-v1" ||
+        "${source_model}" == "steel-module-stack-v1" ]]; then
+    neutron_energy_mev="${NEUTRON_KINETIC_ENERGY_MEV}"
+    if [[ "${source_model}" == "steel-module-scan-v1" ||
+          "${source_model}" == "steel-module-stack-v1" ]]; then
+      neutron_energy_mev="${STEEL_MODULE_NEUTRON_KINETIC_ENERGY_MEV}"
+    fi
+    macro_args+=(
+      --set "${particle_cmd}=neutron"
+      --set "${energy_cmd}=${neutron_energy_mev} MeV"
+      --require "${particle_cmd}"
+      --require "${energy_cmd}"
+    )
+  elif [[ "${source_model}" == "sr90-decay" ]]; then
+    macro_args+=(
+      --set "${particle_cmd}=ion"
+      --set "${energy_cmd}=0 eV"
+      --set "/gps/ion=${SR90_DECAY_GPS_ION}"
+      --set "/process/had/rdm/analogueMC=true"
+      --set "/process/had/rdm/thresholdForVeryLongDecayTime=${SR90_DECAY_RDM_TIME_THRESHOLD}"
+      --remove "/opnovice2/gun/electronEnergyMode"
+      --require "${particle_cmd}"
+      --require "/gps/ion"
+      --require "${energy_cmd}"
+      --require "/process/had/rdm/analogueMC"
+      --require "/process/had/rdm/thresholdForVeryLongDecayTime"
+      --insert-missing-before "/gps/ion=/gps/pos/type"
+      --insert-missing-before "/process/had/rdm/analogueMC=/analysis/setFileName"
+      --insert-missing-before "/process/had/rdm/thresholdForVeryLongDecayTime=/analysis/setFileName"
+    )
+  elif [[ "${source_model}" == "sr90-spectrum" ]]; then
+    macro_args+=(
+      --remove "${energy_cmd}"
+      --remove "/opnovice2/gun/electronEnergyMode"
+      --insert-file-before "${SR90_SPECTRUM_GPS_MACRO}=/run/beamOn"
+      --require "/gps/ene/type"
+      --require "/gps/hist/type"
+      --require "/gps/hist/point"
+      --require "/gps/hist/inter"
+    )
+  else
+    macro_args+=(
+      --set "${energy_cmd}=${primary_energy}"
+      --require "${energy_cmd}"
+    )
+  fi
 
   if [[ -n "${sipm_cavity_mode}" ]]; then
     macro_args+=(--set "/opnovice2/sipm/cavityMode=${sipm_cavity_mode}")
@@ -1563,6 +3934,22 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
   if [[ "${MODE}" == "full" ]]; then
     macro_args+=(--set "/opnovice2/tank/bottomCavity=false")
   fi
+  if [[ "${IS_NEUTRON_STUDY_PRESET}" == "true" ]]; then
+    macro_args+=(
+      --set "/opnovice2/absorber/enabled=true"
+      --set "/opnovice2/absorber/size=${ABSORBER_TRANSVERSE_MM} ${ABSORBER_TRANSVERSE_MM} ${ABSORBER_THICKNESS_MM} mm"
+      --require "/opnovice2/absorber/enabled"
+      --require "/opnovice2/absorber/size"
+    )
+  fi
+  if [[ "${STUDY_PRESET}" == "steel-module-stack-v1" ]]; then
+    macro_args+=(
+      --set "/opnovice2/stack/enabled=true"
+      --set "/opnovice2/stack/layers=10"
+      --require "/opnovice2/stack/enabled"
+      --require "/opnovice2/stack/layers"
+    )
+  fi
   if [[ "${DIMPLE_ENABLED}" == "1" ]]; then
     macro_args+=(
       --set "/opnovice2/dimple/enabled=true"
@@ -1575,16 +3962,81 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
       --require "/opnovice2/dimple/sipmMode"
     )
   fi
+  if [[ "${BEAM_PROFILE}" == "gaussian" ]]; then
+    macro_args+=(
+      --set "/gps/pos/type=Beam"
+      --set "/gps/pos/sigma_x=$(format_num "${BEAM_SIGMA}") ${unit}"
+      --set "/gps/pos/sigma_y=$(format_num "${BEAM_SIGMA}") ${unit}"
+      --require "/gps/pos/type"
+      --require "/gps/pos/sigma_x"
+      --require "/gps/pos/sigma_y"
+      --insert-missing-before "/gps/pos/sigma_x=/gps/direction"
+      --insert-missing-before "/gps/pos/sigma_y=/gps/direction"
+    )
+  fi
+  if [[ "${BEAM_ANGULAR_MODEL}" == "beam2d" ]]; then
+    angular_insert_anchor="${energy_cmd}"
+    if [[ "${source_model}" == "sr90-spectrum" ]]; then
+      angular_insert_anchor="/run/beamOn"
+    fi
+    macro_args+=(
+      --set "/gps/ang/type=beam2d"
+      --set "/gps/ang/sigma_x=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --set "/gps/ang/sigma_y=$(format_num "${BEAM_DIVERGENCE_MRAD}") mrad"
+      --require "/gps/ang/type"
+      --require "/gps/ang/sigma_x"
+      --require "/gps/ang/sigma_y"
+      --insert-missing-before "/gps/ang/type=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_x=${angular_insert_anchor}"
+      --insert-missing-before "/gps/ang/sigma_y=${angular_insert_anchor}"
+    )
+  fi
   if [[ -n "${surface_preset}" ]]; then
     macro_args+=(
       --set "/opnovice2/surfacePreset=${surface_preset}"
       --require "/opnovice2/surfacePreset"
     )
   fi
-  if [[ "${SOURCE_MODE}" == "gun" ]]; then
+  if [[ -n "${SURFACE_PROPERTIES_FRAGMENT}" ]]; then
+    macro_args+=(
+      --remove "/opnovice2/surfaceProperty"
+      --insert-file-before "${SURFACE_PROPERTIES_FRAGMENT}=/run/initialize"
+      --require "/opnovice2/surfaceProperty"
+    )
+  fi
+  if [[ "${grease_enabled}" == "true" ]]; then
+    macro_args+=(
+      --remove "/opnovice2/greaseProperty"
+      --set "/opnovice2/grease/enabled=true"
+      --insert-file-before "${GREASE_PROPERTIES_FRAGMENT}=/run/initialize"
+      --require "/opnovice2/grease/enabled"
+      --require "/opnovice2/greaseProperty"
+    )
+    if [[ -n "${grease_thickness}" ]]; then
+      macro_args+=(
+        --set "/opnovice2/grease/thickness=${grease_thickness}"
+        --require "/opnovice2/grease/thickness"
+      )
+    fi
+    if [[ -n "${grease_size_macro}" ]]; then
+      macro_args+=(
+        --set "/opnovice2/grease/size=${grease_size_macro}"
+        --require "/opnovice2/grease/size"
+      )
+    fi
+  fi
+  if [[ "${SOURCE_MODE}" == "gun" || "${electron_energy_mode}" != "fixed" ]]; then
     macro_args+=(
       --set "/opnovice2/gun/electronEnergyMode=${electron_energy_mode}"
       --require "/opnovice2/gun/electronEnergyMode"
+      --insert-missing-before "/opnovice2/gun/electronEnergyMode=/run/beamOn"
+    )
+  fi
+  if [[ -n "${RANDOM_SEED_1}" ]]; then
+    macro_args+=(
+      --set "/random/setSeeds=${RANDOM_SEED_1} ${RANDOM_SEED_2}"
+      --require "/random/setSeeds"
+      --insert-missing-before "/random/setSeeds=/run/initialize"
     )
   fi
 
@@ -1594,7 +4046,20 @@ tail -n +2 "${POINTS_CSV}" | while IFS=, read -r tag x y z unit macro root log; 
     echo "Prepared ${tag}: x=${x} ${unit}, y=${y} ${unit}"
   else
     echo "Running ${tag}: x=${x} ${unit}, y=${y} ${unit}"
-    ./build/OpNovice2 "${macro}" > "${log}" 2>&1
+    set +e
+    "${OPNOVICE2_EXECUTABLE}" "${macro}" > "${log}" 2>&1
+    status=$?
+    set -e
+    if [[ "${status}" -ne 0 ]]; then
+      echo "Simulation failed for ${tag} with exit status ${status}." >&2
+      echo "Macro: ${macro}" >&2
+      echo "Log: ${log}" >&2
+      if [[ -f "${log}" ]]; then
+        echo "Last ${SCAN_LOG_TAIL_LINES} lines from ${log}:" >&2
+        tail -n "${SCAN_LOG_TAIL_LINES}" "${log}" >&2 || true
+      fi
+      exit "${status}"
+    fi
   fi
 done
 

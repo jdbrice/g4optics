@@ -39,6 +39,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4UnitsTable.hh"
 
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -48,14 +50,105 @@ Run::Run() : G4Run()
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void Run::BeginEvent()
+void Run::BeginEvent(G4int eventID)
 {
+  fCurrentEventID = eventID;
   fEventGeneratedOpticalCount = 0;
+  fEventCerenkovCount = 0;
   fEventScintCount = 0;
   fEventSiPMDetectionCount = 0;
+  fEventSiPMDetectionCounts.fill(0);
+  fEventStackLayers.fill(StackLayerEventRecord{});
+  for (auto& origins : fEventStackTransfers) {
+    origins.fill(0);
+  }
+  for (auto& trackIDs : fEventStackChargedTileEntryTrackIDs) {
+    trackIDs.clear();
+  }
   fEventHitValid = false;
   fEventHitPosition = G4ThreeVector();
   fEventScintPositionSum = G4ThreeVector();
+  fEventSteelEnergyDeposit = 0.;
+  fEventPrimaryNeutronElasticCount = 0;
+  fEventPrimaryNeutronInelasticCount = 0;
+  fEventPrimaryNeutronCaptureCount = 0;
+  fEventChargedTileEntryTrackIDs.clear();
+  fEventChargedTileEntryCount = 0;
+  fEventChargedTileEntryKineticEnergy = 0.;
+  fEventElectronTileEntryCount = 0;
+  fEventElectronTileEntryKineticEnergy = 0.;
+  fEventProtonTileEntryCount = 0;
+  fEventProtonTileEntryKineticEnergy = 0.;
+  fEventOtherChargedTileEntryCount = 0;
+  fEventOtherChargedTileEntryKineticEnergy = 0.;
+  fEventPrimaryNeutronTileEntryValid = false;
+  fEventPrimaryNeutronTileEntryPosition = G4ThreeVector();
+  fEventTileEnergyDeposit = 0.;
+  fEventElectronTileEnergyDeposit = 0.;
+  fEventProtonTileEnergyDeposit = 0.;
+  fEventOtherChargedTileEnergyDeposit = 0.;
+  fEventNeutralTileEnergyDeposit = 0.;
+  fEventStatisticsCommitted = false;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::CommitEventStatistics()
+{
+  if (fEventStatisticsCommitted) {
+    return;
+  }
+
+  fEventStatisticsCommitted = true;
+  fCommittedEventCount += 1;
+  fSteelEnergyDepositMoments.Add(fEventSteelEnergyDeposit);
+  fPrimaryNeutronElasticMoments.Add(fEventPrimaryNeutronElasticCount);
+  fPrimaryNeutronInelasticMoments.Add(fEventPrimaryNeutronInelasticCount);
+  fPrimaryNeutronCaptureMoments.Add(fEventPrimaryNeutronCaptureCount);
+  fPrimaryNeutronInteractionMoments.Add(
+    fEventPrimaryNeutronElasticCount > 0 ||
+        fEventPrimaryNeutronInelasticCount > 0 ||
+        fEventPrimaryNeutronCaptureCount > 0
+      ? 1.
+      : 0.);
+  fChargedTileEntryCountMoments.Add(fEventChargedTileEntryCount);
+  fChargedTileEntryKineticEnergyMoments.Add(fEventChargedTileEntryKineticEnergy);
+  fElectronTileEntryCountMoments.Add(fEventElectronTileEntryCount);
+  fElectronTileEntryKineticEnergyMoments.Add(fEventElectronTileEntryKineticEnergy);
+  fProtonTileEntryCountMoments.Add(fEventProtonTileEntryCount);
+  fProtonTileEntryKineticEnergyMoments.Add(fEventProtonTileEntryKineticEnergy);
+  fOtherChargedTileEntryCountMoments.Add(fEventOtherChargedTileEntryCount);
+  fOtherChargedTileEntryKineticEnergyMoments.Add(
+    fEventOtherChargedTileEntryKineticEnergy);
+  fPrimaryNeutronTileEntryMoments.Add(
+    fEventPrimaryNeutronTileEntryValid ? 1. : 0.);
+  fTileEnergyDepositMoments.Add(fEventTileEnergyDeposit);
+  fElectronTileEnergyDepositMoments.Add(fEventElectronTileEnergyDeposit);
+  fProtonTileEnergyDepositMoments.Add(fEventProtonTileEnergyDeposit);
+  fOtherChargedTileEnergyDepositMoments.Add(fEventOtherChargedTileEnergyDeposit);
+  fNeutralTileEnergyDepositMoments.Add(fEventNeutralTileEnergyDeposit);
+  fGeneratedOpticalMoments.Add(fEventGeneratedOpticalCount);
+  fScintillationMoments.Add(fEventScintCount);
+  fSiPMDetectionMoments.Add(fEventSiPMDetectionCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryKineticEnergy(G4double energy)
+{
+  fPrimaryEnergyCount += 1;
+  fPrimaryEnergySum += energy;
+  fPrimaryEnergySum2 += energy * energy;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, energy);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, energy);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddDecayBetaEnergy(G4double energy)
+{
+  fDecayBetaCount += 1;
+  fDecayBetaEnergySum += energy;
+  fDecayBetaEnergySum2 += energy * energy;
+  fDecayBetaEnergyMin = std::min(fDecayBetaEnergyMin, energy);
+  fDecayBetaEnergyMax = std::max(fDecayBetaEnergyMax, energy);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,6 +168,215 @@ void Run::SetPrimaryHitPosition(const G4ThreeVector& pos)
   fEventHitPosition = pos;
   fHitPositionCount += 1;
   fHitPositionSum += pos;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::SetPrimaryNeutronTileEntry(const G4ThreeVector& pos, G4int layer)
+{
+  if (!fEventPrimaryNeutronTileEntryValid) {
+    fEventPrimaryNeutronTileEntryValid = true;
+    fEventPrimaryNeutronTileEntryPosition = pos;
+  }
+  if (layer >= 0 && layer < kStackLayerCount) {
+    auto& record = fEventStackLayers[static_cast<std::size_t>(layer)];
+    if (!record.primaryNeutronTileEntryValid) {
+      record.primaryNeutronTileEntryValid = true;
+      record.primaryNeutronTileEntryPosition = pos;
+    }
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddSteelEnergyDeposit(G4double energy, G4int layer)
+{
+  if (energy > 0.) {
+    fEventSteelEnergyDeposit += energy;
+    if (layer >= 0 && layer < kStackLayerCount) {
+      fEventStackLayers[static_cast<std::size_t>(layer)].steelEnergyDeposit += energy;
+    }
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryNeutronElasticInteraction(G4int layer)
+{
+  fEventPrimaryNeutronElasticCount += 1;
+  if (layer >= 0 && layer < kStackLayerCount) {
+    fEventStackLayers[static_cast<std::size_t>(layer)].neutronElasticCount += 1;
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryNeutronInelasticInteraction(G4int layer)
+{
+  fEventPrimaryNeutronInelasticCount += 1;
+  if (layer >= 0 && layer < kStackLayerCount) {
+    fEventStackLayers[static_cast<std::size_t>(layer)].neutronInelasticCount += 1;
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddPrimaryNeutronCaptureInteraction(G4int layer)
+{
+  fEventPrimaryNeutronCaptureCount += 1;
+  if (layer >= 0 && layer < kStackLayerCount) {
+    fEventStackLayers[static_cast<std::size_t>(layer)].neutronCaptureCount += 1;
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4bool Run::RecordChargedTileEntry(G4int trackID,
+                                   G4int pdgEncoding,
+                                   G4double charge,
+                                   G4double kineticEnergy,
+                                   G4int layer)
+{
+  if (charge == 0.) {
+    return false;
+  }
+
+  const G4long globalKey = layer >= 0
+    ? (static_cast<G4long>(layer) << 32) | static_cast<unsigned int>(trackID)
+    : static_cast<G4long>(trackID);
+  if (!fEventChargedTileEntryTrackIDs.insert(globalKey).second) {
+    return false;
+  }
+
+  StackLayerEventRecord* layerRecord = nullptr;
+  if (layer >= 0 && layer < kStackLayerCount) {
+    auto& layerIDs =
+      fEventStackChargedTileEntryTrackIDs[static_cast<std::size_t>(layer)];
+    if (!layerIDs.insert(trackID).second) {
+      return false;
+    }
+    layerRecord = &fEventStackLayers[static_cast<std::size_t>(layer)];
+    layerRecord->chargedEntryCount += 1;
+    layerRecord->chargedEntryKineticEnergy += kineticEnergy;
+  }
+
+  fEventChargedTileEntryCount += 1;
+  fEventChargedTileEntryKineticEnergy += kineticEnergy;
+
+  const G4int absPdg = std::abs(pdgEncoding);
+  if (absPdg == 11) {
+    fEventElectronTileEntryCount += 1;
+    fEventElectronTileEntryKineticEnergy += kineticEnergy;
+    if (layerRecord) {
+      layerRecord->electronEntryCount += 1;
+      layerRecord->electronEntryKineticEnergy += kineticEnergy;
+    }
+  }
+  else if (pdgEncoding == 2212) {
+    fEventProtonTileEntryCount += 1;
+    fEventProtonTileEntryKineticEnergy += kineticEnergy;
+    if (layerRecord) {
+      layerRecord->protonEntryCount += 1;
+      layerRecord->protonEntryKineticEnergy += kineticEnergy;
+    }
+  }
+  else {
+    fEventOtherChargedTileEntryCount += 1;
+    fEventOtherChargedTileEntryKineticEnergy += kineticEnergy;
+    if (layerRecord) {
+      layerRecord->otherChargedEntryCount += 1;
+      layerRecord->otherChargedEntryKineticEnergy += kineticEnergy;
+    }
+  }
+
+  return true;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void Run::AddTileEnergyDeposit(G4int pdgEncoding,
+                               G4double charge,
+                               G4double energy,
+                               G4int layer)
+{
+  if (energy <= 0.) {
+    return;
+  }
+
+  fEventTileEnergyDeposit += energy;
+  StackLayerEventRecord* layerRecord = nullptr;
+  if (layer >= 0 && layer < kStackLayerCount) {
+    layerRecord = &fEventStackLayers[static_cast<std::size_t>(layer)];
+    layerRecord->tileEnergyDeposit += energy;
+  }
+  const G4int absPdg = std::abs(pdgEncoding);
+  if (absPdg == 11) {
+    fEventElectronTileEnergyDeposit += energy;
+    if (layerRecord) layerRecord->electronTileEnergyDeposit += energy;
+  }
+  else if (pdgEncoding == 2212) {
+    fEventProtonTileEnergyDeposit += energy;
+    if (layerRecord) layerRecord->protonTileEnergyDeposit += energy;
+  }
+  else if (charge != 0.) {
+    fEventOtherChargedTileEnergyDeposit += energy;
+    if (layerRecord) layerRecord->otherChargedTileEnergyDeposit += energy;
+  }
+  else {
+    fEventNeutralTileEnergyDeposit += energy;
+    if (layerRecord) layerRecord->neutralTileEnergyDeposit += energy;
+  }
+}
+
+void Run::AddSiPMDetection(G4int sensorIndex, G4int originLayer)
+{
+  fSiPMDetectionCount += 1;
+  fEventSiPMDetectionCount += 1;
+  if (sensorIndex >= 0 && sensorIndex < 4) {
+    const auto index = static_cast<std::size_t>(sensorIndex);
+    fSiPMDetectionCounts[index] += 1;
+    fEventSiPMDetectionCounts[index] += 1;
+  }
+  if (sensorIndex < 0 || sensorIndex >= kStackSensorCount) {
+    return;
+  }
+
+  const G4int destinationLayer = sensorIndex / kStackSensorsPerLayer;
+  const G4int localSensor = sensorIndex % kStackSensorsPerLayer;
+  auto& destination =
+    fEventStackLayers[static_cast<std::size_t>(destinationLayer)];
+  destination.sensorAllOrigin[static_cast<std::size_t>(localSensor)] += 1;
+  if (originLayer == destinationLayer) {
+    destination.sensorLocalOrigin[static_cast<std::size_t>(localSensor)] += 1;
+  }
+  const G4int originIndex = originLayer >= 0 && originLayer < kStackLayerCount
+    ? originLayer
+    : kUnknownOriginIndex;
+  fEventStackTransfers[static_cast<std::size_t>(originIndex)]
+                      [static_cast<std::size_t>(sensorIndex)] += 1;
+}
+
+const StackLayerEventRecord& Run::GetEventStackLayer(G4int layer) const
+{
+  static const StackLayerEventRecord empty;
+  return layer >= 0 && layer < kStackLayerCount
+    ? fEventStackLayers[static_cast<std::size_t>(layer)]
+    : empty;
+}
+
+G4int Run::GetEventStackTransfer(G4int originLayer, G4int sensorCopy) const
+{
+  const G4int originIndex = originLayer >= 0 && originLayer < kStackLayerCount
+    ? originLayer
+    : kUnknownOriginIndex;
+  if (sensorCopy < 0 || sensorCopy >= kStackSensorCount) {
+    return 0;
+  }
+  return fEventStackTransfers[static_cast<std::size_t>(originIndex)]
+                             [static_cast<std::size_t>(sensorCopy)];
+}
+
+G4int Run::GetEventUnknownOriginDetections() const
+{
+  G4int total = 0;
+  for (const auto value :
+       fEventStackTransfers[static_cast<std::size_t>(kUnknownOriginIndex)]) {
+    total += value;
+  }
+  return total;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -118,6 +420,290 @@ G4ThreeVector Run::GetMeanScintillationCentroid() const
     return G4ThreeVector();
   }
   return fScintCentroidSum / G4double(fScintCentroidCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyMean() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  return fPrimaryEnergySum / G4double(fPrimaryEnergyCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetPrimaryKineticEnergyRms() const
+{
+  if (fPrimaryEnergyCount == 0) {
+    return 0.;
+  }
+  const G4double mean = GetPrimaryKineticEnergyMean();
+  const G4double mean2 = fPrimaryEnergySum2 / G4double(fPrimaryEnergyCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetDecayBetaEnergyMean() const
+{
+  if (fDecayBetaCount == 0) {
+    return 0.;
+  }
+  return fDecayBetaEnergySum / G4double(fDecayBetaCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetDecayBetaEnergyRms() const
+{
+  if (fDecayBetaCount == 0) {
+    return 0.;
+  }
+  const G4double mean = GetDecayBetaEnergyMean();
+  const G4double mean2 = fDecayBetaEnergySum2 / G4double(fDecayBetaCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetEventMean(const EventMoments& moments) const
+{
+  if (fCommittedEventCount == 0) {
+    return std::numeric_limits<G4double>::quiet_NaN();
+  }
+  return moments.sum / G4double(fCommittedEventCount);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetEventRms(const EventMoments& moments) const
+{
+  if (fCommittedEventCount == 0) {
+    return std::numeric_limits<G4double>::quiet_NaN();
+  }
+  const G4double mean = GetEventMean(moments);
+  const G4double mean2 = moments.sum2 / G4double(fCommittedEventCount);
+  return std::sqrt(std::max(0., mean2 - mean * mean));
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4double Run::GetEventStandardError(const EventMoments& moments) const
+{
+  if (fCommittedEventCount == 0) {
+    return std::numeric_limits<G4double>::quiet_NaN();
+  }
+  return GetEventRms(moments) / std::sqrt(G4double(fCommittedEventCount));
+}
+
+G4double Run::GetSteelEnergyDepositSum() const
+{
+  return fSteelEnergyDepositMoments.sum;
+}
+
+G4double Run::GetSteelEnergyDepositMean() const
+{
+  return GetEventMean(fSteelEnergyDepositMoments);
+}
+
+G4double Run::GetSteelEnergyDepositRms() const
+{
+  return GetEventRms(fSteelEnergyDepositMoments);
+}
+
+G4double Run::GetSteelEnergyDepositStandardError() const
+{
+  return GetEventStandardError(fSteelEnergyDepositMoments);
+}
+
+G4long Run::GetSteelEnergyDepositNonzeroEventCount() const
+{
+  return fSteelEnergyDepositMoments.nonzeroCount;
+}
+
+G4long Run::GetPrimaryNeutronElasticInteractionCount() const
+{
+  return static_cast<G4long>(fPrimaryNeutronElasticMoments.sum);
+}
+
+G4long Run::GetPrimaryNeutronInelasticInteractionCount() const
+{
+  return static_cast<G4long>(fPrimaryNeutronInelasticMoments.sum);
+}
+
+G4long Run::GetPrimaryNeutronCaptureInteractionCount() const
+{
+  return static_cast<G4long>(fPrimaryNeutronCaptureMoments.sum);
+}
+
+G4long Run::GetPrimaryNeutronElasticEventCount() const
+{
+  return fPrimaryNeutronElasticMoments.nonzeroCount;
+}
+
+G4long Run::GetPrimaryNeutronInelasticEventCount() const
+{
+  return fPrimaryNeutronInelasticMoments.nonzeroCount;
+}
+
+G4long Run::GetPrimaryNeutronCaptureEventCount() const
+{
+  return fPrimaryNeutronCaptureMoments.nonzeroCount;
+}
+
+G4long Run::GetPrimaryNeutronInteractionEventCount() const
+{
+  return fPrimaryNeutronInteractionMoments.nonzeroCount;
+}
+
+G4long Run::GetChargedTileEntryCount() const
+{
+  return static_cast<G4long>(fChargedTileEntryCountMoments.sum);
+}
+
+G4long Run::GetChargedTileEntryEventCount() const
+{
+  return fChargedTileEntryCountMoments.nonzeroCount;
+}
+
+G4double Run::GetChargedTileEntryKineticEnergySum() const
+{
+  return fChargedTileEntryKineticEnergyMoments.sum;
+}
+
+G4long Run::GetElectronTileEntryCount() const
+{
+  return static_cast<G4long>(fElectronTileEntryCountMoments.sum);
+}
+
+G4double Run::GetElectronTileEntryKineticEnergySum() const
+{
+  return fElectronTileEntryKineticEnergyMoments.sum;
+}
+
+G4long Run::GetProtonTileEntryCount() const
+{
+  return static_cast<G4long>(fProtonTileEntryCountMoments.sum);
+}
+
+G4double Run::GetProtonTileEntryKineticEnergySum() const
+{
+  return fProtonTileEntryKineticEnergyMoments.sum;
+}
+
+G4long Run::GetOtherChargedTileEntryCount() const
+{
+  return static_cast<G4long>(fOtherChargedTileEntryCountMoments.sum);
+}
+
+G4double Run::GetOtherChargedTileEntryKineticEnergySum() const
+{
+  return fOtherChargedTileEntryKineticEnergyMoments.sum;
+}
+
+G4long Run::GetPrimaryNeutronTileEntryEventCount() const
+{
+  return fPrimaryNeutronTileEntryMoments.nonzeroCount;
+}
+
+G4double Run::GetTileEnergyDepositSum() const
+{
+  return fTileEnergyDepositMoments.sum;
+}
+
+G4double Run::GetElectronTileEnergyDepositSum() const
+{
+  return fElectronTileEnergyDepositMoments.sum;
+}
+
+G4double Run::GetProtonTileEnergyDepositSum() const
+{
+  return fProtonTileEnergyDepositMoments.sum;
+}
+
+G4double Run::GetOtherChargedTileEnergyDepositSum() const
+{
+  return fOtherChargedTileEnergyDepositMoments.sum;
+}
+
+G4double Run::GetNeutralTileEnergyDepositSum() const
+{
+  return fNeutralTileEnergyDepositMoments.sum;
+}
+
+G4double Run::GetTileEnergyDepositMean() const
+{
+  return GetEventMean(fTileEnergyDepositMoments);
+}
+
+G4double Run::GetTileEnergyDepositRms() const
+{
+  return GetEventRms(fTileEnergyDepositMoments);
+}
+
+G4double Run::GetTileEnergyDepositStandardError() const
+{
+  return GetEventStandardError(fTileEnergyDepositMoments);
+}
+
+G4long Run::GetTileEnergyDepositNonzeroEventCount() const
+{
+  return fTileEnergyDepositMoments.nonzeroCount;
+}
+
+G4double Run::GetGeneratedOpticalMean() const
+{
+  return GetEventMean(fGeneratedOpticalMoments);
+}
+
+G4double Run::GetGeneratedOpticalRms() const
+{
+  return GetEventRms(fGeneratedOpticalMoments);
+}
+
+G4double Run::GetGeneratedOpticalStandardError() const
+{
+  return GetEventStandardError(fGeneratedOpticalMoments);
+}
+
+G4long Run::GetGeneratedOpticalNonzeroEventCount() const
+{
+  return fGeneratedOpticalMoments.nonzeroCount;
+}
+
+G4double Run::GetScintillationMean() const
+{
+  return GetEventMean(fScintillationMoments);
+}
+
+G4double Run::GetScintillationRms() const
+{
+  return GetEventRms(fScintillationMoments);
+}
+
+G4double Run::GetScintillationStandardError() const
+{
+  return GetEventStandardError(fScintillationMoments);
+}
+
+G4long Run::GetScintillationNonzeroEventCount() const
+{
+  return fScintillationMoments.nonzeroCount;
+}
+
+G4double Run::GetSiPMDetectionMean() const
+{
+  return GetEventMean(fSiPMDetectionMoments);
+}
+
+G4double Run::GetSiPMDetectionRms() const
+{
+  return GetEventRms(fSiPMDetectionMoments);
+}
+
+G4double Run::GetSiPMDetectionStandardError() const
+{
+  return GetEventStandardError(fSiPMDetectionMoments);
+}
+
+G4long Run::GetSiPMDetectionNonzeroEventCount() const
+{
+  return fSiPMDetectionMoments.nonzeroCount;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -169,6 +755,9 @@ void Run::Merge(const G4Run* run)
 
   // SiPM count
   fSiPMDetectionCount += localRun->fSiPMDetectionCount;
+  for (std::size_t index = 0; index < fSiPMDetectionCounts.size(); ++index) {
+    fSiPMDetectionCounts[index] += localRun->fSiPMDetectionCounts[index];
+  }
 
   fShootPositionCount += localRun->fShootPositionCount;
   fShootPositionSum += localRun->fShootPositionSum;
@@ -176,6 +765,47 @@ void Run::Merge(const G4Run* run)
   fHitPositionSum += localRun->fHitPositionSum;
   fScintCentroidCount += localRun->fScintCentroidCount;
   fScintCentroidSum += localRun->fScintCentroidSum;
+  fPrimaryEnergyCount += localRun->fPrimaryEnergyCount;
+  fPrimaryEnergySum += localRun->fPrimaryEnergySum;
+  fPrimaryEnergySum2 += localRun->fPrimaryEnergySum2;
+  fPrimaryEnergyMin = std::min(fPrimaryEnergyMin, localRun->fPrimaryEnergyMin);
+  fPrimaryEnergyMax = std::max(fPrimaryEnergyMax, localRun->fPrimaryEnergyMax);
+  fDecayBetaCount += localRun->fDecayBetaCount;
+  fDecayBetaEnergySum += localRun->fDecayBetaEnergySum;
+  fDecayBetaEnergySum2 += localRun->fDecayBetaEnergySum2;
+  fDecayBetaEnergyMin = std::min(fDecayBetaEnergyMin, localRun->fDecayBetaEnergyMin);
+  fDecayBetaEnergyMax = std::max(fDecayBetaEnergyMax, localRun->fDecayBetaEnergyMax);
+
+  fCommittedEventCount += localRun->fCommittedEventCount;
+  fSteelEnergyDepositMoments.Merge(localRun->fSteelEnergyDepositMoments);
+  fPrimaryNeutronElasticMoments.Merge(localRun->fPrimaryNeutronElasticMoments);
+  fPrimaryNeutronInelasticMoments.Merge(localRun->fPrimaryNeutronInelasticMoments);
+  fPrimaryNeutronCaptureMoments.Merge(localRun->fPrimaryNeutronCaptureMoments);
+  fPrimaryNeutronInteractionMoments.Merge(
+    localRun->fPrimaryNeutronInteractionMoments);
+  fChargedTileEntryCountMoments.Merge(localRun->fChargedTileEntryCountMoments);
+  fChargedTileEntryKineticEnergyMoments.Merge(
+    localRun->fChargedTileEntryKineticEnergyMoments);
+  fElectronTileEntryCountMoments.Merge(localRun->fElectronTileEntryCountMoments);
+  fElectronTileEntryKineticEnergyMoments.Merge(
+    localRun->fElectronTileEntryKineticEnergyMoments);
+  fProtonTileEntryCountMoments.Merge(localRun->fProtonTileEntryCountMoments);
+  fProtonTileEntryKineticEnergyMoments.Merge(
+    localRun->fProtonTileEntryKineticEnergyMoments);
+  fOtherChargedTileEntryCountMoments.Merge(
+    localRun->fOtherChargedTileEntryCountMoments);
+  fOtherChargedTileEntryKineticEnergyMoments.Merge(
+    localRun->fOtherChargedTileEntryKineticEnergyMoments);
+  fPrimaryNeutronTileEntryMoments.Merge(localRun->fPrimaryNeutronTileEntryMoments);
+  fTileEnergyDepositMoments.Merge(localRun->fTileEnergyDepositMoments);
+  fElectronTileEnergyDepositMoments.Merge(localRun->fElectronTileEnergyDepositMoments);
+  fProtonTileEnergyDepositMoments.Merge(localRun->fProtonTileEnergyDepositMoments);
+  fOtherChargedTileEnergyDepositMoments.Merge(
+    localRun->fOtherChargedTileEnergyDepositMoments);
+  fNeutralTileEnergyDepositMoments.Merge(localRun->fNeutralTileEnergyDepositMoments);
+  fGeneratedOpticalMoments.Merge(localRun->fGeneratedOpticalMoments);
+  fScintillationMoments.Merge(localRun->fScintillationMoments);
+  fSiPMDetectionMoments.Merge(localRun->fSiPMDetectionMoments);
 
   G4Run::Merge(run);
 }
