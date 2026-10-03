@@ -1,0 +1,20 @@
+{
+  "dataset_preflight_sha256": "57ecba460c6af70ed82a6ed04a2362e8b6eea21ed817fe1f9ec520afc65ad252",
+  "paths": {
+    "dataset_dir": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/data-11.4.2-clean",
+    "dataset_manifest": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/source/outputs/frozen-runtime-v2/dataset-SHA256SUMS",
+    "dataset_preflight": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/source/outputs/frozen-runtime-v2/dataset-preflight.json",
+    "executable": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/source/outputs/frozen-runtime-v2/build/OpNovice2",
+    "sif": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/geant4-11.4.2-alma9-amd64.sif",
+    "source_dir": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/d0defcdc-20261003/source"
+  },
+  "simulation_identity": {
+    "architecture": "x86_64",
+    "dataset_manifest_sha256": "af7dd3e7c5c0b2ffaf3d6409fc88867000ed2a5cd43a4f3081c97f92f324d765",
+    "executable_sha256": "5e0c73ff4368e71d17727592fb709a0b817596b92a13e418ccf001475ec19652",
+    "geant4_version": "11.4.2",
+    "run_manager": "Serial",
+    "sif_sha256": "2f1c40922aa5e6affc83d8589aacfc14179ed2cb024de432089ebfb0b2e0dbdf",
+    "source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797"
+  }
+}

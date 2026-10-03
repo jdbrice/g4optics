@@ -1,0 +1,13 @@
+{
+  "archive": "/users/PAS2524/anolddriver66/g4optics-rn/layout-study-pr6/old-root-recovery-20261003/historical-root-evidence.tar.gz",
+  "archive_bytes": 7767791,
+  "archive_sha256": "b9685f399946d5df6eec609a7b3e429cb8a1a01f92d9715f25ccf41b6116882c",
+  "index_sha256": "717dbfac6aee3d1d1e140f3b03426ad149ce0400fd25c43cce58cb8986cbe661",
+  "files": 442,
+  "root_files": 30,
+  "events": 3000,
+  "data_manifest_checks": [
+    true,
+    true
+  ]
+}

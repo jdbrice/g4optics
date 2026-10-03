@@ -1,0 +1,358 @@
+{
+  "derivation_domain": "steel-module-stack-v1",
+  "derivation_source_commit": "a2d05dfe1a6c76df2acd072d7fab8cff366a02f6",
+  "geant4_version": "11.4.2",
+  "note": "Pure input reconstruction only, no simulation; exact canonical task-plan SHA match with frozen July analysis for both stages. Original retrieved TSV will provide independent confirmation.",
+  "schema_version": "july-stack-reconstructed-seed-plan-v1",
+  "simulation_commit": "ca276b4d3f9c96d2a7a50e852216f805d66decf6",
+  "stages": {
+    "pilot": {
+      "campaign_id": "sms-v1-pilot-efebd30f793b",
+      "campaign_seed": 20260723,
+      "plan_hash": "efebd30f793bcb1e983bf9998e953a417a5eb69c94acf8b52ef79ce387beee86",
+      "remote_directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns/steel-module-stack-pilot-ca276b4d-b100",
+      "slurm_job_id": "50645158",
+      "tasks": [
+        {
+          "configuration_hash": "ed056fe89e10e357e2243ce77830127e6a4a248fde8d6af6538b31b860d66276",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t04-b000",
+          "seed1": 2110580821,
+          "seed2": 517293079,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 1,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "758c5be2ace9233b6755c94be3890215380afa100ae14ff7dd9017a68192c735",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t04-b001",
+          "seed1": 2047188443,
+          "seed2": 1427326643,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 2,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "90e39798590ab0d6ce412f282eccd36bb5e26adf1122d984a8d566864cce4d64",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t04-b002",
+          "seed1": 1061385321,
+          "seed2": 639837123,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 3,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "74ab71db49c75bfb29a2e407be755aa8ddad3158852ed4696f841bfd4d8c5cfe",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t04-b003",
+          "seed1": 1859895116,
+          "seed2": 1180901549,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 4,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "6af609cdfaf846cb7c8f93bc656b20071c5ac4340390cb97741a13f29ae946d8",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t08-b000",
+          "seed1": 1872312327,
+          "seed2": 1616342799,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 5,
+          "tile_thickness_mm": 8
+        },
+        {
+          "configuration_hash": "1e32756a2681374a1e2f5f1e44e882fd69bda326eec7498b8f62d5ab01479260",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t08-b001",
+          "seed1": 1750016157,
+          "seed2": 1526468672,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 6,
+          "tile_thickness_mm": 8
+        },
+        {
+          "configuration_hash": "4b705e3ef9444cdb0bd049c40fdf7684a3f3cedeb4f46227d956e2d73d895a9e",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t08-b002",
+          "seed1": 365605371,
+          "seed2": 1501724505,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 7,
+          "tile_thickness_mm": 8
+        },
+        {
+          "configuration_hash": "d0f63ec6bf446454692c58e19ef0ff25237684ed726aff022db307d24245e5f2",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t08-b003",
+          "seed1": 986355562,
+          "seed2": 1410679084,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 8,
+          "tile_thickness_mm": 8
+        },
+        {
+          "configuration_hash": "d0e0219ac85b1499e2e742f50c332cf29c0a4bbb68079e1809a679a4fc5504eb",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t12-b000",
+          "seed1": 865924534,
+          "seed2": 1115626892,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 9,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "891f7b2d5725d0743d6e9707408384351746670c13ef9ad526635a8b2c0875b3",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t12-b001",
+          "seed1": 1990104844,
+          "seed2": 828008795,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 10,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "db46f298996bca7ae1c90f2d77ee908934a1fba61fde1f228c2ab100bc7beeab",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t12-b002",
+          "seed1": 1312387584,
+          "seed2": 444469385,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 11,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "036cbb28507621702a1f52c93739ec73bafa0f60e25cdc57740b2f09177a9e5e",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t12-b003",
+          "seed1": 243849916,
+          "seed2": 56869646,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 12,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "74e0466a32cc60bd2fa393fa19c5f1fd70095d8a1e0a590cbff945189c48e374",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t16-b000",
+          "seed1": 297406186,
+          "seed2": 1024297359,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 13,
+          "tile_thickness_mm": 16
+        },
+        {
+          "configuration_hash": "c5dc9a0466850c4e431c5cd00fdc29ef5aeaa37a51115a38d516efda8fca62f1",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t16-b001",
+          "seed1": 430874168,
+          "seed2": 826574525,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 14,
+          "tile_thickness_mm": 16
+        },
+        {
+          "configuration_hash": "d647cf377fe1d92a21f329b2197beca8f88e493cabefa516b95aca221b324652",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t16-b002",
+          "seed1": 222953717,
+          "seed2": 1295152510,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 15,
+          "tile_thickness_mm": 16
+        },
+        {
+          "configuration_hash": "d40c8d533b9c5f1599341c6037d2eef2b79654d7483a594126fe1d68d9771239",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t16-b003",
+          "seed1": 419034316,
+          "seed2": 1749840673,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 16,
+          "tile_thickness_mm": 16
+        },
+        {
+          "configuration_hash": "97a67cfbbe3be49e31e9df88680fe7d0f71af8e9531641e6180214013d6595ba",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t20-b000",
+          "seed1": 156330081,
+          "seed2": 193044319,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 17,
+          "tile_thickness_mm": 20
+        },
+        {
+          "configuration_hash": "4764bb9b8615bf6f9aaa62ec93b641890d200f75e78c7de760feea239072b1cc",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t20-b001",
+          "seed1": 1125823705,
+          "seed2": 416472096,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 18,
+          "tile_thickness_mm": 20
+        },
+        {
+          "configuration_hash": "b5a506c3768004ada99bf44f0e0e6aba8a61e4fc9658837211a0c95ab7b2b58b",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t20-b002",
+          "seed1": 242402170,
+          "seed2": 32020640,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 19,
+          "tile_thickness_mm": 20
+        },
+        {
+          "configuration_hash": "35c2ef44119bcd697781271410415a8477fbcd3cef61653af54e0515b0070f07",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t20-b003",
+          "seed1": 809374684,
+          "seed2": 350021888,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 20,
+          "tile_thickness_mm": 20
+        },
+        {
+          "configuration_hash": "3a25f1fa947e5933f1355f5b6ba583aa5448fc1b033d5703d408c179b5aad834",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t24-b000",
+          "seed1": 568554446,
+          "seed2": 124506073,
+          "seed_block": 0,
+          "stage": "pilot",
+          "task_index": 21,
+          "tile_thickness_mm": 24
+        },
+        {
+          "configuration_hash": "d9ad8347b97cd1859a4d0a34ae3a8a522b6d174100f2b2ff190c515d2129c9c0",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t24-b001",
+          "seed1": 1788688107,
+          "seed2": 1534497118,
+          "seed_block": 1,
+          "stage": "pilot",
+          "task_index": 22,
+          "tile_thickness_mm": 24
+        },
+        {
+          "configuration_hash": "1deab81e40a6ba50d8b25120d5dbb6895b3ed01321be1f55152b17847776de5a",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t24-b002",
+          "seed1": 610721792,
+          "seed2": 1057232283,
+          "seed_block": 2,
+          "stage": "pilot",
+          "task_index": 23,
+          "tile_thickness_mm": 24
+        },
+        {
+          "configuration_hash": "fe91d99c9382c1b97401ffe2902352b6a4e9739799195c148abd7db4efc8c98c",
+          "events": 100,
+          "logical_task_id": "stack-pilot-t24-b003",
+          "seed1": 1076511822,
+          "seed2": 2074794938,
+          "seed_block": 3,
+          "stage": "pilot",
+          "task_index": 24,
+          "tile_thickness_mm": 24
+        }
+      ]
+    },
+    "production": {
+      "campaign_id": "sms-v1-production-2cfea7112de7",
+      "campaign_seed": 20260724,
+      "plan_hash": "2cfea7112de712cc58139dc4c0d67ed71421ff896c8d66c34d05d696b7492999",
+      "remote_directory": "/users/PAS2524/anolddriver66/g4optics-rn/campaigns/steel-module-stack-production-ca276b4d",
+      "slurm_job_id": "50646154",
+      "tasks": [
+        {
+          "configuration_hash": "1102f937e3d1199b5925b84968c92b9f2532a083f9e867f6ea055e3690c1e22a",
+          "events": 100,
+          "logical_task_id": "stack-production-t04-b004",
+          "seed1": 335535717,
+          "seed2": 2101797694,
+          "seed_block": 4,
+          "stage": "production",
+          "task_index": 1,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "60319c4c18c0f52aa46a05c4ad12aa3d2dabc5ea3d06751cbc9082909783311a",
+          "events": 100,
+          "logical_task_id": "stack-production-t04-b005",
+          "seed1": 1508823233,
+          "seed2": 1898728048,
+          "seed_block": 5,
+          "stage": "production",
+          "task_index": 2,
+          "tile_thickness_mm": 4
+        },
+        {
+          "configuration_hash": "f9b8f95c814b3c39681a98cbb7957bbc8bf96f2e6102732e4e5e956853b98509",
+          "events": 100,
+          "logical_task_id": "stack-production-t12-b004",
+          "seed1": 107512876,
+          "seed2": 1459943568,
+          "seed_block": 4,
+          "stage": "production",
+          "task_index": 3,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "1806ac30e7bd30bee0cc24dfd17deb696ea3c5ea416d8f02677507b183cbc6b2",
+          "events": 100,
+          "logical_task_id": "stack-production-t12-b005",
+          "seed1": 1463184067,
+          "seed2": 1418991986,
+          "seed_block": 5,
+          "stage": "production",
+          "task_index": 4,
+          "tile_thickness_mm": 12
+        },
+        {
+          "configuration_hash": "0f58f972cb909feb8b31ca411862ac1c12e3be15be7fa0ba8678ddd16f5cef66",
+          "events": 100,
+          "logical_task_id": "stack-production-t20-b004",
+          "seed1": 596779788,
+          "seed2": 818438167,
+          "seed_block": 4,
+          "stage": "production",
+          "task_index": 5,
+          "tile_thickness_mm": 20
+        },
+        {
+          "configuration_hash": "e54f11920d5e704343285ff22ff05c9ba7655e3959d2521d1e4f14a5a4b56205",
+          "events": 100,
+          "logical_task_id": "stack-production-t20-b005",
+          "seed1": 1387074042,
+          "seed2": 280984062,
+          "seed_block": 5,
+          "stage": "production",
+          "task_index": 6,
+          "tile_thickness_mm": 20
+        }
+      ]
+    }
+  }
+}

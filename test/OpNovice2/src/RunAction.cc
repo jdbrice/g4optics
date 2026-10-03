@@ -65,19 +65,63 @@ namespace
 
     const auto generatedOptical = run->GetGeneratedOpticalCount();
     const auto sipmDetected = run->GetSiPMDetectionCount();
+    const auto committedEvents = run->GetCommittedEventCount();
+    const auto collectionEfficiencyValid = generatedOptical > 0;
     const auto collectionEfficiency =
-      generatedOptical > 0 ? G4double(sipmDetected) / G4double(generatedOptical) : 0.;
+      collectionEfficiencyValid
+        ? G4double(sipmDetected) / G4double(generatedOptical)
+        : std::numeric_limits<G4double>::quiet_NaN();
+    const auto production = committedEvents > 0
+      ? G4double(run->GetScintillationCount()) / G4double(committedEvents)
+      : std::numeric_limits<G4double>::quiet_NaN();
+    const auto netResponse = committedEvents > 0
+      ? G4double(sipmDetected) / G4double(committedEvents)
+      : std::numeric_limits<G4double>::quiet_NaN();
+    const auto zeroFraction = [committedEvents](G4long nonzeroEvents) {
+      return committedEvents > 0
+        ? G4double(committedEvents - nonzeroEvents) / G4double(committedEvents)
+        : std::numeric_limits<G4double>::quiet_NaN();
+    };
     const auto missingPosition = std::numeric_limits<G4double>::quiet_NaN();
     const auto shootPosition = run->GetMeanShootPosition();
     const auto hitPosition = run->GetMeanHitPosition();
     const auto scintCentroid = run->GetMeanScintillationCentroid();
+    const auto primaryEnergyCount = run->GetPrimaryKineticEnergyCount();
+    const auto decayBetaCount = run->GetDecayBetaCount();
 
     out << "events,generated_optical_photons,scintillation_photons,"
         << "sipm_detected_photons,collection_efficiency,"
         << "shoot_position_events,shoot_x_mm,shoot_y_mm,shoot_z_mm,"
         << "hit_position_events,hit_x_mm,hit_y_mm,hit_z_mm,"
         << "scint_centroid_events,scint_centroid_x_mm,scint_centroid_y_mm,"
-        << "scint_centroid_z_mm\n";
+        << "scint_centroid_z_mm,"
+        << "primary_energy_events,primary_energy_mean_mev,primary_energy_rms_mev,"
+        << "primary_energy_min_mev,primary_energy_max_mev,"
+        << "decay_beta_count,decay_beta_energy_mean_mev,decay_beta_energy_rms_mev,"
+        << "decay_beta_energy_min_mev,decay_beta_energy_max_mev,"
+        << "committed_events,collection_efficiency_valid,"
+        << "production_scint_photons_per_event,net_sipm_photons_per_event,"
+        << "cerenkov_photons,steel_edep_sum_mev,steel_edep_mean_mev,"
+        << "steel_edep_rms_mev,steel_edep_se_mev,steel_edep_nonzero_events,"
+        << "primary_neutron_interaction_events,primary_neutron_elastic_count,"
+        << "primary_neutron_inelastic_count,primary_neutron_capture_count,"
+        << "primary_neutron_elastic_events,primary_neutron_inelastic_events,"
+        << "primary_neutron_capture_events,charged_tile_entry_events,"
+        << "charged_tile_entry_count,charged_tile_entry_ke_sum_mev,"
+        << "electron_tile_entry_count,electron_tile_entry_ke_sum_mev,"
+        << "proton_tile_entry_count,proton_tile_entry_ke_sum_mev,"
+        << "other_charged_tile_entry_count,other_charged_tile_entry_ke_sum_mev,"
+        << "primary_neutron_tile_entry_events,tile_edep_sum_mev,"
+        << "electron_tile_edep_sum_mev,proton_tile_edep_sum_mev,"
+        << "other_charged_tile_edep_sum_mev,neutral_tile_edep_sum_mev,"
+        << "tile_edep_mean_mev,tile_edep_rms_mev,tile_edep_se_mev,"
+        << "tile_edep_nonzero_events,generated_optical_mean,generated_optical_rms,"
+        << "generated_optical_se,generated_optical_zero_events,"
+        << "generated_optical_zero_fraction,"
+        << "scintillation_mean,scintillation_rms,scintillation_se,"
+        << "scintillation_zero_events,scintillation_zero_fraction,"
+        << "sipm_detected_mean,sipm_detected_rms,sipm_detected_se,"
+        << "sipm_detected_zero_events,sipm_detected_zero_fraction\n";
     out << std::setprecision(17);
     out << run->GetNumberOfEvents() << ','
         << generatedOptical << ','
@@ -98,6 +142,76 @@ namespace
         << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.y() / mm : missingPosition)
         << ','
         << (run->GetScintillationCentroidCount() > 0 ? scintCentroid.z() / mm : missingPosition)
+        << ','
+        << primaryEnergyCount << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMean() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyRms() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMin() / MeV : missingPosition)
+        << ','
+        << (primaryEnergyCount > 0 ? run->GetPrimaryKineticEnergyMax() / MeV : missingPosition)
+        << ','
+        << decayBetaCount << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMean() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyRms() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMin() / MeV : missingPosition)
+        << ','
+        << (decayBetaCount > 0 ? run->GetDecayBetaEnergyMax() / MeV : missingPosition)
+        << ','
+        << committedEvents << ','
+        << (collectionEfficiencyValid ? 1 : 0) << ','
+        << production << ','
+        << netResponse << ','
+        << run->GetCerenkovCount() << ','
+        << run->GetSteelEnergyDepositSum() / MeV << ','
+        << run->GetSteelEnergyDepositMean() / MeV << ','
+        << run->GetSteelEnergyDepositRms() / MeV << ','
+        << run->GetSteelEnergyDepositStandardError() / MeV << ','
+        << run->GetSteelEnergyDepositNonzeroEventCount() << ','
+        << run->GetPrimaryNeutronInteractionEventCount() << ','
+        << run->GetPrimaryNeutronElasticInteractionCount() << ','
+        << run->GetPrimaryNeutronInelasticInteractionCount() << ','
+        << run->GetPrimaryNeutronCaptureInteractionCount() << ','
+        << run->GetPrimaryNeutronElasticEventCount() << ','
+        << run->GetPrimaryNeutronInelasticEventCount() << ','
+        << run->GetPrimaryNeutronCaptureEventCount() << ','
+        << run->GetChargedTileEntryEventCount() << ','
+        << run->GetChargedTileEntryCount() << ','
+        << run->GetChargedTileEntryKineticEnergySum() / MeV << ','
+        << run->GetElectronTileEntryCount() << ','
+        << run->GetElectronTileEntryKineticEnergySum() / MeV << ','
+        << run->GetProtonTileEntryCount() << ','
+        << run->GetProtonTileEntryKineticEnergySum() / MeV << ','
+        << run->GetOtherChargedTileEntryCount() << ','
+        << run->GetOtherChargedTileEntryKineticEnergySum() / MeV << ','
+        << run->GetPrimaryNeutronTileEntryEventCount() << ','
+        << run->GetTileEnergyDepositSum() / MeV << ','
+        << run->GetElectronTileEnergyDepositSum() / MeV << ','
+        << run->GetProtonTileEnergyDepositSum() / MeV << ','
+        << run->GetOtherChargedTileEnergyDepositSum() / MeV << ','
+        << run->GetNeutralTileEnergyDepositSum() / MeV << ','
+        << run->GetTileEnergyDepositMean() / MeV << ','
+        << run->GetTileEnergyDepositRms() / MeV << ','
+        << run->GetTileEnergyDepositStandardError() / MeV << ','
+        << run->GetTileEnergyDepositNonzeroEventCount() << ','
+        << run->GetGeneratedOpticalMean() << ','
+        << run->GetGeneratedOpticalRms() << ','
+        << run->GetGeneratedOpticalStandardError() << ','
+        << committedEvents - run->GetGeneratedOpticalNonzeroEventCount() << ','
+        << zeroFraction(run->GetGeneratedOpticalNonzeroEventCount()) << ','
+        << run->GetScintillationMean() << ','
+        << run->GetScintillationRms() << ','
+        << run->GetScintillationStandardError() << ','
+        << committedEvents - run->GetScintillationNonzeroEventCount() << ','
+        << zeroFraction(run->GetScintillationNonzeroEventCount()) << ','
+        << run->GetSiPMDetectionMean() << ','
+        << run->GetSiPMDetectionRms() << ','
+        << run->GetSiPMDetectionStandardError() << ','
+        << committedEvents - run->GetSiPMDetectionNonzeroEventCount() << ','
+        << zeroFraction(run->GetSiPMDetectionNonzeroEventCount())
         << '\n';
   }
 }

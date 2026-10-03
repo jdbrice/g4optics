@@ -1,0 +1,11 @@
+{
+  "result_file": "/tmp/g4-july-retrospective-result-r2.json",
+  "result_sha256": "0485b98fc98683eb744b6910c2501ebd2582bf12a35ace54dd159a69432a5269",
+  "retrospective_npz_sha256": "481a4407e457081bda9015a25bd314f46d8921d0f710e2e656a2e5ad481ce4f4",
+  "script_sha256": "f99911da9c7d82f341c9f2fe9e82fd9e122357e067b9e58cf01809d0ae6bd9ac",
+  "all30_root_index_hashes_match": true,
+  "old_summary_reproduced": true,
+  "finite_bootstrap_replicates": true,
+  "initial_matmul_warnings": "Initial local BLAS emitted floating-status warnings; its saved outputs were finite. An independent non-BLAS contraction using identical registered random weights produced exactly equal arrays in all six configurations. Both original diagnostic and r2 outputs were retained; r2 is final.",
+  "reduction_repeat_arrays_exactly_equal": true
+}

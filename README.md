@@ -1,5 +1,12 @@
 # Undergraduate Research Plan: Scintillator Light Uniformity Study with Geant4
 
+## Ten-layer steel / SiPM layout study
+
+For the four fixed SiPM layouts and six tile thicknesses, start with the
+[Geant4 11.4.2 Docker and OSC quickstart](tools/layout_study/README.md).
+It includes the runtime recipe, a small reproducible run, and geometry/ROOT
+audits. The historical environment and research notes below are retained.
+
 **Duration:** 4 Weeks  
 **Goal:** Study light collection uniformity in plastic scintillator tiles of varying sizes/thicknesses using Geant4 simulations.
 

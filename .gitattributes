@@ -1,0 +1,4 @@
+tools/layout_study/results/**/*.json linguist-generated=true
+tools/layout_study/results/**/*.csv linguist-generated=true
+tools/layout_study/results/**/*.psv linguist-generated=true
+tools/layout_study/results/**/plot_program.py linguist-generated=true

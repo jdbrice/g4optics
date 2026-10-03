@@ -1,0 +1,322 @@
+{
+  "aggregate_matches_exact_saved_points": [
+    {
+      "D_all": 560680,
+      "D_local": 560680,
+      "G": 29253873,
+      "all_origin_net_photons_per_neutron": 934.4666666666667,
+      "events": 600,
+      "generated_photons_per_neutron": 48756.455,
+      "local_collection": 0.019166009232350192,
+      "local_net_photons_per_neutron": 934.4666666666667,
+      "tasks": 6,
+      "tile_thickness_mm": 4
+    },
+    {
+      "D_all": 553930,
+      "D_local": 553930,
+      "G": 37660078,
+      "all_origin_net_photons_per_neutron": 1384.825,
+      "events": 400,
+      "generated_photons_per_neutron": 94150.195,
+      "local_collection": 0.01470867904203491,
+      "local_net_photons_per_neutron": 1384.825,
+      "tasks": 4,
+      "tile_thickness_mm": 8
+    },
+    {
+      "D_all": 934879,
+      "D_local": 934879,
+      "G": 75843391,
+      "all_origin_net_photons_per_neutron": 1558.1316666666667,
+      "events": 600,
+      "generated_photons_per_neutron": 126405.65166666667,
+      "local_collection": 0.012326439887161691,
+      "local_net_photons_per_neutron": 1558.1316666666667,
+      "tasks": 6,
+      "tile_thickness_mm": 12
+    },
+    {
+      "D_all": 782405,
+      "D_local": 782405,
+      "G": 72872847,
+      "all_origin_net_photons_per_neutron": 1956.0125,
+      "events": 400,
+      "generated_photons_per_neutron": 182182.1175,
+      "local_collection": 0.01073657791907046,
+      "local_net_photons_per_neutron": 1956.0125,
+      "tasks": 4,
+      "tile_thickness_mm": 16
+    },
+    {
+      "D_all": 1027257,
+      "D_local": 1027257,
+      "G": 108101959,
+      "all_origin_net_photons_per_neutron": 1712.095,
+      "events": 600,
+      "generated_photons_per_neutron": 180169.93166666667,
+      "local_collection": 0.009502667754614882,
+      "local_net_photons_per_neutron": 1712.095,
+      "tasks": 6,
+      "tile_thickness_mm": 20
+    },
+    {
+      "D_all": 743554,
+      "D_local": 743554,
+      "G": 87418849,
+      "all_origin_net_photons_per_neutron": 1858.885,
+      "events": 400,
+      "generated_photons_per_neutron": 218547.1225,
+      "local_collection": 0.008505648478625016,
+      "local_net_photons_per_neutron": 1858.885,
+      "tasks": 4,
+      "tile_thickness_mm": 24
+    }
+  ],
+  "archive_sha256": "b9685f399946d5df6eec609a7b3e429cb8a1a01f92d9715f25ccf41b6116882c",
+  "data_comparison": {
+    "common_paths_with_different_sha256": 0,
+    "common_paths_with_same_sha256": 25337,
+    "current_dataset_files": 43526,
+    "current_groups": {
+      "G4ABLA3.3": 10,
+      "G4CHANNELING2.0": 21,
+      "G4EMLOW8.8": 11424,
+      "G4ENSDFSTATE3.0": 3,
+      "G4INCL1.3": 16,
+      "G4NDL4.7.1": 16092,
+      "G4PARTICLEXS4.2": 3362,
+      "G4PII1.3": 6189,
+      "G4SAIDDATA2.0": 37,
+      "PhotonEvaporation6.1.2": 3366,
+      "RadioactiveDecay6.1.2": 2965,
+      "RealSurface2.2": 41
+    },
+    "current_official_reference_sha256": "a22fcbb989e4612cb49728242de9b15bff18f4e1ed3f55a6ed2549d46636d306",
+    "exact_common_paths": 25337,
+    "old_dataset_files_excluding_12_tar_archives": 43009,
+    "old_entries_including_archives": 43021,
+    "old_groups": {
+      "G4ABLA.3.3.tar.gz": 1,
+      "G4ABLA3.3": 10,
+      "G4CHANNELING.1.0.tar.gz": 1,
+      "G4CHANNELING1.0": 6,
+      "G4EMLOW.8.6.1.tar.gz": 1,
+      "G4EMLOW8.6.1": 11400,
+      "G4ENSDFSTATE.3.0.tar.gz": 1,
+      "G4ENSDFSTATE3.0": 3,
+      "G4INCL.1.2.tar.gz": 1,
+      "G4INCL1.2": 12,
+      "G4NDL.4.7.1.tar.gz": 1,
+      "G4NDL4.7.1": 16092,
+      "G4PARTICLEXS.4.1.tar.gz": 1,
+      "G4PARTICLEXS4.1": 2888,
+      "G4PII.1.3.tar.gz": 1,
+      "G4PII1.3": 6189,
+      "G4PhotonEvaporation.6.1.tar.gz": 1,
+      "G4RadioactiveDecay.6.1.2.tar.gz": 1,
+      "G4RealSurface.2.2.tar.gz": 1,
+      "G4SAIDDATA.2.0.tar.gz": 1,
+      "G4SAIDDATA2.0": 37,
+      "PhotonEvaporation6.1": 3366,
+      "RadioactiveDecay6.1.2": 2965,
+      "RealSurface2.2": 41
+    },
+    "old_manifest_sha256": "ef94e0915e1fffd0c24923dec161252da608400f5572f088bac8d5ce77acf807",
+    "status": "different-versioned-dataset-manifests",
+    "version_normalized_family_comparison": [
+      {
+        "added_files": 24,
+        "changed_relative_paths": [
+          "History",
+          "dna/sigma_elastic_e_elsepa_muffin.dat",
+          "dna/sigmadiff_cumulated_elastic_e_elsepa_muffin.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Ag.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Al.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_C.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Cu.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Ge.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_KAPTON.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Ni.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_SILICON_DIOXIDE.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Si.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_Ti.dat",
+          "microelec/Elastic/elsepa_elastic_cross_e_W.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Ag.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Al.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_C.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Cu.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Ge.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_KAPTON.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Ni.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_SILICON_DIOXIDE.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Si.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_Ti.dat",
+          "microelec/Elastic/elsepa_elastic_cumulated_diffcross_e_W.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_ALUMINUM_OXIDE.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Ag.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Al.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Au.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_BORON_NITRIDE.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Be.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_C.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Cu.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Fe.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Ge.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_KAPTON.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Ni.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_SILICON_DIOXIDE.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Si.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_TITANIUM_NITRIDE.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_Ti.dat",
+          "microelec/Inelastic/cumulated_mermin_sigmadiff_inelastic_e-_W.dat",
+          "microelec/Structure/Data_ALUMINUM_OXIDE.dat",
+          "microelec/Structure/Data_Ag.dat",
+          "microelec/Structure/Data_Al.dat",
+          "microelec/Structure/Data_Au.dat",
+          "microelec/Structure/Data_BORON_NITRIDE.dat",
+          "microelec/Structure/Data_Be.dat",
+          "microelec/Structure/Data_C.dat",
+          "microelec/Structure/Data_Cu.dat",
+          "microelec/Structure/Data_Fe.dat",
+          "microelec/Structure/Data_Ge.dat",
+          "microelec/Structure/Data_KAPTON.dat",
+          "microelec/Structure/Data_Ni.dat",
+          "microelec/Structure/Data_SILICON_DIOXIDE.dat",
+          "microelec/Structure/Data_Si.dat",
+          "microelec/Structure/Data_TITANIUM_NITRIDE.dat",
+          "microelec/Structure/Data_Ti.dat",
+          "microelec/Structure/Data_W.dat",
+          "microelec/Structure/Example file.dat"
+        ],
+        "changed_shared_files": 60,
+        "current": "G4EMLOW8.8",
+        "current_files": 11424,
+        "old": "G4EMLOW8.6.1",
+        "old_files": 11400,
+        "removed_files": 0,
+        "unchanged_shared_files": 11340
+      },
+      {
+        "added_files": 474,
+        "changed_relative_paths": [
+          "History",
+          "README"
+        ],
+        "changed_shared_files": 2,
+        "current": "G4PARTICLEXS4.2",
+        "current_files": 3362,
+        "old": "G4PARTICLEXS4.1",
+        "old_files": 2888,
+        "removed_files": 0,
+        "unchanged_shared_files": 2886
+      },
+      {
+        "added_files": 0,
+        "changed_relative_paths": [
+          "History",
+          "z5.a11",
+          "z75.a187",
+          "z91.a234",
+          "z94.a239"
+        ],
+        "changed_shared_files": 5,
+        "current": "PhotonEvaporation6.1.2",
+        "current_files": 3366,
+        "old": "PhotonEvaporation6.1",
+        "old_files": 3366,
+        "removed_files": 0,
+        "unchanged_shared_files": 3361
+      },
+      {
+        "added_files": 4,
+        "changed_relative_paths": [
+          "README"
+        ],
+        "changed_shared_files": 1,
+        "current": "G4INCL1.3",
+        "current_files": 16,
+        "old": "G4INCL1.2",
+        "old_files": 12,
+        "removed_files": 0,
+        "unchanged_shared_files": 11
+      },
+      {
+        "added_files": 15,
+        "changed_relative_paths": [
+          "History",
+          "README",
+          "Si_axes_100.dat"
+        ],
+        "changed_shared_files": 3,
+        "current": "G4CHANNELING2.0",
+        "current_files": 21,
+        "old": "G4CHANNELING1.0",
+        "old_files": 6,
+        "removed_files": 0,
+        "unchanged_shared_files": 3
+      }
+    ]
+  },
+  "events": 3000,
+  "indexed_files_verified": 441,
+  "legacy_auditor_source_hashes": {
+    "realistic_neutron_campaign_lib.py": "5d60e6abc90106d5b2d10695cda25938a7557d6718e1659739562c948b83b241",
+    "realistic_neutron_event_audit.py": "d28396da27f840f31f233489b3bbee1fc1056c24378a13c5f13ce4f747ddedbc",
+    "steel_module_stack_campaign_lib.py": "d567c25d13bef0a6451e8fe7a7d6d84e6bafab032c5bf99590ea6a9f5d2c707e",
+    "steel_module_stack_event_audit.py": "aa5b162a280b0f9ac05f4a58e6fdecaf208923563808e00f58d002ee4b576e60"
+  },
+  "limits": [
+    "No new simulation or retrospective bootstrap was run by this proof.",
+    "The old SIF itself and old dataset files were not recovered; comparisons concern sealed receipt maps.",
+    "Different SIF SHA256 values do not establish equal or different container payloads without payload inspection.",
+    "The old launcher preserves an existing valid G4*DATA environment variable before searching the mounted dataset directory. Recovered simulation logs do not enumerate resolved full dataset paths, so the sealed manifest alone cannot prove which listed file was loaded by each physics process.",
+    "Dataset families differ, but some changed hashes are documentation or unused-model tables. This proof does not attribute the response difference to a particular dataset or to the geometry gap."
+  ],
+  "old_environment": {
+    "accepted_statistical_evidence": true,
+    "build_artifact": {
+      "path": "/users/PAS2524/anolddriver66/g4optics-rn/builds/candidate-ca276b4d/OpNovice2",
+      "sha256": "a2870a157ec8eabba4a3b79611dd1451a09147fffd6fa19c9edf79770819b83f"
+    },
+    "g4_data_manifest": {
+      "path": "/users/PAS2524/anolddriver66/g4optics-rn/environment/71e5979a/g4-data-manifest.sha256",
+      "sha256": "ef94e0915e1fffd0c24923dec161252da608400f5572f088bac8d5ce77acf807"
+    },
+    "geant4_version": "11.4.2",
+    "identity_hash": "002529dfae4f34571cadbca0219be09dcc29fa10f71f7c737c55d5296739c810",
+    "image": {
+      "path": "/users/PAS2524/anolddriver66/projects/g4optics/geant4.sif",
+      "sha256": "6a777120a8ad8ae4959580e5c1e9eaa4dc2a837a95cbfca533f2f07d71d54962"
+    },
+    "mode": "osc-production"
+  },
+  "reconstructed_seed_plan_sha256": "9d520a7b94a5ffa4946d66b48be8fb2942aed1a8a7b49af4b6ed3e8a34d922eb",
+  "roots_with_saved_hash_and_fresh_legacy_audit": 30,
+  "simulation_commit": "ca276b4d3f9c96d2a7a50e852216f805d66decf6",
+  "stages": {
+    "pilot": {
+      "campaign_id": "sms-v1-pilot-efebd30f793b",
+      "campaign_manifest_sha256": "06a591e0dd858567756dbd8fceac9485ad1b52c0d281654b66569d7d109164d1",
+      "events": 2400,
+      "sealed_finalized_sha256": "d16de1ca46489b4dbf3a83bb3e66e633a6752c403279f00dc7f6bcba7b224c07",
+      "tasks": 24
+    },
+    "production": {
+      "campaign_id": "sms-v1-production-2cfea7112de7",
+      "campaign_manifest_sha256": "59bdb7ac32404c72a2c75ae6458899489b7fecf461ec3dcda3443257f182b946",
+      "events": 600,
+      "sealed_finalized_sha256": "43969a9f000a0b19a0e43aee487e612d2f32999a1f7cf1049736fd9243f5b088",
+      "tasks": 6
+    }
+  },
+  "status": "old-root-provenance-and-aggregate-verified",
+  "uncopied_campaign_artifacts": [
+    "campaigns/steel-module-stack-pilot-ca276b4d-b100/README.md",
+    "campaigns/steel-module-stack-production-ca276b4d/README.md"
+  ],
+  "uncopied_text_records": [
+    "campaigns/steel-module-stack-production-ca276b4d/finalized/stack-analysis/summary.md"
+  ],
+  "unique_seeds": 60
+}

@@ -1,0 +1,289 @@
+{
+  "scope": "descriptive historical/current overlay; new within-current thickness contrasts are exploratory, outside the 18 prespecified layout contrasts; no new bootstrap or simulation",
+  "historical_csv": "/Users/edison/geant4-docker/workdir/g4optics/test/OpNovice2/campaign/steel-module-stack-final-ca276b4d/finalized/stack-analysis/thickness_summary.csv",
+  "historical_csv_sha256": "c3cc180d3e6eb307ee81face100e2633a16ae489aaac7d4beb160e3e90a5d961",
+  "current_result": "/Users/edison/.codex/worktrees/steel-layout-upstream/g4optics/outputs/upstream-repro/osc-pr6-complete/source/outputs/first-scan-d0defcdc/analysis/result.json",
+  "current_result_sha256": "0ea85e4363beb04e4a29ef0e382d110994bd12c5667c780f0f01e47c5dbeb6ba",
+  "historical_raw_ROOT_rechecked_here": false,
+  "rows": [
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 4,
+      "events": 600,
+      "production": [
+        48756.455,
+        44373.6535,
+        53430.82191666667
+      ],
+      "collection": [
+        0.019166009232350192,
+        0.019004155473491265,
+        0.019329465590988738
+      ],
+      "net_response": [
+        934.4666666666667,
+        850.5636666666667,
+        1022.5624166666666
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 4,
+      "events": 1000,
+      "production": [
+        50169.67,
+        46773.55075,
+        53687.67615
+      ],
+      "collection": [
+        0.019252488605167227,
+        0.01910465056526214,
+        0.019426415745154177
+      ],
+      "net_response": [
+        965.891,
+        900.625725,
+        1032.505225
+      ]
+    },
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 8,
+      "events": 400,
+      "production": [
+        94150.195,
+        85973.9499375,
+        102833.3463125
+      ],
+      "collection": [
+        0.01470867904203491,
+        0.01464303595234368,
+        0.0147749654645792
+      ],
+      "net_response": [
+        1384.825,
+        1263.99775,
+        1512.3038125
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 8,
+      "events": 1000,
+      "production": [
+        89612.958,
+        83779.44732499999,
+        95484.131725
+      ],
+      "collection": [
+        0.014802926157174726,
+        0.01473309820865359,
+        0.014885862212651434
+      ],
+      "net_response": [
+        1326.534,
+        1239.7116,
+        1413.79765
+      ]
+    },
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 12,
+      "events": 600,
+      "production": [
+        126405.65166666667,
+        116378.798625,
+        136831.63654166667
+      ],
+      "collection": [
+        0.012326439887161691,
+        0.012278667276848712,
+        0.012375942732982061
+      ],
+      "net_response": [
+        1558.1316666666667,
+        1434.997,
+        1685.4995416666666
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 12,
+      "events": 1000,
+      "production": [
+        127947.03,
+        120381.038875,
+        135756.18525
+      ],
+      "collection": [
+        0.012355941361046051,
+        0.012318934687411099,
+        0.01239656899102691
+      ],
+      "net_response": [
+        1580.906,
+        1486.817875,
+        1678.018825
+      ]
+    },
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 16,
+      "events": 400,
+      "production": [
+        182182.1175,
+        164667.954,
+        201020.5745625
+      ],
+      "collection": [
+        0.01073657791907046,
+        0.01065879514146159,
+        0.010832519312931433
+      ],
+      "net_response": [
+        1956.0125,
+        1769.1819375,
+        2157.4378125
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 16,
+      "events": 1000,
+      "production": [
+        154261.956,
+        144763.126925,
+        164042.95919999998
+      ],
+      "collection": [
+        0.01067834249424401,
+        0.010647621706781159,
+        0.010712101825155055
+      ],
+      "net_response": [
+        1647.262,
+        1546.2275,
+        1751.1725999999999
+      ]
+    },
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 20,
+      "events": 600,
+      "production": [
+        180169.93166666667,
+        165836.04758333333,
+        194529.29283333334
+      ],
+      "collection": [
+        0.009502667754614882,
+        0.009440841600229493,
+        0.009596835172328861
+      ],
+      "net_response": [
+        1712.095,
+        1577.2267083333331,
+        1848.96775
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 20,
+      "events": 1000,
+      "production": [
+        193469.501,
+        181714.232075,
+        205308.50499999998
+      ],
+      "collection": [
+        0.009499445599955313,
+        0.00945878102436764,
+        0.009549246832380225
+      ],
+      "net_response": [
+        1837.853,
+        1725.872825,
+        1951.199225
+      ]
+    },
+    {
+      "sample": "July zero-gap",
+      "thickness_mm": 24,
+      "events": 400,
+      "production": [
+        218547.1225,
+        197331.216125,
+        240485.80762500002
+      ],
+      "collection": [
+        0.008505648478625016,
+        0.00846762003510789,
+        0.008556883621067738
+      ],
+      "net_response": [
+        1858.885,
+        1678.2214374999999,
+        2044.2589374999998
+      ]
+    },
+    {
+      "sample": "Current 0.5-mm gap",
+      "thickness_mm": 24,
+      "events": 1000,
+      "production": [
+        220668.985,
+        208438.16802500002,
+        232726.19574999998
+      ],
+      "collection": [
+        0.008550612583820966,
+        0.008519821600885184,
+        0.008586800519296195
+      ],
+      "net_response": [
+        1886.855,
+        1781.150375,
+        1991.1576
+      ]
+    }
+  ],
+  "exploratory_current_thickness_contrasts": [
+    {
+      "thickness_high": 16,
+      "thickness_low": 12,
+      "difference_D": 66.356,
+      "unadjusted_descriptive_ci95": [
+        -74.29505000000007,
+        205.11385000000004
+      ]
+    },
+    {
+      "thickness_high": 20,
+      "thickness_low": 16,
+      "difference_D": 190.59100000000012,
+      "unadjusted_descriptive_ci95": [
+        40.502575000000114,
+        344.5801499999998
+      ]
+    },
+    {
+      "thickness_high": 24,
+      "thickness_low": 20,
+      "difference_D": 49.00199999999995,
+      "unadjusted_descriptive_ci95": [
+        -104.08157500000002,
+        202.2656749999999
+      ]
+    },
+    {
+      "thickness_high": 24,
+      "thickness_low": 16,
+      "difference_D": 239.59300000000007,
+      "unadjusted_descriptive_ci95": [
+        90.77477500000009,
+        386.49334999999996
+      ]
+    }
+  ],
+  "source_optical_boundary": "https://github.com/Geant4/geant4/blob/v11.4.2/source/processes/optical/src/G4OpBoundaryProcess.cc#L399-L462"
+}

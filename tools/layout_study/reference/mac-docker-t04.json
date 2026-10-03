@@ -1,0 +1,61 @@
+{
+  "schema_version": "layout-study-engineering-reference-v1",
+  "purpose": "small reproducibility example; not scientific ranking",
+  "platform": "linux/arm64 on Mac Docker",
+  "geant4_version": "11.4.2",
+  "python": "3.10.12",
+  "numpy": "2.0.2",
+  "uproot": "5.6.9",
+  "tile_thickness_mm": 4,
+  "gap_mm": 0.5,
+  "seeds": [
+    20261002,
+    10401
+  ],
+  "events_per_layout": 10,
+  "source_without_git": true,
+  "network_during_build_and_run": false,
+  "unprivileged_runtime": true,
+  "fresh_official_dataset_file_count": 43526,
+  "dataset_file_manifest_sha256": "a22fcbb989e4612cb49728242de9b15bff18f4e1ed3f55a6ed2549d46636d306",
+  "test_count_at_cold_check": 68,
+  "cases": [
+    {
+      "layout": "back-four",
+      "events": 10,
+      "generated_photons": 543361,
+      "detected_photons": 10979,
+      "cross_layer_detected_photons": 0,
+      "unknown_origin_detected_photons": 0
+    },
+    {
+      "layout": "back-two",
+      "events": 10,
+      "generated_photons": 653039,
+      "detected_photons": 6172,
+      "cross_layer_detected_photons": 0,
+      "unknown_origin_detected_photons": 0
+    },
+    {
+      "layout": "back-center",
+      "events": 10,
+      "generated_photons": 560233,
+      "detected_photons": 13766,
+      "cross_layer_detected_photons": 0,
+      "unknown_origin_detected_photons": 0
+    },
+    {
+      "layout": "edge-two",
+      "events": 10,
+      "generated_photons": 491369,
+      "detected_photons": 9221,
+      "cross_layer_detected_photons": 0,
+      "unknown_origin_detected_photons": 0
+    }
+  ],
+  "limits": [
+    "ROOT file bytes contain serialization metadata.",
+    "Across architectures, verify geometry and accounting; identical event trajectories are not promised.",
+    "NoRINDEX check is limited to the inherited first-boundary log counter."
+  ]
+}

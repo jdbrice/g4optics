@@ -1,0 +1,4 @@
+# Direct analysis dependencies validated on OSC with Python 3.9.21.
+# The Docker recipe uses Ubuntu's Python 3.10. Record pip freeze for each run.
+numpy==2.0.2
+uproot==5.6.9

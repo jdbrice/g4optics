@@ -1,0 +1,4 @@
+# Isolated figure-export environment; leaves the frozen analysis runtime unchanged.
+# Python 3.9+; Python 3.12 is suitable for the supplied pinned wheels.
+numpy==2.0.2
+matplotlib==3.9.4

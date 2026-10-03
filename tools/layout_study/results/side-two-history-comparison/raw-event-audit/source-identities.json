@@ -1,0 +1,50 @@
+{
+  "old_manifest_sha256": "ef94e0915e1fffd0c24923dec161252da608400f5572f088bac8d5ce77acf807",
+  "new_manifest_sha256": "af7dd3e7c5c0b2ffaf3d6409fc88867000ed2a5cd43a4f3081c97f92f324d765",
+  "old_entries": 43021,
+  "new_entries": 43526,
+  "matching_common_files": 25337,
+  "differing_common_files": [],
+  "old_only_count": 17684,
+  "new_only_count": 18189,
+  "old_version_directories": [
+    "G4CHANNELING1.0",
+    "G4EMLOW8.6.1",
+    "G4INCL1.2",
+    "G4PARTICLEXS4.1",
+    "PhotonEvaporation6.1"
+  ],
+  "new_version_directories": [
+    "G4CHANNELING2.0",
+    "G4EMLOW8.8",
+    "G4INCL1.3",
+    "G4PARTICLEXS4.2",
+    "PhotonEvaporation6.1.2"
+  ],
+  "interpretation": "Recorded data-tree version differences, not only manifest formatting. No direct runtime variable map was recovered here; directory/version differences do not identify a causal effect on the 16 mm maximum.",
+  "old_run_identity": {
+    "source_commit": "ca276b4d3f9c96d2a7a50e852216f805d66decf6",
+    "geant4_banner": "geant4-11-04-patch-02 [MT] (12-June-2026)",
+    "requested_run_manager": "Serial",
+    "sif_sha256": "6a777120a8ad8ae4959580e5c1e9eaa4dc2a837a95cbfca533f2f07d71d54962",
+    "executable_sha256": "a2870a157ec8eabba4a3b79611dd1451a09147fffd6fa19c9edf79770819b83f",
+    "old16_core_length_mm": 560,
+    "old16_source_z_mm": 281.5,
+    "intermodule_gap_mm": 0
+  },
+  "current_run_identity": {
+    "architecture": "x86_64",
+    "dataset_manifest_sha256": "af7dd3e7c5c0b2ffaf3d6409fc88867000ed2a5cd43a4f3081c97f92f324d765",
+    "executable_sha256": "5e0c73ff4368e71d17727592fb709a0b817596b92a13e418ccf001475ec19652",
+    "geant4_version": "11.4.2",
+    "run_manager": "Serial",
+    "sif_sha256": "2f1c40922aa5e6affc83d8589aacfc14179ed2cb024de432089ebfb0b2e0dbdf",
+    "source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797"
+  },
+  "current16_geometry": {
+    "core_length_mm": 564.5,
+    "source_z_mm": 283.75,
+    "internal_gap_mm": 0.5,
+    "internal_gap_count": 9
+  }
+}

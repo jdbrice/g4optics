@@ -1,0 +1,9 @@
+Figures use only source-result.json; no events were resampled by the plotter.
+response: mean collected photons/neutron with descriptive 95% percentile intervals.
+primary-contrasts: 18 back-minus-side mean differences, individual 99.7222% intervals, nominal Bonferroni family-wise 95%.
+area-normalized-response: collected photons divided by nominal total SiPM collection-face area; not PDE, intrinsic efficiency, or causal placement separation.
+response-diagnostics: zero-event fraction (95% interval) and top-ten-event light share (descriptive only).
+All configurations contain 1,000 events in ten independent 100-event blocks; the frozen analysis pools whole events for 10,000 bootstrap replicates.
+Bootstrap coverage is approximate; target precision and full optical-history closure are not asserted.
+Reproduce in an isolated environment using requirements-plot.txt, then:
+python plot_program.py --result source-result.json --result-sha256 0ea85e4363beb04e4a29ef0e382d110994bd12c5667c780f0f01e47c5dbeb6ba --output reproduced-figures

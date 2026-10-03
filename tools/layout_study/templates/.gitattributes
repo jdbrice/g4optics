@@ -1,0 +1,3 @@
+# Preserve the frozen bytes across checkouts, including Windows autocrlf.
+*.mac -text
+*.json -text

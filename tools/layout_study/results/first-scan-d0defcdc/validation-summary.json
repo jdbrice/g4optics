@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "scope": "independent numerical verification; no production analysis import, no new bootstrap or simulation, no result relabeling",
+  "manifest_sha256": "82c23d9a967fd7cfaf0bcf1cd67b5ef9d7d39d77f72c065e96cb463a3539ed0c",
+  "result_sha256": "0ea85e4363beb04e4a29ef0e382d110994bd12c5667c780f0f01e47c5dbeb6ba",
+  "bootstrap_sha256": "0850e51cb7662441772335dfd8ea2fc5a8cad1f62601200ddf3894e98e551506",
+  "approved_source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797",
+  "tasks_checked": 240,
+  "events_checked": 24000,
+  "configurations_checked": 24,
+  "primary_intervals_checked": 18,
+  "checks": 53211,
+  "floating_comparison_rtol": 1e-12,
+  "floating_comparison_atol": 1e-12,
+  "max_compared_float_abs_difference": 8.731149137020111e-11,
+  "schema": "steel-layout-published-validation-summary-v1",
+  "full_numerical_report_sha256": "85b31cd320a3a82849dec9fe0f49891e3fa33fbf2fbd0efdbf91dd896a2bcd06",
+  "numerical_checker_sha256": "fe4b62d09af2502a20873a22597b5d3756f53bd975396694a6cc9700877e29dc",
+  "visual_review": {
+    "scope": "All four PNG exports inspected at rendered size; readable labels, correct interval levels and provenance, no clipping or overlap observed. PDF files share the Matplotlib figures; PDF structure checked, no independent PDF-page render claimed.",
+    "plot_program_sha256": "f346da52812cb72618d4297e4b6c80946dca8a82ec6d2723c2fb65ee1207258e",
+    "png_sha256": {
+      "response.png": "7e4c980144f1ab3253c39e26482a7bf9b9538d27da936cdbdc207b94796033a8",
+      "area-normalized-response.png": "3ec28f4d380e310469926ae66ff35baf7cdc77f741f4db7ef0e52290a573d150",
+      "primary-contrasts.png": "916bf9dfa4401a46bb070f6d956fd42ae9e6fa52b9028aaa8191050a9aec23ca",
+      "response-diagnostics.png": "4e7376aed76213d199b656f207673dd8efec091c1e0465f353ae222aef4df367"
+    },
+    "formatting_update": "Final exporter uses LF CSV line endings and removes one documentation trailing space. All 8 PNG/PDF files remain byte-identical to the reviewed v3 figures, and all CSV fields are unchanged."
+  },
+  "provenance_geometry_review": {
+    "status": "passed-provenance-scheduler-geometry",
+    "accepted_receipts_checked": 240,
+    "all_scheduler_allocations": "240 COMPLETED / 0:0 / 1 CPU",
+    "copied_source_files_matching_commit": 61,
+    "build_source_hashes_matching_commit": 107,
+    "dataset_file_maps_matching_official_reference": 43526,
+    "fresh_geometry_audits": 240,
+    "indexed_files_checked": 4025,
+    "limits": [
+      "No numerical scientific statistics or fresh ROOT event arithmetic was evaluated in this proof; another audit covers those.",
+      "The archived ELF/SIF and physical dataset files are absent; identity receipts and complete dataset digest maps were checked.",
+      "NoRINDEX log checking retains the original first-boundary diagnostic scope, not a full optical trajectory guarantee."
+    ],
+    "full_report_sha256": "fbff3a0ee825b0003705e8196d224fd6f4ae05aae32f596b8a6027a3a1140a52"
+  },
+  "standalone_figure_replay": {
+    "status": "passed",
+    "scope": "Standalone bundled plot_program.py executed from /tmp against the published JSON with no Git or ROOT access; all 11 PNG/PDF/CSV outputs byte-identical to the reviewed exports in the recorded local environment.",
+    "artifacts_compared": 11
+  }
+}

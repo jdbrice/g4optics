@@ -1,0 +1,18 @@
+{
+  "verified_date": "2026-10-02",
+  "repository": "carlomt/geant4",
+  "docker": {
+    "tag": "11.4.2-gui",
+    "index": "sha256:7e660c618ad80506c66e9f509a285e7d9e76dadd75b66f28cbe378ccf91ae3f5",
+    "linux/amd64": "sha256:6cafc6d608ad91085b4c4d2d0c78721f63e737d2b0f27d5785ae68ca49eaed1f",
+    "linux/arm64": "sha256:6ca84898d1346dfd9b511251dc158eada0f906fdcae6d9139415c0c3f932e7b6",
+    "metadata_url": "https://hub.docker.com/v2/repositories/carlomt/geant4/tags/11.4.2-gui"
+  },
+  "osc": {
+    "tag": "11.4.2-almalinux9",
+    "index": "sha256:3f9c1550b9f257081a9d4d355c1416e557ba53c85516667bcb48519fe3e2a4c6",
+    "linux/amd64": "sha256:6d7e8dae53bcde0a09b9c47ce863798bafba58a86650de205c64a51abb18f24b",
+    "linux/arm64": "sha256:0aeadcba198433ba57d2f8f7ec3862fd5fdfbc76bf3587458ac2fa99316d98bf",
+    "metadata_url": "https://hub.docker.com/v2/repositories/carlomt/geant4/tags/11.4.2-almalinux9"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "analysis_program_sha256": "a661abf8d1d3814b01e7f04de5c989e48704f6a09e3b58150379a1bc19e4ef36",
+  "colors_markers": {
+    "back-center": [
+      "#D55E00",
+      "^",
+      "-.",
+      "Back: center one"
+    ],
+    "back-four": [
+      "#0072B2",
+      "o",
+      "-",
+      "Back: four"
+    ],
+    "back-two": [
+      "#B8860B",
+      "s",
+      "--",
+      "Back: diagonal two"
+    ],
+    "edge-two": [
+      "#4A4A4A",
+      "D",
+      ":",
+      "Side: two (+X)"
+    ]
+  },
+  "configurations": 24,
+  "events": 24000,
+  "files": {
+    "FIGURES.txt": "92d4064520cfb504b036a61e0cf75b5c603a1c45ddee89cdbc4c1a480ac562c9",
+    "area-normalized-response.pdf": "ec091ab0d695d27d8ea025c7e3496d84e713eacb6f05fa033ec8650452e729fe",
+    "area-normalized-response.png": "3ec28f4d380e310469926ae66ff35baf7cdc77f741f4db7ef0e52290a573d150",
+    "block-means.csv": "eb564f003042503004545a02b6440e65ad4068600ac6d9326b6f005e02c49a6e",
+    "configuration-summary.csv": "1e12df897e59c4317161cfd2d055ecdc2ffe36244d2ae77d598d34c293a1f3b5",
+    "plot_program.py": "f346da52812cb72618d4297e4b6c80946dca8a82ec6d2723c2fb65ee1207258e",
+    "primary-contrasts.csv": "ba6cbdce46d3732b3508d5a4e8ae835305e9231b71a030785c04c54653878685",
+    "primary-contrasts.pdf": "f878dceed5925e40235db1f4fb872061123c63abdd4718ec8c245fe855f456f6",
+    "primary-contrasts.png": "916bf9dfa4401a46bb070f6d956fd42ae9e6fa52b9028aaa8191050a9aec23ca",
+    "requirements-plot.txt": "5fc9c62b8209f78c1fb8a025d50c9b0a5ed91b8ca47fb2b478ed75081d5c09f9",
+    "response-diagnostics.pdf": "624f7a7755554042a1827b9c4ee3e0dee0c9e639cbe257d6bae2ec663ae5747d",
+    "response-diagnostics.png": "4e7376aed76213d199b656f207673dd8efec091c1e0465f353ae222aef4df367",
+    "response.pdf": "4158b5f96b5d85036e6675dd18030aee1505d9fd6cb2727deda7d3009bf48b00",
+    "response.png": "7e4c980144f1ab3253c39e26482a7bf9b9538d27da936cdbdc207b94796033a8",
+    "source-result.json": "0ea85e4363beb04e4a29ef0e382d110994bd12c5667c780f0f01e47c5dbeb6ba"
+  },
+  "manifest_sha256": "82c23d9a967fd7cfaf0bcf1cd67b5ef9d7d39d77f72c065e96cb463a3539ed0c",
+  "plot_program_sha256": "f346da52812cb72618d4297e4b6c80946dca8a82ec6d2723c2fb65ee1207258e",
+  "runtime": {
+    "backend": "Agg",
+    "font": "DejaVu Sans",
+    "freetype": "2.6.1",
+    "matplotlib": "3.9.4",
+    "numpy": "2.0.2",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "python": "3.12.14"
+  },
+  "schema_version": "steel-layout-first-scan-figures-v1",
+  "source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797",
+  "source_result_sha256": "0ea85e4363beb04e4a29ef0e382d110994bd12c5667c780f0f01e47c5dbeb6ba",
+  "status": "rendered-awaiting-visual-review"
+}

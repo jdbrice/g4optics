@@ -1,0 +1,3990 @@
+{
+  "analysis_seed": 2026100209,
+  "approved_source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797",
+  "bootstrap_replicates": 10000,
+  "excluded_seed_registry_sha256": "95e2bc636f4e8d6249802a40be938ec5b1c5605ddd36e7806ab2e410031d9bdb",
+  "excluded_simulation_seed_values": [
+    10401,
+    20409,
+    20413,
+    20417,
+    20421,
+    20425,
+    71004,
+    72004,
+    20261002,
+    20261010,
+    20261014,
+    20261018,
+    20261022,
+    20261026,
+    202610420,
+    202610430,
+    202610440,
+    202610450,
+    202610820,
+    202610830,
+    202610840,
+    202610850,
+    202611220,
+    202611230,
+    202611240,
+    202611250,
+    202611620,
+    202611630,
+    202611640,
+    202611650,
+    202612020,
+    202612030,
+    202612040,
+    202612050,
+    202612420,
+    202612430,
+    202612440,
+    202612450,
+    302610420,
+    302610430,
+    302610440,
+    302610450,
+    302610820,
+    302610830,
+    302610840,
+    302610850,
+    302611220,
+    302611230,
+    302611240,
+    302611250,
+    302611620,
+    302611630,
+    302611640,
+    302611650,
+    302612020,
+    302612030,
+    302612040,
+    302612050,
+    302612420,
+    302612430,
+    302612440,
+    302612450
+  ],
+  "geometry_audit_sha256": "eb640f0c5d91e0473f6e5199b0714c1a09de60828860bbe657e9bc458d22b0c8",
+  "layout_audit_sha256": "e72624f5d5741d3f7fa4e55025c755bb3eb6fa14b7bacbdfd16885b63e9ea5b7",
+  "purpose": "independent-first-formal-layout-scan",
+  "runtime_path": "runtime.json",
+  "runtime_sha256": "6308266daf5ca0603e9a500c275a349d8773411469233670931ce73b2549e044",
+  "schema_version": "steel-layout-first-scan-analysis-input-v1",
+  "simulation_identity": {
+    "architecture": "x86_64",
+    "dataset_manifest_sha256": "af7dd3e7c5c0b2ffaf3d6409fc88867000ed2a5cd43a4f3081c97f92f324d765",
+    "executable_sha256": "5e0c73ff4368e71d17727592fb709a0b817596b92a13e418ccf001475ec19652",
+    "geant4_version": "11.4.2",
+    "run_manager": "Serial",
+    "sif_sha256": "2f1c40922aa5e6affc83d8589aacfc14179ed2cb024de432089ebfb0b2e0dbdf",
+    "source_commit": "d0defcdc3bc7513b4feccdaa64a4512ea621c797"
+  },
+  "source_files_sha256": {
+    "test/OpNovice2/CMakeLists.txt": "d485423443e56f8d54b471aa7f4a60c1ef1339e98799edb114f96517776b74a5",
+    "test/OpNovice2/OpNovice2.cc": "9782f4c78c50a2c3e55d8cdfbb1bd817b7662c9c9a8737842fc59327e53199e4",
+    "test/OpNovice2/include/ActionInitialization.hh": "80db837eaf4bada6b840a0bd5d3335c6cc36d7df28d13ceb83aad50e9bf3a91d",
+    "test/OpNovice2/include/DetectorConstruction.hh": "337abb9d2878583b7fed0a0d7f838e6283caf4d4d6a5e5be137f8346db2e432b",
+    "test/OpNovice2/include/DetectorMessenger.hh": "2ba3df9990522a4396ddfb81c8e1589de63f6638fbae5c86aec9a0d574594553",
+    "test/OpNovice2/include/EventAction.hh": "a4c9cd30aaa975827b07e9348a03ffcb081eb47e910876f9ceb98147b1f9fbe0",
+    "test/OpNovice2/include/HistoManager.hh": "257714f6c6431e0a81174d5378ac4f657ded113cad126be0a11268846a7657e0",
+    "test/OpNovice2/include/PrimaryGeneratorAction.hh": "e143509eced78b7b4dec9d39f73c5364ec6e052c45240d03a712d31c0db33ee4",
+    "test/OpNovice2/include/PrimaryGeneratorMessenger.hh": "0f17ee715d7b46ec69cd69fffdf6884675bb2cedc4ac7592522e8c72cacb7daf",
+    "test/OpNovice2/include/Run.hh": "fbe1ea56ef531944958f766b0e290e363a4060e78dafd25b5424bea5fa6d1f21",
+    "test/OpNovice2/include/RunAction.hh": "e833960e26d61a1a2314aad8596a0d4c2e9e485e7485eabd75d6dbba744226c2",
+    "test/OpNovice2/include/SteppingAction.hh": "d1b052109428d4f60fb9bc0e31c1a83b0b8efe3bdb1be226ebff10e26dc1d87b",
+    "test/OpNovice2/include/SteppingMessenger.hh": "c075c08413d80096e70ca4054d794ed67cffd4e6024d426bd6708a9d0685921c",
+    "test/OpNovice2/include/SteppingVerbose.hh": "60d7701b7eedb8db0fe109d706d6eeecc4499e5c38c6e72ea5b50e0a53df777d",
+    "test/OpNovice2/include/TrackInformation.hh": "2c03dd487c0bc4400de9cbf9b46c014b1cab6e73cbb44e1ff899d47eb7889144",
+    "test/OpNovice2/include/TrackingAction.hh": "f3e4c453d0a36a1bd632adecfd2c0ed1936f15cf2287fe11f1272dc4a255cf61",
+    "test/OpNovice2/src/ActionInitialization.cc": "75eb4076c09c8002df9f83c7b60026666c4ecfa8b0bdc6cc552e74b75d2da0be",
+    "test/OpNovice2/src/DetectorConstruction.cc": "41004b11a1dffbadc168ad5661133e3fe9f7273ed0d9917edabdba986f64a088",
+    "test/OpNovice2/src/DetectorMessenger.cc": "42ce690dd00721a5d7a5fa057ce863805d40cae8b7d870f37af431d02a58341a",
+    "test/OpNovice2/src/EventAction.cc": "468c97f0538e74b38711b86634234145e5f0b990d6924b04526cad309a9a734c",
+    "test/OpNovice2/src/HistoManager.cc": "c88df09ad32bb8c18f9984b6108c8a4ab76b6549e1ad13a12ee8a3ef0fdb130c",
+    "test/OpNovice2/src/PrimaryGeneratorAction.cc": "81fc30e121ba1d1011424081ce96a524ed31123afbe44ea9625c5fc5ebc4bf29",
+    "test/OpNovice2/src/PrimaryGeneratorMessenger.cc": "0b7822a2e4fc65ab10caff0c239a47df3804d461a2684b963cf5ccbb3f57bf6f",
+    "test/OpNovice2/src/Run.cc": "ea2949739add6a07e7f41f9708eb5eb50ca950f999d15bcd5d033b4ea7c74c6d",
+    "test/OpNovice2/src/RunAction.cc": "b396b819a9e5026f7d376470e6366b2088990c1d099f12d0db2f68dce4412ea1",
+    "test/OpNovice2/src/SteppingAction.cc": "238ec22c5284600d34d385cbb84609e9720e0acaf56a02b9129aa096d5e70f44",
+    "test/OpNovice2/src/SteppingMessenger.cc": "67560a4f5c335eb5a52b4c085bd6ea4bddb143c00df65c4a91cb71b45a009329",
+    "test/OpNovice2/src/SteppingVerbose.cc": "f1af72d2c47127a9adb305026c061cf389e498b09adf54ab899ed410433b8a3b",
+    "test/OpNovice2/src/TrackInformation.cc": "68b5c7c76ebd3d35b381dba8717cf14d71017f22c04f83d0d6643e4b4d73a646",
+    "test/OpNovice2/src/TrackingAction.cc": "87f3c1cc821d62a7aeb50cc51766129997e489030c3721e925a0495bc5e809d5",
+    "tools/layout_study/FIRST_SCAN.md": "644db5586980152dda90efdfc7af9d8c3a441c9133b888f5a2c509f7ab6de22a",
+    "tools/layout_study/FORMAL_RUN.md": "0e5e296c6de1c1ea0cfb9077b4b2e079694c4933263e12c52f02005c0862fdc7",
+    "tools/layout_study/README.md": "f6064aeba47734664053ddddd0c32cb0461da7059850cc49f124c77a519e6f85",
+    "tools/layout_study/VALIDATION.md": "1115aeba06f95581f6b0e9d7082959c7d5944523d844c537edf6ffe87e00e5fe",
+    "tools/layout_study/analysis.py": "a661abf8d1d3814b01e7f04de5c989e48704f6a09e3b58150379a1bc19e4ef36",
+    "tools/layout_study/audit.py": "e72624f5d5741d3f7fa4e55025c755bb3eb6fa14b7bacbdfd16885b63e9ea5b7",
+    "tools/layout_study/audit_geometry.py": "eb640f0c5d91e0473f6e5199b0714c1a09de60828860bbe657e9bc458d22b0c8",
+    "tools/layout_study/build_runtime.py": "2d042836dd00ad8105fc2dfe6cde39a83539e2bd83497f4e38752ad2b92b3b13",
+    "tools/layout_study/docker/Dockerfile": "5b164c4ad66971d559fd99c22c361c7afcbafddad7b4f7b4c9a06c3f653ab0cd",
+    "tools/layout_study/docker/entrypoint.sh": "44c48b853fed8273d5eca1667891cb13bcba9a57a19a38d8ba806781b66a750b",
+    "tools/layout_study/docker/images.json": "16ff4158067114dbaf8504177594ef7e0d9a6c5e5d639a8a1c6c8cc5e946cce8",
+    "tools/layout_study/docker/install_data.sh": "a633bce6c3acd33ee0f70441f5bc875eff671825d3c79d98e944f1f5f28702cd",
+    "tools/layout_study/osc_scan.sbatch": "f3f895997258ddfa2a79f08af230a3dec7354fec4cc614bc88f49f690db7b061",
+    "tools/layout_study/prepare.py": "76f6aa0e411adc8249d7129590603295a7111e5cde6d1b042d3bb05302969462",
+    "tools/layout_study/reference/engineering-seeds.json": "95e2bc636f4e8d6249802a40be938ec5b1c5605ddd36e7806ab2e410031d9bdb",
+    "tools/layout_study/reference/mac-docker-t04.json": "98c2d2250b0bf984d260452598804b3b2ff58867e75336a448c22d0b74963cfe",
+    "tools/layout_study/requirements.txt": "fe0204801794ca57eca96e51bb8785f21cedac567d4754f54fb61557ae3ea480",
+    "tools/layout_study/run_local.py": "737a43de9363f759ef80623d0ab3b8d8be418b4c06f673e425c5a9ab890a3fc4",
+    "tools/layout_study/scan.py": "8c296a4316ea40f8d13fa1623ba9f004ad74a308b136752cf8c3c51e6e271fff",
+    "tools/layout_study/templates/.gitattributes": "bd385684603ad541086dcfef89e2bbadf147601859bb3146c3dbdc4a4ddb8f8b",
+    "tools/layout_study/templates/README.md": "1874de3e2c78943b140f82e701b10bf031ab04b73a58ab6d5e98c18c8b309fd6",
+    "tools/layout_study/templates/baseline_template.mac": "4a323d8dd501eec584e94354515905756dc9ecec4f5780ecbace3f40aeb7607d",
+    "tools/layout_study/templates/baseline_template.provenance.json": "0e8fb86f00d2d7d4a652609f325340a06af4cc4246309afb0a01f6c2b0948733",
+    "tools/layout_study/templates/macro_reference.json": "5f30028138b39b5474b5701924993bbb55e0da3811ca1fd6248612fd452c7d4a",
+    "tools/layout_study/tests/test_analysis.py": "f3d4b0d08e7083d47a9556e7b2cd83667ee0e1a2c113fd57aacda676bc3c8efb",
+    "tools/layout_study/tests/test_audit.py": "77540e0db65edd154d32c63bf092bd9abda428b75f3ade7812897a96f1cd9984",
+    "tools/layout_study/tests/test_audit_geometry.py": "7c949b13fc4e15e31f5d8c6f4a419a2800ee2c89f171d447f4cc9d1d910ff8bc",
+    "tools/layout_study/tests/test_build_runtime.py": "4f6c44a3bb420d4d9baeee4b8adeaf2165ec4b04187291c679dfdb236409d447",
+    "tools/layout_study/tests/test_prepare.py": "d04705d77700e5d6df4aa98fd7b5ff3f75a78bce8d206403eafeb83a1eaa327d",
+    "tools/layout_study/tests/test_run_local.py": "cb6fbdfce011619deec4896d6c6355154e80b8d99b4a33b22e0e7b37513f001f",
+    "tools/layout_study/tests/test_scan.py": "b50e5469b22546ba945c80a1700b74308de154852a923dc78ad7f11c31b20116"
+  },
+  "tasks": [
+    {
+      "block_id": 0,
+      "config_path": "inputs/t04-back-four-b00/config.json",
+      "config_sha256": "8dd0af55337f8d7d0bebadf16d54881fb4ca1b356f1d46283949833914ecb504",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b00/run.mac",
+      "macro_sha256": "f118456d48f839c701bc6659f2a2ee9d45038183e34def454368d1eb5f2e2410",
+      "receipt_path": "accepted/t04-back-four-b00.json",
+      "seeds": [
+        1800000001,
+        1800000002
+      ],
+      "task_id": "t04-back-four-b00",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t04-back-four-b01/config.json",
+      "config_sha256": "353b58d7e22f1f4fa4b41498e18358e6ca3c3bc76198ec4bed240d31a6a896e9",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b01/run.mac",
+      "macro_sha256": "6e0a8800173c5fa0db1fa99808835241739a9671bde204539636e80fd696d833",
+      "receipt_path": "accepted/t04-back-four-b01.json",
+      "seeds": [
+        1800000003,
+        1800000004
+      ],
+      "task_id": "t04-back-four-b01",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t04-back-four-b02/config.json",
+      "config_sha256": "0b42ee1547a9c397180388db966ed7c8d139c8e7d120ca32c036bc2ec3269f0e",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b02/run.mac",
+      "macro_sha256": "881704ff32a8dd02039815ea4aa818a49c54a886e9f42871c13e567106469a74",
+      "receipt_path": "accepted/t04-back-four-b02.json",
+      "seeds": [
+        1800000005,
+        1800000006
+      ],
+      "task_id": "t04-back-four-b02",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t04-back-four-b03/config.json",
+      "config_sha256": "6f301d78e8408ae49f7ebee2d768aeea20c0016cbd5f64193fe6048daaacc94f",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b03/run.mac",
+      "macro_sha256": "52ee69a2f1f75918cb2250cf5d5fbc0c2dd9a7ca0b321ea0f96cb30f13714709",
+      "receipt_path": "accepted/t04-back-four-b03.json",
+      "seeds": [
+        1800000007,
+        1800000008
+      ],
+      "task_id": "t04-back-four-b03",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t04-back-four-b04/config.json",
+      "config_sha256": "ac498bf01f19bad96b79a5eb1552114d7f1a4a995e27f33a9d4e3475eb33cf38",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b04/run.mac",
+      "macro_sha256": "e61dddbd407549e91c9b7599151110998c5874bc45555d66234e7fbd05d1549c",
+      "receipt_path": "accepted/t04-back-four-b04.json",
+      "seeds": [
+        1800000009,
+        1800000010
+      ],
+      "task_id": "t04-back-four-b04",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t04-back-four-b05/config.json",
+      "config_sha256": "fb4a483af2ad5a4accaf8a09bb22ca5c7b5cf79b629d0b126df357dfd44f6e91",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b05/run.mac",
+      "macro_sha256": "8f766feb29f926c11e25731a890377d60f6dc542cd25be5660ca9e38c16ec85d",
+      "receipt_path": "accepted/t04-back-four-b05.json",
+      "seeds": [
+        1800000011,
+        1800000012
+      ],
+      "task_id": "t04-back-four-b05",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t04-back-four-b06/config.json",
+      "config_sha256": "bcdd66744ac9c10d07d2e8b4982bcd0b96964606d555d494d844b8e08e6c4788",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b06/run.mac",
+      "macro_sha256": "aae1f1b8e0c38d81c01785ccc7334a9c598ff6d1ac9b27b4dee7a4552ce7a79e",
+      "receipt_path": "accepted/t04-back-four-b06.json",
+      "seeds": [
+        1800000013,
+        1800000014
+      ],
+      "task_id": "t04-back-four-b06",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t04-back-four-b07/config.json",
+      "config_sha256": "759102170cfa8bb73f31397cd2d2dac80cb046d744c0d4404f7febb0ea83ca22",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b07/run.mac",
+      "macro_sha256": "d23b15499804693e6f2a96a4f9c87c8e23718a578daf5d9cc91d61db4c838e91",
+      "receipt_path": "accepted/t04-back-four-b07.json",
+      "seeds": [
+        1800000015,
+        1800000016
+      ],
+      "task_id": "t04-back-four-b07",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t04-back-four-b08/config.json",
+      "config_sha256": "a24038b949a6000eb0f3736d9a8d01871cffa44380a0007f121310bf23dc692a",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b08/run.mac",
+      "macro_sha256": "520e60b315199887c9ddcdaf6ee63f3d7a04b546ca4bc309790a3f86a7fffd09",
+      "receipt_path": "accepted/t04-back-four-b08.json",
+      "seeds": [
+        1800000017,
+        1800000018
+      ],
+      "task_id": "t04-back-four-b08",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t04-back-four-b09/config.json",
+      "config_sha256": "b65435c6194ac05d37bf92b875f780a028b981a5e5b1cf1e8d762b4d600f4795",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t04-back-four-b09/run.mac",
+      "macro_sha256": "62a019e3253a2de9afac1938a40457268009806ed48943cd88dffa3d4e6d34cb",
+      "receipt_path": "accepted/t04-back-four-b09.json",
+      "seeds": [
+        1800000019,
+        1800000020
+      ],
+      "task_id": "t04-back-four-b09",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t04-back-two-b00/config.json",
+      "config_sha256": "da10184e93f4ee5f92637d1514e824c3273e43ebe4d712022015aa6009765c6e",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b00/run.mac",
+      "macro_sha256": "4254db48a4a04071a5d79ffad23159fc0b1e291750052ec6b0ff0238623d4d6a",
+      "receipt_path": "accepted/t04-back-two-b00.json",
+      "seeds": [
+        1800000021,
+        1800000022
+      ],
+      "task_id": "t04-back-two-b00",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t04-back-two-b01/config.json",
+      "config_sha256": "1d8272fa65a158129cd85eacdbed5980f59ecd7bd0e13b8dd5384eede647fbb6",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b01/run.mac",
+      "macro_sha256": "0896d3fbae96dccfa134570e741a16fec76824a0e383068eb10aceeaa7560fc0",
+      "receipt_path": "accepted/t04-back-two-b01.json",
+      "seeds": [
+        1800000023,
+        1800000024
+      ],
+      "task_id": "t04-back-two-b01",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t04-back-two-b02/config.json",
+      "config_sha256": "c0b5bba4e26f3946f47742ed25d3ef8edd6c904dd476df1f353b7c10f7ba5ea9",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b02/run.mac",
+      "macro_sha256": "55280498d0a9b949decbff3b01add78fcbcc15ebb02dac8c62a7baa1de2e5a05",
+      "receipt_path": "accepted/t04-back-two-b02.json",
+      "seeds": [
+        1800000025,
+        1800000026
+      ],
+      "task_id": "t04-back-two-b02",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t04-back-two-b03/config.json",
+      "config_sha256": "06628544762695662bb7902424d0efaffad2434de193d7bfadaef8bd8d197e00",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b03/run.mac",
+      "macro_sha256": "d6039c40ab73b9c72d7f67307625dbea0669a84a1d97756210219d5a3fb46c4b",
+      "receipt_path": "accepted/t04-back-two-b03.json",
+      "seeds": [
+        1800000027,
+        1800000028
+      ],
+      "task_id": "t04-back-two-b03",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t04-back-two-b04/config.json",
+      "config_sha256": "3ebc64f5882429790fd39ccdf84a97bc56a5ded10f487cccbd0d4366f5dee15e",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b04/run.mac",
+      "macro_sha256": "17e9120378168dc8e07c65e520baf2e4b3e7c1c611debecf1079e4ed8edc4753",
+      "receipt_path": "accepted/t04-back-two-b04.json",
+      "seeds": [
+        1800000029,
+        1800000030
+      ],
+      "task_id": "t04-back-two-b04",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t04-back-two-b05/config.json",
+      "config_sha256": "583cfc39ae9fee28fe3bcbca274dfb3923174f953a29f7f1f1941721cbe39a59",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b05/run.mac",
+      "macro_sha256": "5b23635ccd5c0cdef80c6fcbc90250c2965ecf8d68e9280f591ecfc493fe0ce8",
+      "receipt_path": "accepted/t04-back-two-b05.json",
+      "seeds": [
+        1800000031,
+        1800000032
+      ],
+      "task_id": "t04-back-two-b05",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t04-back-two-b06/config.json",
+      "config_sha256": "100fc143370c2fc39e647854028711e13dd64f3e4a34bac1c3927a1c2a3f867e",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b06/run.mac",
+      "macro_sha256": "d5cdac8aa8f0262b11ffdfd57840488c16d3537a7a3d680d2ee916fe2efa216f",
+      "receipt_path": "accepted/t04-back-two-b06.json",
+      "seeds": [
+        1800000033,
+        1800000034
+      ],
+      "task_id": "t04-back-two-b06",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t04-back-two-b07/config.json",
+      "config_sha256": "47ba7f5a388415693ef11749dbbfdc75bd9408a468270fd30ae6f7a2d4184ae2",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b07/run.mac",
+      "macro_sha256": "1ed2e2ad24a5aec791c1578548bbbe4a58f12cf3d64477ef7f67a294df4c9067",
+      "receipt_path": "accepted/t04-back-two-b07.json",
+      "seeds": [
+        1800000035,
+        1800000036
+      ],
+      "task_id": "t04-back-two-b07",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t04-back-two-b08/config.json",
+      "config_sha256": "2fe01fca96d491d66245984ab96f99722591caef4b9d9a4c065fe43f85855c99",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b08/run.mac",
+      "macro_sha256": "adf40c555c0a1aa580ba8f002ee037ebf8ac59ee8bf69acdc1c2113ee568acac",
+      "receipt_path": "accepted/t04-back-two-b08.json",
+      "seeds": [
+        1800000037,
+        1800000038
+      ],
+      "task_id": "t04-back-two-b08",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t04-back-two-b09/config.json",
+      "config_sha256": "80b466185e8f4c5c14c05055e13dafdc96eb4d2def5fa00005be8039bd13dd57",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t04-back-two-b09/run.mac",
+      "macro_sha256": "d6abe6579ef1bb1dfd4b7d61943e8a81ef4366eddfb89f133ebd2dae2cb98f66",
+      "receipt_path": "accepted/t04-back-two-b09.json",
+      "seeds": [
+        1800000039,
+        1800000040
+      ],
+      "task_id": "t04-back-two-b09",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t04-back-center-b00/config.json",
+      "config_sha256": "109e98a20fa74350bafd30a0f4f56a8613d9500e2423e1a379e49c4bd91fa1ec",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b00/run.mac",
+      "macro_sha256": "bbde3e05abe66e9fc5af87e98fc64aa9471a7a343103405b9fcff5d741493516",
+      "receipt_path": "accepted/t04-back-center-b00.json",
+      "seeds": [
+        1800000041,
+        1800000042
+      ],
+      "task_id": "t04-back-center-b00",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t04-back-center-b01/config.json",
+      "config_sha256": "83b6d968309714395ac5a2455bde514ce944b19b9f2f95de9e4a19918dd2f8f1",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b01/run.mac",
+      "macro_sha256": "f08867eabcb70365a3a671962f7f7f15a3f4b97a82e2dbc31003a50c94675483",
+      "receipt_path": "accepted/t04-back-center-b01.json",
+      "seeds": [
+        1800000043,
+        1800000044
+      ],
+      "task_id": "t04-back-center-b01",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t04-back-center-b02/config.json",
+      "config_sha256": "b1d19265d670505718942f40d4ee1c6d99fcdca28f9fcd48f7dadf1b3eca8d9f",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b02/run.mac",
+      "macro_sha256": "e1b4088df58811943b79e650d646530d89c3b2208b0385de3c148b6de151df8b",
+      "receipt_path": "accepted/t04-back-center-b02.json",
+      "seeds": [
+        1800000045,
+        1800000046
+      ],
+      "task_id": "t04-back-center-b02",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t04-back-center-b03/config.json",
+      "config_sha256": "9009740aa868682bc11ce184239b7ea3245af46cd0de81801a18783ce0238a09",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b03/run.mac",
+      "macro_sha256": "af9346b1bc266ef91f86d72ec53035f6e3b39c8c71a7f3e663c32d42a8014e77",
+      "receipt_path": "accepted/t04-back-center-b03.json",
+      "seeds": [
+        1800000047,
+        1800000048
+      ],
+      "task_id": "t04-back-center-b03",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t04-back-center-b04/config.json",
+      "config_sha256": "e02407dada3012047c787308a8654c94533eb5b46140276758b95d39cfcf8583",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b04/run.mac",
+      "macro_sha256": "735a202fd5f524fc043d67709b0821271e2e90fb8d0e8884413b2100b9eceb11",
+      "receipt_path": "accepted/t04-back-center-b04.json",
+      "seeds": [
+        1800000049,
+        1800000050
+      ],
+      "task_id": "t04-back-center-b04",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t04-back-center-b05/config.json",
+      "config_sha256": "d47690d9076b2fd0cbab465c94136842cb76df508deb744b3532ccb81158bbe0",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b05/run.mac",
+      "macro_sha256": "ebe208cf47ba4e7b35d0ddbde2f0b9f4a5d23f2171ccea026f5c810512f84ecd",
+      "receipt_path": "accepted/t04-back-center-b05.json",
+      "seeds": [
+        1800000051,
+        1800000052
+      ],
+      "task_id": "t04-back-center-b05",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t04-back-center-b06/config.json",
+      "config_sha256": "ad4191b9ae3ac377e400039df9b9c98f259c4c88a8e9f17590ca9eef7ace7a7c",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b06/run.mac",
+      "macro_sha256": "539bb95fb3043f93218643aa7deaa4a4ad1b3f3a9f83f713be1818d15be1276d",
+      "receipt_path": "accepted/t04-back-center-b06.json",
+      "seeds": [
+        1800000053,
+        1800000054
+      ],
+      "task_id": "t04-back-center-b06",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t04-back-center-b07/config.json",
+      "config_sha256": "110aac8087c1fdf00084331a0bcb9a9576eb4c76c911b517aa94d949f3ca9269",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b07/run.mac",
+      "macro_sha256": "2b1f3428947d3c95df3fe21806e4aae645d643a0c63651f8ba8cf360b05d767e",
+      "receipt_path": "accepted/t04-back-center-b07.json",
+      "seeds": [
+        1800000055,
+        1800000056
+      ],
+      "task_id": "t04-back-center-b07",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t04-back-center-b08/config.json",
+      "config_sha256": "c561e9345ca89631998894ce1da421b2d27a0eae52740fcfe30c67ca5930006e",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b08/run.mac",
+      "macro_sha256": "403c1fd0f0a3cf5b3110ed9d40f61a8fb86e52d2c0db952c6cf29e507848fa83",
+      "receipt_path": "accepted/t04-back-center-b08.json",
+      "seeds": [
+        1800000057,
+        1800000058
+      ],
+      "task_id": "t04-back-center-b08",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t04-back-center-b09/config.json",
+      "config_sha256": "6ca0ed79b7261fb12ad6acfb775364b7af69f22cec51fae3e3fda926db85e34d",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t04-back-center-b09/run.mac",
+      "macro_sha256": "b59868005ae4ec3a29cfbb52fe8a1cbd6a4b31a97a299f2f12db02c0292971b6",
+      "receipt_path": "accepted/t04-back-center-b09.json",
+      "seeds": [
+        1800000059,
+        1800000060
+      ],
+      "task_id": "t04-back-center-b09",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t04-edge-two-b00/config.json",
+      "config_sha256": "63dfcd5d2ce8d5a7621bd180fc26c5f3aabfbfcca34ad30eb8c2823d9d913012",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b00/run.mac",
+      "macro_sha256": "c2336a0066dd318857cd5c7f84710f98c9487c7a6254ac34b0295fe231559417",
+      "receipt_path": "accepted/t04-edge-two-b00.json",
+      "seeds": [
+        1800000061,
+        1800000062
+      ],
+      "task_id": "t04-edge-two-b00",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t04-edge-two-b01/config.json",
+      "config_sha256": "58fbba66c291e11e8fdf79ab83cbdc4bb1aecfa57a12f29aafa395078c4215d1",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b01/run.mac",
+      "macro_sha256": "cb8783f6cbbec2baf82bbe0ed27dfa3863b3a6d78b3e785ede9f1054603aa241",
+      "receipt_path": "accepted/t04-edge-two-b01.json",
+      "seeds": [
+        1800000063,
+        1800000064
+      ],
+      "task_id": "t04-edge-two-b01",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t04-edge-two-b02/config.json",
+      "config_sha256": "5baba85d169ccc4156c4ab5ab0d202ce5129ad22d2768758d4ef2689c4223d86",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b02/run.mac",
+      "macro_sha256": "8531b67d5898922d3d5db433951271153f618ff5c5d35ffecaef99c9913e2ed9",
+      "receipt_path": "accepted/t04-edge-two-b02.json",
+      "seeds": [
+        1800000065,
+        1800000066
+      ],
+      "task_id": "t04-edge-two-b02",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t04-edge-two-b03/config.json",
+      "config_sha256": "3b78d968c8270e1a1cbe2ea2bed6dd13aed985368d9ed481d5435ca2c4241540",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b03/run.mac",
+      "macro_sha256": "a63bd132223a1f98458a876bcb3008ee0f9aa29784ba1eb241762b4782544ffd",
+      "receipt_path": "accepted/t04-edge-two-b03.json",
+      "seeds": [
+        1800000067,
+        1800000068
+      ],
+      "task_id": "t04-edge-two-b03",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t04-edge-two-b04/config.json",
+      "config_sha256": "21446d8f3928d489755033966e6848fb7756daee3e629d890fd86da3cb303b69",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b04/run.mac",
+      "macro_sha256": "199287b67aab39bc5f40c2a6eed21445a8d09be5f661ce44ade88a25052bb6e1",
+      "receipt_path": "accepted/t04-edge-two-b04.json",
+      "seeds": [
+        1800000069,
+        1800000070
+      ],
+      "task_id": "t04-edge-two-b04",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t04-edge-two-b05/config.json",
+      "config_sha256": "45a845c052ef966f65c5f5efb744870ebfdf115dde2e8c3129e7347649d3127b",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b05/run.mac",
+      "macro_sha256": "e75892844f6c3035f1d8a0187fae62dc13d9aa3857f81ac67061ccf2166c6b22",
+      "receipt_path": "accepted/t04-edge-two-b05.json",
+      "seeds": [
+        1800000071,
+        1800000072
+      ],
+      "task_id": "t04-edge-two-b05",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t04-edge-two-b06/config.json",
+      "config_sha256": "623430976cf51fc7055addfef0261f020ea6212c691520a730e86e3aca556acf",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b06/run.mac",
+      "macro_sha256": "4cf40b83104b74ad7417bc75662d9221efb4a97bc6d59166120f74ad77b7fabb",
+      "receipt_path": "accepted/t04-edge-two-b06.json",
+      "seeds": [
+        1800000073,
+        1800000074
+      ],
+      "task_id": "t04-edge-two-b06",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t04-edge-two-b07/config.json",
+      "config_sha256": "cd576685becdb3573271c7f9fcec2e7ef6fd054c3c7047085176f841df5558d3",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b07/run.mac",
+      "macro_sha256": "59cac6db212159a34e3d6f461b51a34dee1851165fc28ce34d69f327f42f70a2",
+      "receipt_path": "accepted/t04-edge-two-b07.json",
+      "seeds": [
+        1800000075,
+        1800000076
+      ],
+      "task_id": "t04-edge-two-b07",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t04-edge-two-b08/config.json",
+      "config_sha256": "48ec13342efe6abe861c74fa811e97ad80785d36991413e6e3b86bf3535f097a",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b08/run.mac",
+      "macro_sha256": "f6552dddc919251e70a4c154eb64cb73e67cf9f385a411e7a77a8af5f3fae67b",
+      "receipt_path": "accepted/t04-edge-two-b08.json",
+      "seeds": [
+        1800000077,
+        1800000078
+      ],
+      "task_id": "t04-edge-two-b08",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t04-edge-two-b09/config.json",
+      "config_sha256": "1decb34df06faa2307b903e1d9d96cba8ee198ff1f7bc8b0b10df714ffc71d03",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t04-edge-two-b09/run.mac",
+      "macro_sha256": "85418c1b408093c4491b5d71bfa41985c1dea02661dc97a4bd396ae55ea65b73",
+      "receipt_path": "accepted/t04-edge-two-b09.json",
+      "seeds": [
+        1800000079,
+        1800000080
+      ],
+      "task_id": "t04-edge-two-b09",
+      "tile_thickness_mm": 4
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t08-back-four-b00/config.json",
+      "config_sha256": "62b106acf3b8841581b2078bf9b94b430e8648c6e926fb7c6683406c1d33fb16",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b00/run.mac",
+      "macro_sha256": "8b4869d7d1a433ceeefa4702b1a3bb81cee19cce15e0635c79924c627bce3415",
+      "receipt_path": "accepted/t08-back-four-b00.json",
+      "seeds": [
+        1800000081,
+        1800000082
+      ],
+      "task_id": "t08-back-four-b00",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t08-back-four-b01/config.json",
+      "config_sha256": "cc8bcc67464c780dbde5ca536d35e2694b0a9f749512e32a5d89569dbb282e4f",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b01/run.mac",
+      "macro_sha256": "e3941094c2739763f37204288d8e18c3ba541288680a95f98c6009d1bd689f00",
+      "receipt_path": "accepted/t08-back-four-b01.json",
+      "seeds": [
+        1800000083,
+        1800000084
+      ],
+      "task_id": "t08-back-four-b01",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t08-back-four-b02/config.json",
+      "config_sha256": "4ba400ccd163a97c08a848c6b6aca792e10865b129df6034f79d3b2f8c6e80dd",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b02/run.mac",
+      "macro_sha256": "7d3d445cdbec4bdff19324c989425466380631c0758a512f321cc2c00378ad6c",
+      "receipt_path": "accepted/t08-back-four-b02.json",
+      "seeds": [
+        1800000085,
+        1800000086
+      ],
+      "task_id": "t08-back-four-b02",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t08-back-four-b03/config.json",
+      "config_sha256": "06e674e225d11c7e5859c9aed0203f2e4ccd04834a0b18d389dd0c20d13a84b2",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b03/run.mac",
+      "macro_sha256": "325583ccdb13d08a2c072df0c51f17e4c71e18ed9ef8b5a66474342b96b29f65",
+      "receipt_path": "accepted/t08-back-four-b03.json",
+      "seeds": [
+        1800000087,
+        1800000088
+      ],
+      "task_id": "t08-back-four-b03",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t08-back-four-b04/config.json",
+      "config_sha256": "dc3fe39c1d03caa4d6a6e2e953156ebde6d43b45a7da1ae4ac560f0a3bdf71fd",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b04/run.mac",
+      "macro_sha256": "331e65eec5b1442298d91a0c4aa9360cd699fcd0ac0d32fc6dd15f6be1a89463",
+      "receipt_path": "accepted/t08-back-four-b04.json",
+      "seeds": [
+        1800000089,
+        1800000090
+      ],
+      "task_id": "t08-back-four-b04",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t08-back-four-b05/config.json",
+      "config_sha256": "afc158e8260036d196da82906ec5648de5ad392b126c132a78b8233b14dc6d1f",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b05/run.mac",
+      "macro_sha256": "ec21c5031546e4178b96959ca9ec6a8bf2af97913d4a3fb9732d823a3a1dd0a2",
+      "receipt_path": "accepted/t08-back-four-b05.json",
+      "seeds": [
+        1800000091,
+        1800000092
+      ],
+      "task_id": "t08-back-four-b05",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t08-back-four-b06/config.json",
+      "config_sha256": "076931df0d0e04be67b43117924e6e43846892420ae12b1fe68a819c5ba18d1d",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b06/run.mac",
+      "macro_sha256": "4307557a68e5bda0a44a52d0975d7210749c1321d26174144ef026b4555a3797",
+      "receipt_path": "accepted/t08-back-four-b06.json",
+      "seeds": [
+        1800000093,
+        1800000094
+      ],
+      "task_id": "t08-back-four-b06",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t08-back-four-b07/config.json",
+      "config_sha256": "27c149179305a7e7905d5cf592aa658550579dfbd125ff8fff0447d065dc6b46",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b07/run.mac",
+      "macro_sha256": "58676dd53873d75b11a05af5153d19ba7dce6ff52fe36bf61ea7c7b0ffe289d3",
+      "receipt_path": "accepted/t08-back-four-b07.json",
+      "seeds": [
+        1800000095,
+        1800000096
+      ],
+      "task_id": "t08-back-four-b07",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t08-back-four-b08/config.json",
+      "config_sha256": "ef58119ebfe4adc376eea20900d8839920cccbfd820bfe94a8339abc3b5a377b",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b08/run.mac",
+      "macro_sha256": "fc480f15da36cac037324c3fd0e80aebfbf360c70adc4220d2cfc7d6c04c43f8",
+      "receipt_path": "accepted/t08-back-four-b08.json",
+      "seeds": [
+        1800000097,
+        1800000098
+      ],
+      "task_id": "t08-back-four-b08",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t08-back-four-b09/config.json",
+      "config_sha256": "01efa539c42ae2a4c61ea9dd9595b3d7a16c5fd3d7f96eac4e5350a263cdcfb8",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t08-back-four-b09/run.mac",
+      "macro_sha256": "5be32642f8b350e3861eb3b22a271130f620712e0eed5beabced9abd19804875",
+      "receipt_path": "accepted/t08-back-four-b09.json",
+      "seeds": [
+        1800000099,
+        1800000100
+      ],
+      "task_id": "t08-back-four-b09",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t08-back-two-b00/config.json",
+      "config_sha256": "ee3ab724342209be59904ff2f556d589772c230dd5f0b656aa59f8e07bb30251",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b00/run.mac",
+      "macro_sha256": "d303265523f1881ac645a9ac4e5a335c064683d0ccc88615aeed0824225c31af",
+      "receipt_path": "accepted/t08-back-two-b00.json",
+      "seeds": [
+        1800000101,
+        1800000102
+      ],
+      "task_id": "t08-back-two-b00",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t08-back-two-b01/config.json",
+      "config_sha256": "165bd9a038a1f6afa35ffd82dee80bba56f1915ae168c665c404ff959b930e1f",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b01/run.mac",
+      "macro_sha256": "11082eac2f342b0983cd7c9f632bcb01ed557ef5c8eef07711889d09aa5a33fe",
+      "receipt_path": "accepted/t08-back-two-b01.json",
+      "seeds": [
+        1800000103,
+        1800000104
+      ],
+      "task_id": "t08-back-two-b01",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t08-back-two-b02/config.json",
+      "config_sha256": "d8c481a5a2f100328ac31469f4f8aade6f1b26153a106cfa203285e4d9ddfa4f",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b02/run.mac",
+      "macro_sha256": "6b68f6bedc51df5d3e62c9d8b90dd4afd44457a8a41e0fdca1852a358dbdedf8",
+      "receipt_path": "accepted/t08-back-two-b02.json",
+      "seeds": [
+        1800000105,
+        1800000106
+      ],
+      "task_id": "t08-back-two-b02",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t08-back-two-b03/config.json",
+      "config_sha256": "5fbae70ac3362b5d9f8055d9b06db8df3a3c0c67a13da41de3df3cfc1eb07186",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b03/run.mac",
+      "macro_sha256": "4d8904cb1a8b6c841d126fcf4dae2a05991b638e02b1f4daf3ce4d7e7e66546f",
+      "receipt_path": "accepted/t08-back-two-b03.json",
+      "seeds": [
+        1800000107,
+        1800000108
+      ],
+      "task_id": "t08-back-two-b03",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t08-back-two-b04/config.json",
+      "config_sha256": "984fb060b61b9d647ed3e853d86ea9c8d5adaa6f729b5f1fc59b582220afcfb4",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b04/run.mac",
+      "macro_sha256": "b2bb19fafa0de1c10b1cde68fc95e2dfe3ebf292fc308118d0e64454d2fd15b6",
+      "receipt_path": "accepted/t08-back-two-b04.json",
+      "seeds": [
+        1800000109,
+        1800000110
+      ],
+      "task_id": "t08-back-two-b04",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t08-back-two-b05/config.json",
+      "config_sha256": "19ded844880a603e2088cee7625a841a7120ba8eefe8b6f9f355f3152914598a",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b05/run.mac",
+      "macro_sha256": "807185eddd05a10c3168a01d15e6b2f5d26a3233d498ecadbf3fec527b65b29e",
+      "receipt_path": "accepted/t08-back-two-b05.json",
+      "seeds": [
+        1800000111,
+        1800000112
+      ],
+      "task_id": "t08-back-two-b05",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t08-back-two-b06/config.json",
+      "config_sha256": "a77f8eb5d4adaa5933fde3eefa437b224315e82bce827a046783a580326138eb",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b06/run.mac",
+      "macro_sha256": "b4cfdd55cd99d6c0c35700426bdeedbfd16aa5070216ad79f3d8d5cc6a1bb5ba",
+      "receipt_path": "accepted/t08-back-two-b06.json",
+      "seeds": [
+        1800000113,
+        1800000114
+      ],
+      "task_id": "t08-back-two-b06",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t08-back-two-b07/config.json",
+      "config_sha256": "764f739e25e730230702682a971fdcf62735af4a6fb0b83caae203e029402f8b",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b07/run.mac",
+      "macro_sha256": "58bb26a62a0407f6d099e154f6591fb0579d6239addd7499545b2a0718a5d07c",
+      "receipt_path": "accepted/t08-back-two-b07.json",
+      "seeds": [
+        1800000115,
+        1800000116
+      ],
+      "task_id": "t08-back-two-b07",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t08-back-two-b08/config.json",
+      "config_sha256": "ba112ae4bf953b5c31a94d626bd746a404217eb9154c3d2bf98ad777d39706b1",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b08/run.mac",
+      "macro_sha256": "5fc551fbdd2da8e5a30a91ca6ed22371e99951d76421acf9d0aecbade18d80bf",
+      "receipt_path": "accepted/t08-back-two-b08.json",
+      "seeds": [
+        1800000117,
+        1800000118
+      ],
+      "task_id": "t08-back-two-b08",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t08-back-two-b09/config.json",
+      "config_sha256": "b23e5e60403e128b645d680b683bbbd0f0d0999cdd7439be617a1d10105bbb85",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t08-back-two-b09/run.mac",
+      "macro_sha256": "e3d5f8276895084a5fc8dc42d2c9086cfafcd928496b99613d836161bef5bdbc",
+      "receipt_path": "accepted/t08-back-two-b09.json",
+      "seeds": [
+        1800000119,
+        1800000120
+      ],
+      "task_id": "t08-back-two-b09",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t08-back-center-b00/config.json",
+      "config_sha256": "2a041af6571cd7355fe7825841e78277da9192679326a325113379624246575a",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b00/run.mac",
+      "macro_sha256": "270e20a2df090d09fc8ce1d138ff0acd84cc97ed44abfcdcc0e1fe686578f908",
+      "receipt_path": "accepted/t08-back-center-b00.json",
+      "seeds": [
+        1800000121,
+        1800000122
+      ],
+      "task_id": "t08-back-center-b00",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t08-back-center-b01/config.json",
+      "config_sha256": "322c4f273931fadb24a3663303134d1278ddab6ac992a2cc5981a5f3b7ff8136",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b01/run.mac",
+      "macro_sha256": "13d841eee0ea4cd22112f3e11c7dbdf0829f49a23519bfc62fbd93599760e11c",
+      "receipt_path": "accepted/t08-back-center-b01.json",
+      "seeds": [
+        1800000123,
+        1800000124
+      ],
+      "task_id": "t08-back-center-b01",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t08-back-center-b02/config.json",
+      "config_sha256": "7ab272fb89d862d8821752b074b3d3b2c752ca501d31c8c3b6cdfe4c5a94b901",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b02/run.mac",
+      "macro_sha256": "f466393651541a6144ee306af423d6481bdc2bfa81c2511bb3e3f422cab11d51",
+      "receipt_path": "accepted/t08-back-center-b02.json",
+      "seeds": [
+        1800000125,
+        1800000126
+      ],
+      "task_id": "t08-back-center-b02",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t08-back-center-b03/config.json",
+      "config_sha256": "6855b8bbea3ea9edbe4f64202bca86903dcef0680025651fbdfa68c7028c5267",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b03/run.mac",
+      "macro_sha256": "e19e4f52b0611528129993dd78f8d358721687e77b927e71c06932e80edf21d8",
+      "receipt_path": "accepted/t08-back-center-b03.json",
+      "seeds": [
+        1800000127,
+        1800000128
+      ],
+      "task_id": "t08-back-center-b03",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t08-back-center-b04/config.json",
+      "config_sha256": "9045c40f790b5891df7dbc7fbea448a433f787d568561b2d2585eb71a9384bc9",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b04/run.mac",
+      "macro_sha256": "9a0e501c0545e9518a59eca1dbd0ef7a55e06027ff4fbeb3ccefe10e4b05be9d",
+      "receipt_path": "accepted/t08-back-center-b04.json",
+      "seeds": [
+        1800000129,
+        1800000130
+      ],
+      "task_id": "t08-back-center-b04",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t08-back-center-b05/config.json",
+      "config_sha256": "7b56930545a964869f5ab6dd3eef29de9b55884ad654f07d7b604ffc0f2244cb",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b05/run.mac",
+      "macro_sha256": "566bd8f63f343b0eb5a11da0870859f6e4ba71a2020441a9fb8158d300beca26",
+      "receipt_path": "accepted/t08-back-center-b05.json",
+      "seeds": [
+        1800000131,
+        1800000132
+      ],
+      "task_id": "t08-back-center-b05",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t08-back-center-b06/config.json",
+      "config_sha256": "e3a897652967a9bb2ad2a45d54fa81fbc211cdacd256d0222dd564ccc6c7652f",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b06/run.mac",
+      "macro_sha256": "62b4ba3a6f477041685aab922a1d9b86dfd5b88ab549d608d580f2fdd16317ae",
+      "receipt_path": "accepted/t08-back-center-b06.json",
+      "seeds": [
+        1800000133,
+        1800000134
+      ],
+      "task_id": "t08-back-center-b06",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t08-back-center-b07/config.json",
+      "config_sha256": "c127b6bc9837423187aa8bbe0a9b8c866e1fa072cbf4e765805872f264b8f9ba",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b07/run.mac",
+      "macro_sha256": "adc4cc780191cdf5f3717fb2fb957c2ff5ca9600b5d961fce188dbedb6a400ae",
+      "receipt_path": "accepted/t08-back-center-b07.json",
+      "seeds": [
+        1800000135,
+        1800000136
+      ],
+      "task_id": "t08-back-center-b07",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t08-back-center-b08/config.json",
+      "config_sha256": "dd41f2be190dbc1d97730cf0ff4d20fcd6780403a89722426fb24a621b9e8260",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b08/run.mac",
+      "macro_sha256": "aba38c3a30014d75a77dd7c6cf6cea3ef350e0acebecd7b4b28d1eb44af736b1",
+      "receipt_path": "accepted/t08-back-center-b08.json",
+      "seeds": [
+        1800000137,
+        1800000138
+      ],
+      "task_id": "t08-back-center-b08",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t08-back-center-b09/config.json",
+      "config_sha256": "0d803e1bb8fea68597c6d578bc7a788cbe6a2edf42d6132ba8b6aa038858058e",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t08-back-center-b09/run.mac",
+      "macro_sha256": "26880a16dca61704372e57e0475f6024da318e8329b9da2c60f475cd6dd0f1b9",
+      "receipt_path": "accepted/t08-back-center-b09.json",
+      "seeds": [
+        1800000139,
+        1800000140
+      ],
+      "task_id": "t08-back-center-b09",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t08-edge-two-b00/config.json",
+      "config_sha256": "f92c3cb488a541b78ebb5c0026a4a289269a16da47e95e4bbf279399b202097f",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b00/run.mac",
+      "macro_sha256": "de0f2f2e7b68120a17d2f891a1d8ec1d87224b978329956fda53fece5eb29642",
+      "receipt_path": "accepted/t08-edge-two-b00.json",
+      "seeds": [
+        1800000141,
+        1800000142
+      ],
+      "task_id": "t08-edge-two-b00",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t08-edge-two-b01/config.json",
+      "config_sha256": "4aa669fe1fad8a85a1e4b13ef7869d7ca131876abdba090b865de639771a22bf",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b01/run.mac",
+      "macro_sha256": "f3b27669b94daa4dbd3812b53a88273802894646736b487bac6b7df36a54a9ae",
+      "receipt_path": "accepted/t08-edge-two-b01.json",
+      "seeds": [
+        1800000143,
+        1800000144
+      ],
+      "task_id": "t08-edge-two-b01",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t08-edge-two-b02/config.json",
+      "config_sha256": "39d785b03063cdcdc16fd470e3bbfaa3cc7e5b45af91eddeb438eb9fcec72fcc",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b02/run.mac",
+      "macro_sha256": "33391863b53b001cf86674be27690d01a5bf7792933fb57fe931adf2bb7476eb",
+      "receipt_path": "accepted/t08-edge-two-b02.json",
+      "seeds": [
+        1800000145,
+        1800000146
+      ],
+      "task_id": "t08-edge-two-b02",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t08-edge-two-b03/config.json",
+      "config_sha256": "baa3e1256a7709b0505ad70ed6a4e763858b5416f8e86946e197e163fd2449cd",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b03/run.mac",
+      "macro_sha256": "e6d9ec2474857a9a7bd15186ec6c15e0233f302a108b32e16b6ae712cf40a532",
+      "receipt_path": "accepted/t08-edge-two-b03.json",
+      "seeds": [
+        1800000147,
+        1800000148
+      ],
+      "task_id": "t08-edge-two-b03",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t08-edge-two-b04/config.json",
+      "config_sha256": "c7d32d88c3385ba8a8845129780fc315b07d3f2cba1e31611a1507fd39237b3a",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b04/run.mac",
+      "macro_sha256": "465ef61447886357c735e47972202a068b37208dcb314d10637495c24a5e0a29",
+      "receipt_path": "accepted/t08-edge-two-b04.json",
+      "seeds": [
+        1800000149,
+        1800000150
+      ],
+      "task_id": "t08-edge-two-b04",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t08-edge-two-b05/config.json",
+      "config_sha256": "7dde0b2bdaad854e8a026e6ac430f55b70d48cd7a3fd4a88f32dd3a74ce9579f",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b05/run.mac",
+      "macro_sha256": "ee569ca0f5ec9fd76281c8f37a175c4decc053f2e2daeef25e612f5127c4a0d0",
+      "receipt_path": "accepted/t08-edge-two-b05.json",
+      "seeds": [
+        1800000151,
+        1800000152
+      ],
+      "task_id": "t08-edge-two-b05",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t08-edge-two-b06/config.json",
+      "config_sha256": "69d662eb4eb5914a80c0933d9905b4cce0d9166cb37aff2996498c7813cb080e",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b06/run.mac",
+      "macro_sha256": "94c2916d3c79cfee1cfeb82242eb98120d721bf628cbb1214b170ce45cb43512",
+      "receipt_path": "accepted/t08-edge-two-b06.json",
+      "seeds": [
+        1800000153,
+        1800000154
+      ],
+      "task_id": "t08-edge-two-b06",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t08-edge-two-b07/config.json",
+      "config_sha256": "21aadb08d6bab184fa2257bbecc81aebd4f7616e81274505c4a235fca89800d1",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b07/run.mac",
+      "macro_sha256": "baee26f17d72893bf8a146a3bb282bd634a66f3b6118ebe9cc18768a8fbbb01d",
+      "receipt_path": "accepted/t08-edge-two-b07.json",
+      "seeds": [
+        1800000155,
+        1800000156
+      ],
+      "task_id": "t08-edge-two-b07",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t08-edge-two-b08/config.json",
+      "config_sha256": "11331558f77ccab4b4e52303af6e8fa894ab461e5243e9956866847d8e2405e0",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b08/run.mac",
+      "macro_sha256": "da2ecdab12dcc91741e3ada8ab258069867db80b7a8e93bf61575ea10bf5301e",
+      "receipt_path": "accepted/t08-edge-two-b08.json",
+      "seeds": [
+        1800000157,
+        1800000158
+      ],
+      "task_id": "t08-edge-two-b08",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t08-edge-two-b09/config.json",
+      "config_sha256": "e66a50d29c20bd1183eed3ceea690ac74e6542295115d5861b507d16d51348f1",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t08-edge-two-b09/run.mac",
+      "macro_sha256": "885af984709b6fb3aa6b2ed495a9f9bb1386308fcf2aa18707d83e63033f74d4",
+      "receipt_path": "accepted/t08-edge-two-b09.json",
+      "seeds": [
+        1800000159,
+        1800000160
+      ],
+      "task_id": "t08-edge-two-b09",
+      "tile_thickness_mm": 8
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t12-back-four-b00/config.json",
+      "config_sha256": "4d4da1df12136f83a7a7f54009b4b71270c02a6a04114068cb057be0da929c5c",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b00/run.mac",
+      "macro_sha256": "bb67781a1c0db4b42e034047afe91ea6313ac7957d48456d004bd847f69102b2",
+      "receipt_path": "accepted/t12-back-four-b00.json",
+      "seeds": [
+        1800000161,
+        1800000162
+      ],
+      "task_id": "t12-back-four-b00",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t12-back-four-b01/config.json",
+      "config_sha256": "2402b8d3f4089c8f11d82597f97cb36db61ff00e86173e59772e98d7c3411985",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b01/run.mac",
+      "macro_sha256": "b26fe5a7925ae3593a649e72fc5fc376a80b4e12850da76a167714d70f1a0063",
+      "receipt_path": "accepted/t12-back-four-b01.json",
+      "seeds": [
+        1800000163,
+        1800000164
+      ],
+      "task_id": "t12-back-four-b01",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t12-back-four-b02/config.json",
+      "config_sha256": "999fa798f3675214392184e6ff961b027baf32781be978f93ca47e9efafffffd",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b02/run.mac",
+      "macro_sha256": "01a82afd11860683d10c78909116f302058e252a20aa0b12c294ab824a4d3d0d",
+      "receipt_path": "accepted/t12-back-four-b02.json",
+      "seeds": [
+        1800000165,
+        1800000166
+      ],
+      "task_id": "t12-back-four-b02",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t12-back-four-b03/config.json",
+      "config_sha256": "7ab58f85a01323f4ad7213602f36cf3aa7a5f800315e9659bd8dd24f92442364",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b03/run.mac",
+      "macro_sha256": "8202c6909a451badf07cac3fd0089f52557d27a509ba7edc93b5c5f5c86b03e2",
+      "receipt_path": "accepted/t12-back-four-b03.json",
+      "seeds": [
+        1800000167,
+        1800000168
+      ],
+      "task_id": "t12-back-four-b03",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t12-back-four-b04/config.json",
+      "config_sha256": "38b4506c8ca9b9f5d8a102a962c1f00b0907383a192d3646bb0ab55bb07fcb77",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b04/run.mac",
+      "macro_sha256": "3a1718e0f4c35b35ad6d4ae965875f97cf004c8075f8d296fc03e624e34bbea2",
+      "receipt_path": "accepted/t12-back-four-b04.json",
+      "seeds": [
+        1800000169,
+        1800000170
+      ],
+      "task_id": "t12-back-four-b04",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t12-back-four-b05/config.json",
+      "config_sha256": "0397a589032fc39cd9e2943d65f7458c9c42bfe25abb7b16d04384deffa079ba",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b05/run.mac",
+      "macro_sha256": "54c4731c0d4511079ad5fbc8a64a2141b1df9b392e618dd69720982dd6d1f0cd",
+      "receipt_path": "accepted/t12-back-four-b05.json",
+      "seeds": [
+        1800000171,
+        1800000172
+      ],
+      "task_id": "t12-back-four-b05",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t12-back-four-b06/config.json",
+      "config_sha256": "20a57f86e656d11c2e36cd60b9ca0705dfda033e14429ce619bdb5672012270f",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b06/run.mac",
+      "macro_sha256": "c0571e8659f52d646f71f00b6926b165dc9e6de70f69b1eb957d6764a7c55170",
+      "receipt_path": "accepted/t12-back-four-b06.json",
+      "seeds": [
+        1800000173,
+        1800000174
+      ],
+      "task_id": "t12-back-four-b06",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t12-back-four-b07/config.json",
+      "config_sha256": "fc36b6ad4ed7479266d4d5096bc77c941b29474d503a927e3f078a2951d3aa44",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b07/run.mac",
+      "macro_sha256": "def955c1560501f40b7748aa201a801f6bb3f0f81e0dc092ad5153ae0a4a1915",
+      "receipt_path": "accepted/t12-back-four-b07.json",
+      "seeds": [
+        1800000175,
+        1800000176
+      ],
+      "task_id": "t12-back-four-b07",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t12-back-four-b08/config.json",
+      "config_sha256": "80620d4728ac4f0531c889561ba05409a71afeca42e15993170e382383341d76",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b08/run.mac",
+      "macro_sha256": "975ffdc0fda973575da9bc08f217994bf6382124a3e89152174d8069d641c81e",
+      "receipt_path": "accepted/t12-back-four-b08.json",
+      "seeds": [
+        1800000177,
+        1800000178
+      ],
+      "task_id": "t12-back-four-b08",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t12-back-four-b09/config.json",
+      "config_sha256": "d1e6c3c25fb9d19e64b8398d1d7fe230032f406e628a18f0e1b8f9cf8124ca87",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t12-back-four-b09/run.mac",
+      "macro_sha256": "6622eb7ff9d9313870f13876bb1b7e6471b246f440b2a900c15385183a4b0cad",
+      "receipt_path": "accepted/t12-back-four-b09.json",
+      "seeds": [
+        1800000179,
+        1800000180
+      ],
+      "task_id": "t12-back-four-b09",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t12-back-two-b00/config.json",
+      "config_sha256": "d2c2214567bf60d98b5f6ac5867a960abb82d1865a78fbec5a77b311ad45d8f1",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b00/run.mac",
+      "macro_sha256": "6f818cdfd461b56fbe637f6d4769fa4154db5b5d07a262949d2ea91be10fe271",
+      "receipt_path": "accepted/t12-back-two-b00.json",
+      "seeds": [
+        1800000181,
+        1800000182
+      ],
+      "task_id": "t12-back-two-b00",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t12-back-two-b01/config.json",
+      "config_sha256": "84ff5e6e8fba8d35f444175e8f2ecb8ef08f90b9e82dee6bf2275017e43a8c8a",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b01/run.mac",
+      "macro_sha256": "4a24a3eab60aacf3ca6052751a6b1e872d71b10138dfa397e56ed416e1aa3bac",
+      "receipt_path": "accepted/t12-back-two-b01.json",
+      "seeds": [
+        1800000183,
+        1800000184
+      ],
+      "task_id": "t12-back-two-b01",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t12-back-two-b02/config.json",
+      "config_sha256": "bf7decefee1b061e824e46e661dc037453d94855295b872599d353a9128f1a52",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b02/run.mac",
+      "macro_sha256": "f5cf5d1a841ff35fd0edf6ff8ef328e8780604c57f6b6b8416b15e449d62b516",
+      "receipt_path": "accepted/t12-back-two-b02.json",
+      "seeds": [
+        1800000185,
+        1800000186
+      ],
+      "task_id": "t12-back-two-b02",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t12-back-two-b03/config.json",
+      "config_sha256": "ac90bb5f71da676ab2e7bfcad49dc17270d7f81047c621d0d34b3694b65c109a",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b03/run.mac",
+      "macro_sha256": "7c02fd3042b1252909c5a4f3478e41b5f8dd5c2d29832b19241034312ee513a2",
+      "receipt_path": "accepted/t12-back-two-b03.json",
+      "seeds": [
+        1800000187,
+        1800000188
+      ],
+      "task_id": "t12-back-two-b03",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t12-back-two-b04/config.json",
+      "config_sha256": "5807cceca0e20ef7f971fd1d0757f9e3ac1b3c3252438d9e2370e75b4a0c683d",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b04/run.mac",
+      "macro_sha256": "e2a9e7ad3a1b1892c9fdd6efa3e1acd101c2f894a4697aab1bddd96ebcdf998f",
+      "receipt_path": "accepted/t12-back-two-b04.json",
+      "seeds": [
+        1800000189,
+        1800000190
+      ],
+      "task_id": "t12-back-two-b04",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t12-back-two-b05/config.json",
+      "config_sha256": "185950cf5532c15b911d61f18d20874049aeabdabc768a413ecd59d2523fbb21",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b05/run.mac",
+      "macro_sha256": "43b92c8bb592ea768718090deace8c673388883c7c7c6de3a8dfdd882c531e19",
+      "receipt_path": "accepted/t12-back-two-b05.json",
+      "seeds": [
+        1800000191,
+        1800000192
+      ],
+      "task_id": "t12-back-two-b05",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t12-back-two-b06/config.json",
+      "config_sha256": "39998e23cb4321538055d1ccc76282a283ed5e3bde7010541c67dfb98781cbd0",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b06/run.mac",
+      "macro_sha256": "bb3c1d8bfcd690ec281e7d4dc4569f82070b8da191c70f2d4b738020766ff301",
+      "receipt_path": "accepted/t12-back-two-b06.json",
+      "seeds": [
+        1800000193,
+        1800000194
+      ],
+      "task_id": "t12-back-two-b06",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t12-back-two-b07/config.json",
+      "config_sha256": "53b3dcc4fe78734efa8f0b6e4a4e122b9bfc6b24a1d8ffaab27c0aeb4db6b1d7",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b07/run.mac",
+      "macro_sha256": "83af78b6ec0d174f0d855a60699870ad8c7e15aba4ef9af76045e638edfed21d",
+      "receipt_path": "accepted/t12-back-two-b07.json",
+      "seeds": [
+        1800000195,
+        1800000196
+      ],
+      "task_id": "t12-back-two-b07",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t12-back-two-b08/config.json",
+      "config_sha256": "24c789c2e724a2af72bfac857d96b0380bf926561323daa81638c15757ed65a5",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b08/run.mac",
+      "macro_sha256": "542fb28aa13e6c1d15c7de320ce88a998914bcca37b3e670027e4ff91e9fe9c8",
+      "receipt_path": "accepted/t12-back-two-b08.json",
+      "seeds": [
+        1800000197,
+        1800000198
+      ],
+      "task_id": "t12-back-two-b08",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t12-back-two-b09/config.json",
+      "config_sha256": "b8755807aeacac11fa407f893f5a353c79e3683009fa48cb946aae6a0b61784e",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t12-back-two-b09/run.mac",
+      "macro_sha256": "6ab7baeaffb46d165d41126f3554bfcc2081d5497c0bb95d60845a8041a49580",
+      "receipt_path": "accepted/t12-back-two-b09.json",
+      "seeds": [
+        1800000199,
+        1800000200
+      ],
+      "task_id": "t12-back-two-b09",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t12-back-center-b00/config.json",
+      "config_sha256": "fe912cf75989a8e1cb0fe7b33116dee35f04c09bfcb722ff318dbe13865b1410",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b00/run.mac",
+      "macro_sha256": "643d91356367d592f99f6778ea64deb95686ca7885c23b03e4803038ab537591",
+      "receipt_path": "accepted/t12-back-center-b00.json",
+      "seeds": [
+        1800000201,
+        1800000202
+      ],
+      "task_id": "t12-back-center-b00",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t12-back-center-b01/config.json",
+      "config_sha256": "c50a67a7652ec16203434df8670a955a73efbe35553617964d66af5efe8afa3b",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b01/run.mac",
+      "macro_sha256": "869b7ae757168a3ef644c194a948a175bd01701b05f00ebfcb6f00d13c552b14",
+      "receipt_path": "accepted/t12-back-center-b01.json",
+      "seeds": [
+        1800000203,
+        1800000204
+      ],
+      "task_id": "t12-back-center-b01",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t12-back-center-b02/config.json",
+      "config_sha256": "6a44fbef924f639486bf2cdf95fbb870f142ccd814d65f5d487ad69c716b9d32",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b02/run.mac",
+      "macro_sha256": "0c365923152f7db9ee6b81dbf62c079482bfc6e8f52c16383222f742938ee449",
+      "receipt_path": "accepted/t12-back-center-b02.json",
+      "seeds": [
+        1800000205,
+        1800000206
+      ],
+      "task_id": "t12-back-center-b02",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t12-back-center-b03/config.json",
+      "config_sha256": "b590c52ab8df4614821e3ee9d0f8f8450703f1a38f2f9b01697733368b34d9f7",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b03/run.mac",
+      "macro_sha256": "5f6f9c736d6ae52be061079579c9d0e116099e6d6c166a5896cd967afcb4d650",
+      "receipt_path": "accepted/t12-back-center-b03.json",
+      "seeds": [
+        1800000207,
+        1800000208
+      ],
+      "task_id": "t12-back-center-b03",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t12-back-center-b04/config.json",
+      "config_sha256": "1cd4a4cbe8e59628dfea1633fa7a3cc01cd07d87e7838d381b0c1766ad1d2438",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b04/run.mac",
+      "macro_sha256": "fb4060583544fb566b299d0743cb524cf6cf0ec94ddfd0ea203dc802ff32d627",
+      "receipt_path": "accepted/t12-back-center-b04.json",
+      "seeds": [
+        1800000209,
+        1800000210
+      ],
+      "task_id": "t12-back-center-b04",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t12-back-center-b05/config.json",
+      "config_sha256": "b9c02683d575ab7efdc6489748c94cce57f8466d75e01dcd1db693e81529a76d",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b05/run.mac",
+      "macro_sha256": "d340615d0f505c75d4fa229cc33bc4783b6ed97e5d86358909baa8290de8decc",
+      "receipt_path": "accepted/t12-back-center-b05.json",
+      "seeds": [
+        1800000211,
+        1800000212
+      ],
+      "task_id": "t12-back-center-b05",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t12-back-center-b06/config.json",
+      "config_sha256": "fffb4f5d2bb35dcf50f9c96f0f6fc5c3e04b8699616001cc4835ad96712c3644",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b06/run.mac",
+      "macro_sha256": "50f8f94ad8fbea52ff3c7fb768c6216387abac796a4fe3cdd21ea8b3ee831c4d",
+      "receipt_path": "accepted/t12-back-center-b06.json",
+      "seeds": [
+        1800000213,
+        1800000214
+      ],
+      "task_id": "t12-back-center-b06",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t12-back-center-b07/config.json",
+      "config_sha256": "873824ebefbf2e4004afc3d6568d63a1303cb64be4c1f8c21c56109cfdb072b2",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b07/run.mac",
+      "macro_sha256": "ebd588ef768ab205cca3948d1ecc549c0a404386a63bbd2f8546ce899701f6d7",
+      "receipt_path": "accepted/t12-back-center-b07.json",
+      "seeds": [
+        1800000215,
+        1800000216
+      ],
+      "task_id": "t12-back-center-b07",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t12-back-center-b08/config.json",
+      "config_sha256": "f9472cce51e6b8549e335a6c6dd077a756edfad9a29d90a1b4f99c949279e26f",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b08/run.mac",
+      "macro_sha256": "9236f18cce1b8b7185596a5af2c6a7b0df5f41753c54e633e388a016013bcb15",
+      "receipt_path": "accepted/t12-back-center-b08.json",
+      "seeds": [
+        1800000217,
+        1800000218
+      ],
+      "task_id": "t12-back-center-b08",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t12-back-center-b09/config.json",
+      "config_sha256": "6b52723ce5ab854e6b1759524a3fac601bdf4e27ce3877d2de148860db1c82ea",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t12-back-center-b09/run.mac",
+      "macro_sha256": "7dab5e7cc3eedbcc70afe11b4559ae8ff16914e0235e261c99921971b7d24c2d",
+      "receipt_path": "accepted/t12-back-center-b09.json",
+      "seeds": [
+        1800000219,
+        1800000220
+      ],
+      "task_id": "t12-back-center-b09",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t12-edge-two-b00/config.json",
+      "config_sha256": "e41e375e985b2cfaf14e3d2f46aa0399f81f043eca3ea68195e23dcd04e43b15",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b00/run.mac",
+      "macro_sha256": "d6f6405148ccb68808e90044737f21bf6cea47cf55097fcea62196dcfdf755d9",
+      "receipt_path": "accepted/t12-edge-two-b00.json",
+      "seeds": [
+        1800000221,
+        1800000222
+      ],
+      "task_id": "t12-edge-two-b00",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t12-edge-two-b01/config.json",
+      "config_sha256": "b8aaeb5243053e8c26a5f843b04bc418d33cdb17f68c7d07b36e185efc2a3799",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b01/run.mac",
+      "macro_sha256": "ef65bcffbbc98a1835f44a127731944f821fd5c08ac0def33e1d802c60a7eae0",
+      "receipt_path": "accepted/t12-edge-two-b01.json",
+      "seeds": [
+        1800000223,
+        1800000224
+      ],
+      "task_id": "t12-edge-two-b01",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t12-edge-two-b02/config.json",
+      "config_sha256": "ea7c1c1911febba0e6d5687e701181213e0d8c1b55f1e3a9c03e9b72449aa38e",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b02/run.mac",
+      "macro_sha256": "7b5b7ecc4aebdb8ad1efb88319733898c2d0649275af6aa9da0e7e631e5835e3",
+      "receipt_path": "accepted/t12-edge-two-b02.json",
+      "seeds": [
+        1800000225,
+        1800000226
+      ],
+      "task_id": "t12-edge-two-b02",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t12-edge-two-b03/config.json",
+      "config_sha256": "2047e819e0cbce562357b597da185ede8bf80999c04be663903b7ec22cf971e0",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b03/run.mac",
+      "macro_sha256": "a169724ed606d71d0def4c46d52c88a466e0fcde341c8cc3c41fb719a5a002cd",
+      "receipt_path": "accepted/t12-edge-two-b03.json",
+      "seeds": [
+        1800000227,
+        1800000228
+      ],
+      "task_id": "t12-edge-two-b03",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t12-edge-two-b04/config.json",
+      "config_sha256": "a2be01df2f73ed9881b3a2513b505f55761ca2bb95d5e871a73859af53b49095",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b04/run.mac",
+      "macro_sha256": "2c1f116862d51f9f9458f1a265e4ad3923f5800011a659676c950243588b2ecf",
+      "receipt_path": "accepted/t12-edge-two-b04.json",
+      "seeds": [
+        1800000229,
+        1800000230
+      ],
+      "task_id": "t12-edge-two-b04",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t12-edge-two-b05/config.json",
+      "config_sha256": "5cc10d0f5bc743048867cbce39a321e5e38055d8749ae380d1519f931b0e1542",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b05/run.mac",
+      "macro_sha256": "5b20226718b7096a14073466e060db8f7c1e780fb68bb1ccd2b073a7beceb7ea",
+      "receipt_path": "accepted/t12-edge-two-b05.json",
+      "seeds": [
+        1800000231,
+        1800000232
+      ],
+      "task_id": "t12-edge-two-b05",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t12-edge-two-b06/config.json",
+      "config_sha256": "f9083be6d8f31d244414f04afd8def26299b72057103b59cf6ad2f04dbf105d4",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b06/run.mac",
+      "macro_sha256": "aa28031e31d8982e5bebe87989fdea3437c18c97dd311adcf9aa02c43245cdcc",
+      "receipt_path": "accepted/t12-edge-two-b06.json",
+      "seeds": [
+        1800000233,
+        1800000234
+      ],
+      "task_id": "t12-edge-two-b06",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t12-edge-two-b07/config.json",
+      "config_sha256": "40dd979cd2c4a311fa9b865fbc9c0427edc7d75c799be91cd147e6d58b26d225",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b07/run.mac",
+      "macro_sha256": "079f19e829729e12d85f78998e73dfa813049f1dfa358ca81825677477601a3b",
+      "receipt_path": "accepted/t12-edge-two-b07.json",
+      "seeds": [
+        1800000235,
+        1800000236
+      ],
+      "task_id": "t12-edge-two-b07",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t12-edge-two-b08/config.json",
+      "config_sha256": "b67e82b58b27f2470888b4a7b205993151177ca3da54350f99b22f9dd337401c",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b08/run.mac",
+      "macro_sha256": "a1c218e1464cc4a34a066905b10e38007ac2e228df6b1b19789c52464d41c596",
+      "receipt_path": "accepted/t12-edge-two-b08.json",
+      "seeds": [
+        1800000237,
+        1800000238
+      ],
+      "task_id": "t12-edge-two-b08",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t12-edge-two-b09/config.json",
+      "config_sha256": "001d0b31df91eb37dff0a0acb66fdc8ce705c7c3f46ee4709790e9c9d3b0fe38",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t12-edge-two-b09/run.mac",
+      "macro_sha256": "ac54edce1ccd904f325893ce5f0e86a2f957a1aac89881f0be04f38d1f7d139e",
+      "receipt_path": "accepted/t12-edge-two-b09.json",
+      "seeds": [
+        1800000239,
+        1800000240
+      ],
+      "task_id": "t12-edge-two-b09",
+      "tile_thickness_mm": 12
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t16-back-four-b00/config.json",
+      "config_sha256": "48419faf83a72c22ee5f446d55105c8865a08ee7dce0012ff11776a329ff0d2f",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b00/run.mac",
+      "macro_sha256": "1448cd2c5de43f25449311715bbf008432479ded6d0027b99b31f545cfcadb46",
+      "receipt_path": "accepted/t16-back-four-b00.json",
+      "seeds": [
+        1800000241,
+        1800000242
+      ],
+      "task_id": "t16-back-four-b00",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t16-back-four-b01/config.json",
+      "config_sha256": "0deeab4a493b2c0e33fd90aa0ed889fffdaf1c83541f065fefc77a0ae643be9d",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b01/run.mac",
+      "macro_sha256": "09e76cb8c96eadd9b1518d3d4e338560edb7f77218bc4dd4ef749ede6a5ac887",
+      "receipt_path": "accepted/t16-back-four-b01.json",
+      "seeds": [
+        1800000243,
+        1800000244
+      ],
+      "task_id": "t16-back-four-b01",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t16-back-four-b02/config.json",
+      "config_sha256": "adf90df68072e1bfdb708f08809d19c62ae53e82ddeefaf839060242fd20103c",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b02/run.mac",
+      "macro_sha256": "417a65edd5c3b061b617391928950c11f7dbc0c364fe39cd39797289097b1c99",
+      "receipt_path": "accepted/t16-back-four-b02.json",
+      "seeds": [
+        1800000245,
+        1800000246
+      ],
+      "task_id": "t16-back-four-b02",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t16-back-four-b03/config.json",
+      "config_sha256": "16427284da5918d3dd2daa2b72d72a87d6d187e253564602a28d99010eff4f99",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b03/run.mac",
+      "macro_sha256": "6337685ca2e427d2860584b98250d680b5d4ad5af8fea02446d100bfacab9bc3",
+      "receipt_path": "accepted/t16-back-four-b03.json",
+      "seeds": [
+        1800000247,
+        1800000248
+      ],
+      "task_id": "t16-back-four-b03",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t16-back-four-b04/config.json",
+      "config_sha256": "16a5d95bfd405254d9ca1fbee23e22e45992a724a9655716d9a8e786ff62f87e",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b04/run.mac",
+      "macro_sha256": "f9c6ea79e784ae5bd55adcdaa697a81ae2955e367697bee0a20ae1d2e68faf64",
+      "receipt_path": "accepted/t16-back-four-b04.json",
+      "seeds": [
+        1800000249,
+        1800000250
+      ],
+      "task_id": "t16-back-four-b04",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t16-back-four-b05/config.json",
+      "config_sha256": "ebb6b262011274ec2ec052214ab38c4d78ecdbdb9b862e2f597231c990769786",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b05/run.mac",
+      "macro_sha256": "9ea6f53d17f40f3216a8e1357e993b4b249d65c98e485c7a583b34c7e51af3bc",
+      "receipt_path": "accepted/t16-back-four-b05.json",
+      "seeds": [
+        1800000251,
+        1800000252
+      ],
+      "task_id": "t16-back-four-b05",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t16-back-four-b06/config.json",
+      "config_sha256": "63681de9b17fd198e1f84f51135c84336169dba423b20772fbbbb4d7eb8f84e3",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b06/run.mac",
+      "macro_sha256": "c9982c77c6b3500460fcf448e0e3a64ce70882f47a1bfdbe1a3e2c738f50bd12",
+      "receipt_path": "accepted/t16-back-four-b06.json",
+      "seeds": [
+        1800000253,
+        1800000254
+      ],
+      "task_id": "t16-back-four-b06",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t16-back-four-b07/config.json",
+      "config_sha256": "68f4eb82f66c849bcf957df46b7b073f77bb5ceab24cac5d3eed17ef3e2304da",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b07/run.mac",
+      "macro_sha256": "f1240de1f14ad28b8a2d3b409c0a058d8028ba1b268116d29dad861548b1dbf6",
+      "receipt_path": "accepted/t16-back-four-b07.json",
+      "seeds": [
+        1800000255,
+        1800000256
+      ],
+      "task_id": "t16-back-four-b07",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t16-back-four-b08/config.json",
+      "config_sha256": "9e6179f9b5d47159e017f2b3080885a61d220af8994613d8d509d0c2eb4220f7",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b08/run.mac",
+      "macro_sha256": "fea7e25655d0c41a71e871052fc1e23608756e2fd6bdf2ca557e3026a5f5fc36",
+      "receipt_path": "accepted/t16-back-four-b08.json",
+      "seeds": [
+        1800000257,
+        1800000258
+      ],
+      "task_id": "t16-back-four-b08",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t16-back-four-b09/config.json",
+      "config_sha256": "bc161e726ed50f154257866f226863b6c8dabee98c8845333093150cc9d2ab3a",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t16-back-four-b09/run.mac",
+      "macro_sha256": "76fb7edf9e3d8e55f5c02989b0714987dbace2d3ff644e4292854bcc0f491536",
+      "receipt_path": "accepted/t16-back-four-b09.json",
+      "seeds": [
+        1800000259,
+        1800000260
+      ],
+      "task_id": "t16-back-four-b09",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t16-back-two-b00/config.json",
+      "config_sha256": "f4dc0f18f0ed1e21013643cd2c772e49a03dc069f7a9325947ce342fe9ed368f",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b00/run.mac",
+      "macro_sha256": "c37782c0067b854fb9327e475d7dd3b95d24d1d79c24642d5bd743fe6e633bed",
+      "receipt_path": "accepted/t16-back-two-b00.json",
+      "seeds": [
+        1800000261,
+        1800000262
+      ],
+      "task_id": "t16-back-two-b00",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t16-back-two-b01/config.json",
+      "config_sha256": "dbadba1811a3fbb6d35b8d7f0d45a44e4d3103b9f11713f1fa2c8f7fedc9c2b6",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b01/run.mac",
+      "macro_sha256": "046dd7e7c5ca8824207d13b60e56edcd1e572918b1f5415d785677c05f5e0699",
+      "receipt_path": "accepted/t16-back-two-b01.json",
+      "seeds": [
+        1800000263,
+        1800000264
+      ],
+      "task_id": "t16-back-two-b01",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t16-back-two-b02/config.json",
+      "config_sha256": "3e69e162e2b59c5e982d37986c43c8de136d5595693ecbfbacfcee92b93436c1",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b02/run.mac",
+      "macro_sha256": "0edf4a107c61780c94100303a52aac39a9cd6b000580833828cdc6e62ba1f684",
+      "receipt_path": "accepted/t16-back-two-b02.json",
+      "seeds": [
+        1800000265,
+        1800000266
+      ],
+      "task_id": "t16-back-two-b02",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t16-back-two-b03/config.json",
+      "config_sha256": "e9c922c9754acf0308587fe30813ff7acec22455ce60081105f666429b1e4cf9",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b03/run.mac",
+      "macro_sha256": "2dfd5205227bd5cb2551db3f77a5784e90fe60fcef8dbaec26da47abf004aad9",
+      "receipt_path": "accepted/t16-back-two-b03.json",
+      "seeds": [
+        1800000267,
+        1800000268
+      ],
+      "task_id": "t16-back-two-b03",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t16-back-two-b04/config.json",
+      "config_sha256": "724599f1fc9fac7380d6628dfc2ff0dc19155b8c1721ea5fa10a2d306c946549",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b04/run.mac",
+      "macro_sha256": "a96299d9cb6c49c055fc57a586e3d373e0c27b13397e21beef48c8cb590538d4",
+      "receipt_path": "accepted/t16-back-two-b04.json",
+      "seeds": [
+        1800000269,
+        1800000270
+      ],
+      "task_id": "t16-back-two-b04",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t16-back-two-b05/config.json",
+      "config_sha256": "afed05ade79db204b23aad1c6f8fac5a44e0bcba0b321710be3638b2ce02dab6",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b05/run.mac",
+      "macro_sha256": "7bc261bcb0ebb41b4e12cb875f86e9be2bc1d859326ae8cef968037a8809c91f",
+      "receipt_path": "accepted/t16-back-two-b05.json",
+      "seeds": [
+        1800000271,
+        1800000272
+      ],
+      "task_id": "t16-back-two-b05",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t16-back-two-b06/config.json",
+      "config_sha256": "85cfc9d3b09aeaecddeb1c7df03ff59d181c61184f7b9ef6009b1817c63dc675",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b06/run.mac",
+      "macro_sha256": "baf867ac46bf0009ba7652f7348b7f5bfc2a5f97c8d7698a3e56ce34c91a55b7",
+      "receipt_path": "accepted/t16-back-two-b06.json",
+      "seeds": [
+        1800000273,
+        1800000274
+      ],
+      "task_id": "t16-back-two-b06",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t16-back-two-b07/config.json",
+      "config_sha256": "c37b9154596614245bc3e84afe23e3eb8f0151b9eee2f536cf94682389231770",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b07/run.mac",
+      "macro_sha256": "45f60c9980d17bd4962bdb9a8388fd637f44c4b1304a45caf0004dc47ce0f470",
+      "receipt_path": "accepted/t16-back-two-b07.json",
+      "seeds": [
+        1800000275,
+        1800000276
+      ],
+      "task_id": "t16-back-two-b07",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t16-back-two-b08/config.json",
+      "config_sha256": "d2e7741b8218d3e95b47bafc4ed03db7d4a1df2b99a577dd6973b110a9362a86",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b08/run.mac",
+      "macro_sha256": "79f000531d0597b1d620807a88594abaf9dca4036c77b5429262f8c8092dd723",
+      "receipt_path": "accepted/t16-back-two-b08.json",
+      "seeds": [
+        1800000277,
+        1800000278
+      ],
+      "task_id": "t16-back-two-b08",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t16-back-two-b09/config.json",
+      "config_sha256": "523b07eccb23921d33d68c702f1218561457dbbac820313fc2962ff306060189",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t16-back-two-b09/run.mac",
+      "macro_sha256": "8d2c39f7eff59a87ec9f9c741849136fe0450bbdcfbb7db3f0de0dbcab9cbee5",
+      "receipt_path": "accepted/t16-back-two-b09.json",
+      "seeds": [
+        1800000279,
+        1800000280
+      ],
+      "task_id": "t16-back-two-b09",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t16-back-center-b00/config.json",
+      "config_sha256": "3ad2cb512cbac16f0de3d5ef55ee26aa236477cf93fbd9727a79fdf72b6470c1",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b00/run.mac",
+      "macro_sha256": "265583645725fc36956f733489f946a175819c118bea017899775a57311dec29",
+      "receipt_path": "accepted/t16-back-center-b00.json",
+      "seeds": [
+        1800000281,
+        1800000282
+      ],
+      "task_id": "t16-back-center-b00",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t16-back-center-b01/config.json",
+      "config_sha256": "62c4ae1b8d31e65395a28532ad92cd2d0f5177b88081b43b506beaef7066a387",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b01/run.mac",
+      "macro_sha256": "5fde10da141740b2e31d99a75c03e04c15b6d3db6716cf2ab753aded3f363b93",
+      "receipt_path": "accepted/t16-back-center-b01.json",
+      "seeds": [
+        1800000283,
+        1800000284
+      ],
+      "task_id": "t16-back-center-b01",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t16-back-center-b02/config.json",
+      "config_sha256": "2ee65cf266bcb541e75c71bd77879d2704e1dd33097a2af4b3b2871d31566c33",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b02/run.mac",
+      "macro_sha256": "d287e73280d6584e6a9a58270bb56502d74b49c21a3da003876091d225d782aa",
+      "receipt_path": "accepted/t16-back-center-b02.json",
+      "seeds": [
+        1800000285,
+        1800000286
+      ],
+      "task_id": "t16-back-center-b02",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t16-back-center-b03/config.json",
+      "config_sha256": "a8fdb36ecb0937857de67556e95e8e01089cdfbf54296eb9c0a721549aa8fb6a",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b03/run.mac",
+      "macro_sha256": "d1ec988fcb0ea9ebddafd2c06c3a9979e939f8578e7892a8b743d6815e9759d1",
+      "receipt_path": "accepted/t16-back-center-b03.json",
+      "seeds": [
+        1800000287,
+        1800000288
+      ],
+      "task_id": "t16-back-center-b03",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t16-back-center-b04/config.json",
+      "config_sha256": "5ae1d5e8e6710eecb0adb78467e271c7ad8a681bb27ed51823b3f92ac7c92910",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b04/run.mac",
+      "macro_sha256": "fefa08d9486b6b9a760266fda0673966b7d79f863b158f21e15c553327fd1ac5",
+      "receipt_path": "accepted/t16-back-center-b04.json",
+      "seeds": [
+        1800000289,
+        1800000290
+      ],
+      "task_id": "t16-back-center-b04",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t16-back-center-b05/config.json",
+      "config_sha256": "37b6cfd0fbc36a03abf29ad99434a63f67260da995a0e03899f2bc9509612eed",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b05/run.mac",
+      "macro_sha256": "0294d90db5a00811852741589f3d412a2b63d6d00d38a0408fe87e9e489437e0",
+      "receipt_path": "accepted/t16-back-center-b05.json",
+      "seeds": [
+        1800000291,
+        1800000292
+      ],
+      "task_id": "t16-back-center-b05",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t16-back-center-b06/config.json",
+      "config_sha256": "12e2f7d53cdb5c0cc9e837e724a185702417866a399b4fa13bab728153b04e87",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b06/run.mac",
+      "macro_sha256": "0b1de0bc535396be71a94d90c03e7a9c20041048c31eba62bfcd2933b2c41b81",
+      "receipt_path": "accepted/t16-back-center-b06.json",
+      "seeds": [
+        1800000293,
+        1800000294
+      ],
+      "task_id": "t16-back-center-b06",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t16-back-center-b07/config.json",
+      "config_sha256": "0f46cacc786478ffd8a2069bb1370a026104b20d06f056500d36b4ddf1c3907f",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b07/run.mac",
+      "macro_sha256": "7e5a0e816b1a199df130a5ff3fb738515a2cc8545ee6bb77a45db7f76f9a6860",
+      "receipt_path": "accepted/t16-back-center-b07.json",
+      "seeds": [
+        1800000295,
+        1800000296
+      ],
+      "task_id": "t16-back-center-b07",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t16-back-center-b08/config.json",
+      "config_sha256": "004485550f907d84c52002dc447be7001c7621e8df1b762cd08cd2e10b9e5ff1",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b08/run.mac",
+      "macro_sha256": "418eccf99a856561f99665e7f04c7290568a9b9c93e7748687e5f964d5de4e61",
+      "receipt_path": "accepted/t16-back-center-b08.json",
+      "seeds": [
+        1800000297,
+        1800000298
+      ],
+      "task_id": "t16-back-center-b08",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t16-back-center-b09/config.json",
+      "config_sha256": "0bfad1095c7c22c5a82e84a0ddfeb2a5640c8a2c9d5ea064b993219922f0d7cc",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t16-back-center-b09/run.mac",
+      "macro_sha256": "8b49d83bd1a48602407e59a4a01af0728561e61e66714b692c07d5627b612739",
+      "receipt_path": "accepted/t16-back-center-b09.json",
+      "seeds": [
+        1800000299,
+        1800000300
+      ],
+      "task_id": "t16-back-center-b09",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t16-edge-two-b00/config.json",
+      "config_sha256": "2745ef851cde93ea045c0a8800e8062d026c9f653f3b8e15f321d3d07220f8dd",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b00/run.mac",
+      "macro_sha256": "309165d582f73e5dd86de6a5ed9fc5430d4bbf1c435215fe85761a5122c8e5e4",
+      "receipt_path": "accepted/t16-edge-two-b00.json",
+      "seeds": [
+        1800000301,
+        1800000302
+      ],
+      "task_id": "t16-edge-two-b00",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t16-edge-two-b01/config.json",
+      "config_sha256": "ccebb283c33d360700db30413edf3475eaed5b5df5ce4e6a1cb0f8e14dbe6db3",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b01/run.mac",
+      "macro_sha256": "829eba98a8e0da6d7d49ec04ab657cf5a28b3e1a72f7f986b11e5ff6a1d535c3",
+      "receipt_path": "accepted/t16-edge-two-b01.json",
+      "seeds": [
+        1800000303,
+        1800000304
+      ],
+      "task_id": "t16-edge-two-b01",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t16-edge-two-b02/config.json",
+      "config_sha256": "87dc85f7e0b725f425d32e00b239d7f542824e7ad2c90fe7046d34a60276a97e",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b02/run.mac",
+      "macro_sha256": "52bcb33e9742c00d39013985c48fe693f3918b747d4dbd06c4478a0021b580d6",
+      "receipt_path": "accepted/t16-edge-two-b02.json",
+      "seeds": [
+        1800000305,
+        1800000306
+      ],
+      "task_id": "t16-edge-two-b02",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t16-edge-two-b03/config.json",
+      "config_sha256": "b7c8fda78e2de07144e774ccbba51d9f2a19a287b2652f2d5b8584647612150b",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b03/run.mac",
+      "macro_sha256": "73946975c29712274019d9d9f7106651b6cfa92e665c7d9772fa734e6a6305a1",
+      "receipt_path": "accepted/t16-edge-two-b03.json",
+      "seeds": [
+        1800000307,
+        1800000308
+      ],
+      "task_id": "t16-edge-two-b03",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t16-edge-two-b04/config.json",
+      "config_sha256": "b25f0e623eefad9f3169b0158054dbc76f18f4ed5ca07dfe40f5b8dc7709c912",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b04/run.mac",
+      "macro_sha256": "d6cbd8c8889b2c417afbf077b625ed5c24bb2dab063c406db6bed7adf81ab50c",
+      "receipt_path": "accepted/t16-edge-two-b04.json",
+      "seeds": [
+        1800000309,
+        1800000310
+      ],
+      "task_id": "t16-edge-two-b04",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t16-edge-two-b05/config.json",
+      "config_sha256": "629754c328a3b01cb9ab4badeb7d69887a730d0a1ff5b789769ac22135c5fc96",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b05/run.mac",
+      "macro_sha256": "5c166b53dcdab8f12199ae9316bcc6ba17bf3c9abae72b81b1972e3ff1d8aa87",
+      "receipt_path": "accepted/t16-edge-two-b05.json",
+      "seeds": [
+        1800000311,
+        1800000312
+      ],
+      "task_id": "t16-edge-two-b05",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t16-edge-two-b06/config.json",
+      "config_sha256": "fe6f5898de39a48b2b2edf905b81a940cb10b3f73585626ccac823ebdaa49980",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b06/run.mac",
+      "macro_sha256": "91989de817d5f2eec8a02a1d9853ab2267eec19fe53e27096697f8bfdf21335e",
+      "receipt_path": "accepted/t16-edge-two-b06.json",
+      "seeds": [
+        1800000313,
+        1800000314
+      ],
+      "task_id": "t16-edge-two-b06",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t16-edge-two-b07/config.json",
+      "config_sha256": "ec3cedc25492960b01efac98e3fa4e4ffda0d51a5405081815f6b64558f1bf43",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b07/run.mac",
+      "macro_sha256": "80bebce037133e1015d77cf7e49bf5e17cc7a2f8cd77a0ede6f5d9df57f9a1eb",
+      "receipt_path": "accepted/t16-edge-two-b07.json",
+      "seeds": [
+        1800000315,
+        1800000316
+      ],
+      "task_id": "t16-edge-two-b07",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t16-edge-two-b08/config.json",
+      "config_sha256": "804db082ad8042a161b1c81a5da074fa2d834617b5cc8631708a0fcf376ef53f",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b08/run.mac",
+      "macro_sha256": "2f5e1e8815253f6846ea67afc0d0508daf3cbeaa7e99f76e141e3b1d81ce2243",
+      "receipt_path": "accepted/t16-edge-two-b08.json",
+      "seeds": [
+        1800000317,
+        1800000318
+      ],
+      "task_id": "t16-edge-two-b08",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t16-edge-two-b09/config.json",
+      "config_sha256": "57e7a41606527f699d0faae9e56dd0336989e471f4aa3e4fc0a0d274061cf32f",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t16-edge-two-b09/run.mac",
+      "macro_sha256": "bfd6563926749e3083f428954089a286a200b12f3aa40da2082a64e872eb5def",
+      "receipt_path": "accepted/t16-edge-two-b09.json",
+      "seeds": [
+        1800000319,
+        1800000320
+      ],
+      "task_id": "t16-edge-two-b09",
+      "tile_thickness_mm": 16
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t20-back-four-b00/config.json",
+      "config_sha256": "cbdc01e86702f08c33e79dc6c904a664b1dfdee1d356841968de342304d9ad5e",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b00/run.mac",
+      "macro_sha256": "d2bf0b2b2e301dd7f59c8b64afc1f08a497edac9fdb4ab9bf385de6922d9af9f",
+      "receipt_path": "accepted/t20-back-four-b00.json",
+      "seeds": [
+        1800000321,
+        1800000322
+      ],
+      "task_id": "t20-back-four-b00",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t20-back-four-b01/config.json",
+      "config_sha256": "133ff0b20fb1badfce2e05d9ffcb69dc95958734df683efb2976d21697665a8d",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b01/run.mac",
+      "macro_sha256": "649a27434dd04042b38bd08269a8ba000b3d13fdd123703bec511142e28849a4",
+      "receipt_path": "accepted/t20-back-four-b01.json",
+      "seeds": [
+        1800000323,
+        1800000324
+      ],
+      "task_id": "t20-back-four-b01",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t20-back-four-b02/config.json",
+      "config_sha256": "beb4c29dd72a683248ee92002d76009479f820c61d350ae8437ae211d3169bf7",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b02/run.mac",
+      "macro_sha256": "de21870cdc9e85e5d12f9615678ae5b348e13b0ee25701d33345e2460c7f4ca3",
+      "receipt_path": "accepted/t20-back-four-b02.json",
+      "seeds": [
+        1800000325,
+        1800000326
+      ],
+      "task_id": "t20-back-four-b02",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t20-back-four-b03/config.json",
+      "config_sha256": "3c4ac7ffbe8cf6a5dbb68d2f6829f78e879e9a1af74ed65ab419d515198901b1",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b03/run.mac",
+      "macro_sha256": "27b6bfd555faf2017a6dfbc11eb7b8674ec1a57ff84f1a28ce70ed0053a521cf",
+      "receipt_path": "accepted/t20-back-four-b03.json",
+      "seeds": [
+        1800000327,
+        1800000328
+      ],
+      "task_id": "t20-back-four-b03",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t20-back-four-b04/config.json",
+      "config_sha256": "b01e150112bcbe000873985512b18291acfbdefb46f6a49581046d67b43fa225",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b04/run.mac",
+      "macro_sha256": "a2100ddb08d099820cd0eccd2ba585fad2e268ae846eb7bfb45a3077e089c4f8",
+      "receipt_path": "accepted/t20-back-four-b04.json",
+      "seeds": [
+        1800000329,
+        1800000330
+      ],
+      "task_id": "t20-back-four-b04",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t20-back-four-b05/config.json",
+      "config_sha256": "ef837a85ff82e7c43140e4459f7ce3e642e03fe4dc8d42e5fd4d05cd10aff9b2",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b05/run.mac",
+      "macro_sha256": "f8adf53d4fbe1655b7b43b2410037449fff9b4e6c9c2c70280b4bd973c8f2a2b",
+      "receipt_path": "accepted/t20-back-four-b05.json",
+      "seeds": [
+        1800000331,
+        1800000332
+      ],
+      "task_id": "t20-back-four-b05",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t20-back-four-b06/config.json",
+      "config_sha256": "69c1b9c7e72648ca360e735874dc3c34fa347a903e89d0585ac6f14cf634637a",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b06/run.mac",
+      "macro_sha256": "980671d3782dd5dcf457e172fe3ee15a613006101835008b6552822a49b4f161",
+      "receipt_path": "accepted/t20-back-four-b06.json",
+      "seeds": [
+        1800000333,
+        1800000334
+      ],
+      "task_id": "t20-back-four-b06",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t20-back-four-b07/config.json",
+      "config_sha256": "3f1d86b3eff1ee36ecdac1575c0cfc2cd5bc2154cb5844b8209e5e6628223742",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b07/run.mac",
+      "macro_sha256": "5c09067dee69e1f546f68982cb01f20b1ded21bdc74594dc38cf16c3e2315b6a",
+      "receipt_path": "accepted/t20-back-four-b07.json",
+      "seeds": [
+        1800000335,
+        1800000336
+      ],
+      "task_id": "t20-back-four-b07",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t20-back-four-b08/config.json",
+      "config_sha256": "4ad19b94b93c9fbe9bd8fb6d00bc6e977970b9cea35fa5b1dddb65265672291b",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b08/run.mac",
+      "macro_sha256": "f4614a6f777537136cef95233639def6f72656917cc9725a0fbfd176ee5d5dc1",
+      "receipt_path": "accepted/t20-back-four-b08.json",
+      "seeds": [
+        1800000337,
+        1800000338
+      ],
+      "task_id": "t20-back-four-b08",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t20-back-four-b09/config.json",
+      "config_sha256": "778afae78979e1af421ef7049ab7de59cdd2c687a41151926e934a2e682eebad",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t20-back-four-b09/run.mac",
+      "macro_sha256": "994bfa9d99bed4f2e30c220ee09495df3b49f4a743466613d5d5109cefd80dfc",
+      "receipt_path": "accepted/t20-back-four-b09.json",
+      "seeds": [
+        1800000339,
+        1800000340
+      ],
+      "task_id": "t20-back-four-b09",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t20-back-two-b00/config.json",
+      "config_sha256": "5c748d57eaecf06bfaac25e7d44d6929c1d6c1dbbb0176f147963e0216c3530c",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b00/run.mac",
+      "macro_sha256": "0929c6604f1b13abeaa83571541ad8aeccc172ce9c43cd445070c0464bd65f30",
+      "receipt_path": "accepted/t20-back-two-b00.json",
+      "seeds": [
+        1800000341,
+        1800000342
+      ],
+      "task_id": "t20-back-two-b00",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t20-back-two-b01/config.json",
+      "config_sha256": "2a700650c88da67f3c92a30618479241e77a14bb194691b61a3db055bd0198f3",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b01/run.mac",
+      "macro_sha256": "c6f853d4f2cae9f93998c70bc0d25ce8afe16157893191c78a8856c412926b39",
+      "receipt_path": "accepted/t20-back-two-b01.json",
+      "seeds": [
+        1800000343,
+        1800000344
+      ],
+      "task_id": "t20-back-two-b01",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t20-back-two-b02/config.json",
+      "config_sha256": "1b741be0a415e8495170a6ab9d27074f9bc4c9f0bd970aa23ac82eb76b09cd47",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b02/run.mac",
+      "macro_sha256": "f30f9439f7f4d955b869fb6b5c88de1bbc1d4b0008e66e3aea6c1d61636d9fb1",
+      "receipt_path": "accepted/t20-back-two-b02.json",
+      "seeds": [
+        1800000345,
+        1800000346
+      ],
+      "task_id": "t20-back-two-b02",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t20-back-two-b03/config.json",
+      "config_sha256": "bcc7034e4aa7fce7dc54b3292dbf6ffff593c72e8665ad7930b2c51b99d18019",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b03/run.mac",
+      "macro_sha256": "020dd817eb155593a991bd3eefbe5a22267ee81a3a130104f14436108f00fb5b",
+      "receipt_path": "accepted/t20-back-two-b03.json",
+      "seeds": [
+        1800000347,
+        1800000348
+      ],
+      "task_id": "t20-back-two-b03",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t20-back-two-b04/config.json",
+      "config_sha256": "881e7f175d531171aebe522b13b610696acd02bc87d10fd51e35269ed41a1bfc",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b04/run.mac",
+      "macro_sha256": "0ccfdb226971ae4353e3d9e4a07cfb78eca4add928226867f4b825f0388b7a35",
+      "receipt_path": "accepted/t20-back-two-b04.json",
+      "seeds": [
+        1800000349,
+        1800000350
+      ],
+      "task_id": "t20-back-two-b04",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t20-back-two-b05/config.json",
+      "config_sha256": "7c85bbd0c88e5e5ced217c27e002ed6f7ad88e1036be5b01aa4b5418648c5d0c",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b05/run.mac",
+      "macro_sha256": "6b20445558c4b48bd930d6ecef535e195c9060aa02967ff69b5ebb67bd1f9bdc",
+      "receipt_path": "accepted/t20-back-two-b05.json",
+      "seeds": [
+        1800000351,
+        1800000352
+      ],
+      "task_id": "t20-back-two-b05",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t20-back-two-b06/config.json",
+      "config_sha256": "ba2557f2c341b3010d9954a5b2ea9ebbc904cb87d058076ba8536904d8ddf68a",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b06/run.mac",
+      "macro_sha256": "bc1db76dbafbfa96a22b9d6eec4dc7a9f1253a59958490c1f53045e960dd296e",
+      "receipt_path": "accepted/t20-back-two-b06.json",
+      "seeds": [
+        1800000353,
+        1800000354
+      ],
+      "task_id": "t20-back-two-b06",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t20-back-two-b07/config.json",
+      "config_sha256": "b9ce0984d75216990f922c976fc0f2e5d9eb3d99d20b3b7380c94cb58e55c206",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b07/run.mac",
+      "macro_sha256": "b30bb5c7bc7c5c0ca9737ad1542a15bd2941b947b147ffbe52756baa3eb33b32",
+      "receipt_path": "accepted/t20-back-two-b07.json",
+      "seeds": [
+        1800000355,
+        1800000356
+      ],
+      "task_id": "t20-back-two-b07",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t20-back-two-b08/config.json",
+      "config_sha256": "395eb0afe58168c8178b6f711d08e40922983a552aa8c6801e2e2ed780526b00",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b08/run.mac",
+      "macro_sha256": "9811cc38246eb7558a40712ef58c8e5825d8fc540e8fc4a3684484ab57303c46",
+      "receipt_path": "accepted/t20-back-two-b08.json",
+      "seeds": [
+        1800000357,
+        1800000358
+      ],
+      "task_id": "t20-back-two-b08",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t20-back-two-b09/config.json",
+      "config_sha256": "1afb0d05f1aef3101bbf722861f8a2fda8a1d86e5b99d7cdae9b09ee3e37807f",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t20-back-two-b09/run.mac",
+      "macro_sha256": "57f6bc674733a8405bc162a4fda805baf20d24a84703e62788d4591446317e4c",
+      "receipt_path": "accepted/t20-back-two-b09.json",
+      "seeds": [
+        1800000359,
+        1800000360
+      ],
+      "task_id": "t20-back-two-b09",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t20-back-center-b00/config.json",
+      "config_sha256": "89201522fa5bb19e1a44533ed621c915550cac9ea3c73e92d7729094faf8380e",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b00/run.mac",
+      "macro_sha256": "184026a15671f6f78f1e4f85612e42a301d04b485167397f32cea9da1988d160",
+      "receipt_path": "accepted/t20-back-center-b00.json",
+      "seeds": [
+        1800000361,
+        1800000362
+      ],
+      "task_id": "t20-back-center-b00",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t20-back-center-b01/config.json",
+      "config_sha256": "cd8b315bc9703f8981e8f8a691b70f1b0ccd5a5fc4273c30170d0869a34a2055",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b01/run.mac",
+      "macro_sha256": "0aa9d92aa41cac79ae15b8b5d78408f02d20f2736e93b763cd6505f39bc6145a",
+      "receipt_path": "accepted/t20-back-center-b01.json",
+      "seeds": [
+        1800000363,
+        1800000364
+      ],
+      "task_id": "t20-back-center-b01",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t20-back-center-b02/config.json",
+      "config_sha256": "e58de068fc260dbc9d65b25d3fc335c1f91137ea4a302c5df24d5ccecb73b2cf",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b02/run.mac",
+      "macro_sha256": "249bffa8595da2410953126068539732e318ae270f0871668e203f7c6e555e36",
+      "receipt_path": "accepted/t20-back-center-b02.json",
+      "seeds": [
+        1800000365,
+        1800000366
+      ],
+      "task_id": "t20-back-center-b02",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t20-back-center-b03/config.json",
+      "config_sha256": "4a80593915a210214cc0f1f20a7100c2f2df28b5c33995411af8ad4194a69d15",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b03/run.mac",
+      "macro_sha256": "f975ec0bba5137275ad7abdf7e3f461af40fad93a68ced86725bfed3e0795a0b",
+      "receipt_path": "accepted/t20-back-center-b03.json",
+      "seeds": [
+        1800000367,
+        1800000368
+      ],
+      "task_id": "t20-back-center-b03",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t20-back-center-b04/config.json",
+      "config_sha256": "991d6d9cd66d570993775c8427b61eacf46d3ca2f4d79d74683cd9d7b5ba2ecd",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b04/run.mac",
+      "macro_sha256": "215dd1018bd0a7ed475a7a9d0bdc4395193f1b619985bc4f9bdab96952fce352",
+      "receipt_path": "accepted/t20-back-center-b04.json",
+      "seeds": [
+        1800000369,
+        1800000370
+      ],
+      "task_id": "t20-back-center-b04",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t20-back-center-b05/config.json",
+      "config_sha256": "d02138b8ef4ad0baddff6e67cc7f0504bb4dea868d0f317cffc27545bfd79a4f",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b05/run.mac",
+      "macro_sha256": "655e764b77c325a27d258a55e03896bbca9089334b330ed4b2d8620812ebb0c9",
+      "receipt_path": "accepted/t20-back-center-b05.json",
+      "seeds": [
+        1800000371,
+        1800000372
+      ],
+      "task_id": "t20-back-center-b05",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t20-back-center-b06/config.json",
+      "config_sha256": "5406ad0de038ec1585076b1b9e39ddde42e2d99fc5354710b0ce8f67b2466834",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b06/run.mac",
+      "macro_sha256": "7a9c9fec042b61900995a33f3ffa11ce3229c600aff0352ab6703fdf73d29d24",
+      "receipt_path": "accepted/t20-back-center-b06.json",
+      "seeds": [
+        1800000373,
+        1800000374
+      ],
+      "task_id": "t20-back-center-b06",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t20-back-center-b07/config.json",
+      "config_sha256": "1fda6ec425b0545b7ce57bf392a65555d62e3a5f7f8b62a6b248b15d555f6879",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b07/run.mac",
+      "macro_sha256": "2cb3a96691a58d7f64a1a1906bb4408b8815496b0e50657825da609a96e15230",
+      "receipt_path": "accepted/t20-back-center-b07.json",
+      "seeds": [
+        1800000375,
+        1800000376
+      ],
+      "task_id": "t20-back-center-b07",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t20-back-center-b08/config.json",
+      "config_sha256": "acdefdd67dba952842fe4419af955d1e58563f4d0aa03fd42bc45397742ff22e",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b08/run.mac",
+      "macro_sha256": "c6083b59469246158ec86a9482bec6cebf7c244d89d40c1c3d63a8ed081e5c31",
+      "receipt_path": "accepted/t20-back-center-b08.json",
+      "seeds": [
+        1800000377,
+        1800000378
+      ],
+      "task_id": "t20-back-center-b08",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t20-back-center-b09/config.json",
+      "config_sha256": "f2bc8a2513b5f63eb89f655acf407758af460f87e0b13570722b2fd173e03092",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t20-back-center-b09/run.mac",
+      "macro_sha256": "44d0008ed125ef1f524c4b1623f8fce172bffecac6eaf6e573ad0cc1a801269e",
+      "receipt_path": "accepted/t20-back-center-b09.json",
+      "seeds": [
+        1800000379,
+        1800000380
+      ],
+      "task_id": "t20-back-center-b09",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t20-edge-two-b00/config.json",
+      "config_sha256": "a5fa2cb458e29b8b82fe5816c07ff1af6528a1d5c2d197a65b5aec5cf2165cbd",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b00/run.mac",
+      "macro_sha256": "9e6d5f0ea5a2dbb4d5f738f029147c95aff5e4925bfc667f51ec9b3e30420f2a",
+      "receipt_path": "accepted/t20-edge-two-b00.json",
+      "seeds": [
+        1800000381,
+        1800000382
+      ],
+      "task_id": "t20-edge-two-b00",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t20-edge-two-b01/config.json",
+      "config_sha256": "57b0a16bcb74168a0174ecb736d8a6e174ebd98b1df5fa9108f764889f719b48",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b01/run.mac",
+      "macro_sha256": "341a1a21f9ac415099ce0e64835556d261a5a0f6619170e8770c499cb10b9916",
+      "receipt_path": "accepted/t20-edge-two-b01.json",
+      "seeds": [
+        1800000383,
+        1800000384
+      ],
+      "task_id": "t20-edge-two-b01",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t20-edge-two-b02/config.json",
+      "config_sha256": "4fe856d537110c0fe34e0d3b73bd1ae3e2fd643644384f72e3474d05a2323a2c",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b02/run.mac",
+      "macro_sha256": "35fa06b2fd9517c294366bbe7310a1e071b90bd1fbfd034652593fa97c12b9c6",
+      "receipt_path": "accepted/t20-edge-two-b02.json",
+      "seeds": [
+        1800000385,
+        1800000386
+      ],
+      "task_id": "t20-edge-two-b02",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t20-edge-two-b03/config.json",
+      "config_sha256": "dab180cc6968a0662c15eec35911d94486ffb12fbf4e373e2fef5af4576864a2",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b03/run.mac",
+      "macro_sha256": "551322d45b398990abb0a27cb4addff310c1beef4d6c4f1d68db9daf816bdc18",
+      "receipt_path": "accepted/t20-edge-two-b03.json",
+      "seeds": [
+        1800000387,
+        1800000388
+      ],
+      "task_id": "t20-edge-two-b03",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t20-edge-two-b04/config.json",
+      "config_sha256": "99aa9d52e0616353888a0f9648952ce366d860c3699e1bcc671cf46b2fc5d099",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b04/run.mac",
+      "macro_sha256": "a50bee2df9e4241477f8f30cd0efeeb8465c3946f071fd6f4c61a5035df9738a",
+      "receipt_path": "accepted/t20-edge-two-b04.json",
+      "seeds": [
+        1800000389,
+        1800000390
+      ],
+      "task_id": "t20-edge-two-b04",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t20-edge-two-b05/config.json",
+      "config_sha256": "63a90ec7144d68e1eaa35a9f605db24d4ce46d58a0b528a4fd09d57076ae82e2",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b05/run.mac",
+      "macro_sha256": "8d279901d9fe1f7f48940c38abda1feeef85a488975813417cfbb5fd17808ac0",
+      "receipt_path": "accepted/t20-edge-two-b05.json",
+      "seeds": [
+        1800000391,
+        1800000392
+      ],
+      "task_id": "t20-edge-two-b05",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t20-edge-two-b06/config.json",
+      "config_sha256": "de89d25ebb09f6ef242540e446293135149e76837c89728affe2e991cfa82dd5",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b06/run.mac",
+      "macro_sha256": "78b213c5c9cf6b33b833c433ef5d3d5cb8ee563ca9ba7861f02033c83a83120d",
+      "receipt_path": "accepted/t20-edge-two-b06.json",
+      "seeds": [
+        1800000393,
+        1800000394
+      ],
+      "task_id": "t20-edge-two-b06",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t20-edge-two-b07/config.json",
+      "config_sha256": "8fc55ec7440449ae0a0a6ab663260d745c5ffa0fb0bd7c9b633db869edba6ea1",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b07/run.mac",
+      "macro_sha256": "7708db9b3d6737727a06ca9d18c9228506aa9bed5681c11414256ba837162344",
+      "receipt_path": "accepted/t20-edge-two-b07.json",
+      "seeds": [
+        1800000395,
+        1800000396
+      ],
+      "task_id": "t20-edge-two-b07",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t20-edge-two-b08/config.json",
+      "config_sha256": "36c397b1dcaea1d97686e275942ece0bf0b0528565a0f17d4ff2f95af1a4cac8",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b08/run.mac",
+      "macro_sha256": "d4616f6a2ef3c59d2eb8ab8154eb6bbf9394a33357d90937dc79727d8de72614",
+      "receipt_path": "accepted/t20-edge-two-b08.json",
+      "seeds": [
+        1800000397,
+        1800000398
+      ],
+      "task_id": "t20-edge-two-b08",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t20-edge-two-b09/config.json",
+      "config_sha256": "670ea9604c318caa2f36f24657f183c6ad3f38799e7c4ffd9185e2246028c5c7",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t20-edge-two-b09/run.mac",
+      "macro_sha256": "6d53e499e58c5bf08f7e3595ed563a6b677df2bcf6a5d9857a8a0b813e7470b5",
+      "receipt_path": "accepted/t20-edge-two-b09.json",
+      "seeds": [
+        1800000399,
+        1800000400
+      ],
+      "task_id": "t20-edge-two-b09",
+      "tile_thickness_mm": 20
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t24-back-four-b00/config.json",
+      "config_sha256": "82072d70bfdc45266d1a8dd25785a778b1d65add1e751967082c751f1b26812e",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b00/run.mac",
+      "macro_sha256": "1080687d190adf840213864c885993abad6f76f95b0582c3275ad6abe6182301",
+      "receipt_path": "accepted/t24-back-four-b00.json",
+      "seeds": [
+        1800000401,
+        1800000402
+      ],
+      "task_id": "t24-back-four-b00",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t24-back-four-b01/config.json",
+      "config_sha256": "e093b223a8245cddd1800763c434857f5f50163f3c7ca0d01357e3c5ea6f4a9a",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b01/run.mac",
+      "macro_sha256": "d10056b1170c9cf2171c52445394658600a8aaebe7cdc2b7ed103173283f9533",
+      "receipt_path": "accepted/t24-back-four-b01.json",
+      "seeds": [
+        1800000403,
+        1800000404
+      ],
+      "task_id": "t24-back-four-b01",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t24-back-four-b02/config.json",
+      "config_sha256": "58ba7ee451a17afd78ac99231f5ce0f8c2385d964067f70623f85eff553f0556",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b02/run.mac",
+      "macro_sha256": "8ac06a478cc98749263a5bf289ef1c5d2b74ba60b8e7f7b1547bee26fa617ba1",
+      "receipt_path": "accepted/t24-back-four-b02.json",
+      "seeds": [
+        1800000405,
+        1800000406
+      ],
+      "task_id": "t24-back-four-b02",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t24-back-four-b03/config.json",
+      "config_sha256": "3e0e9da032e2021cf61d45f245a4a7b9c3ab502a43353dbf2f4bcd3154c0b723",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b03/run.mac",
+      "macro_sha256": "f1efba4a90a49f412695f5a46b0dcf0d0d7e439ed54d1c579efc7a9fa03a6a31",
+      "receipt_path": "accepted/t24-back-four-b03.json",
+      "seeds": [
+        1800000407,
+        1800000408
+      ],
+      "task_id": "t24-back-four-b03",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t24-back-four-b04/config.json",
+      "config_sha256": "cdf69a96a49c28e78a3a7d9dac14855a8ccf0970176657bf7f23d2dc7d3e6431",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b04/run.mac",
+      "macro_sha256": "b99a8deb0229c4932519bd330c2a6ced4f34436b8b80cf5191cfd16283df0682",
+      "receipt_path": "accepted/t24-back-four-b04.json",
+      "seeds": [
+        1800000409,
+        1800000410
+      ],
+      "task_id": "t24-back-four-b04",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t24-back-four-b05/config.json",
+      "config_sha256": "a0ef08b0616f5669f5b13aa6b5074cbd06c5ca9c7b2e76b9d7fe111d855144f5",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b05/run.mac",
+      "macro_sha256": "f8278e56bc946d300321d9353b1460094b1b48c899b2d1f50e912af24c1ed70f",
+      "receipt_path": "accepted/t24-back-four-b05.json",
+      "seeds": [
+        1800000411,
+        1800000412
+      ],
+      "task_id": "t24-back-four-b05",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t24-back-four-b06/config.json",
+      "config_sha256": "4f022b086ea8e8833e798109ae72372ff72bf09a610102af90b1f9423fe2d4d6",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b06/run.mac",
+      "macro_sha256": "c6266cd7a80632e45295c2a36e3d375835046501b55733e6c5e7749fbbd082a5",
+      "receipt_path": "accepted/t24-back-four-b06.json",
+      "seeds": [
+        1800000413,
+        1800000414
+      ],
+      "task_id": "t24-back-four-b06",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t24-back-four-b07/config.json",
+      "config_sha256": "10e8cb6093788e0a61effe0b08230dc114d5eecdd2dad301685e6238ce66968a",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b07/run.mac",
+      "macro_sha256": "ce6a43c85b59c7bbf2653f92c1024c610b78b55afec71ab0234b13fb24e4dee7",
+      "receipt_path": "accepted/t24-back-four-b07.json",
+      "seeds": [
+        1800000415,
+        1800000416
+      ],
+      "task_id": "t24-back-four-b07",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t24-back-four-b08/config.json",
+      "config_sha256": "db402b76bf4eb5c11ec145c9e2cee45f8570f2e6d1c8f11c5a153ac45075a707",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b08/run.mac",
+      "macro_sha256": "182a019bea5f34d4cd1844e31bd0a0b58b1157de44857f4885b0d072d10bef00",
+      "receipt_path": "accepted/t24-back-four-b08.json",
+      "seeds": [
+        1800000417,
+        1800000418
+      ],
+      "task_id": "t24-back-four-b08",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t24-back-four-b09/config.json",
+      "config_sha256": "7a65e37625f9f65fd9cc07523999cad641e40e8d4916ec72ece0dc7ee54f30a8",
+      "events": 100,
+      "layout": "back-four",
+      "macro_path": "inputs/t24-back-four-b09/run.mac",
+      "macro_sha256": "40d55aa53476aaae34baf301d0cde33b980d85577ba189244da39f0ce5a2cce4",
+      "receipt_path": "accepted/t24-back-four-b09.json",
+      "seeds": [
+        1800000419,
+        1800000420
+      ],
+      "task_id": "t24-back-four-b09",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t24-back-two-b00/config.json",
+      "config_sha256": "60eda3384e0c77b413d7e79cc9909fff41b990508054a12e4722cca037c14e7f",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b00/run.mac",
+      "macro_sha256": "91d2458e8bea69f6ddfabdbebdaa3cc413c0529dd733c54132bae742fd4ab2ad",
+      "receipt_path": "accepted/t24-back-two-b00.json",
+      "seeds": [
+        1800000421,
+        1800000422
+      ],
+      "task_id": "t24-back-two-b00",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t24-back-two-b01/config.json",
+      "config_sha256": "2a06e6f1d6ddbfb526ac63cb6fa1db48b6fef67f843579790bbfe1fa0184ea3e",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b01/run.mac",
+      "macro_sha256": "a0a6ec8b650c0ab47daf3ef83646d1950570446daebe510c6cdaa5b1648be743",
+      "receipt_path": "accepted/t24-back-two-b01.json",
+      "seeds": [
+        1800000423,
+        1800000424
+      ],
+      "task_id": "t24-back-two-b01",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t24-back-two-b02/config.json",
+      "config_sha256": "cbe3035dfffbbf54a9cfc51a4c2d94e10497013cc6c50605f690837c08638bfc",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b02/run.mac",
+      "macro_sha256": "e1488e14e71b8da0c21e89e1da21fef6bd6d9f42be244830c681a797bee7ff55",
+      "receipt_path": "accepted/t24-back-two-b02.json",
+      "seeds": [
+        1800000425,
+        1800000426
+      ],
+      "task_id": "t24-back-two-b02",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t24-back-two-b03/config.json",
+      "config_sha256": "934f3757957f4e7d91815d0106c869deb8baf2c9e5759f4e392b8535cb529ad2",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b03/run.mac",
+      "macro_sha256": "4d8f912675984d89435105876a687c95ee411f5cb017fd6aed203ceb6be25091",
+      "receipt_path": "accepted/t24-back-two-b03.json",
+      "seeds": [
+        1800000427,
+        1800000428
+      ],
+      "task_id": "t24-back-two-b03",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t24-back-two-b04/config.json",
+      "config_sha256": "c9f940b0c0d3a6183c0bc27c9044ea89ed273e3de4020a42feca3f9deb9525bb",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b04/run.mac",
+      "macro_sha256": "6aa6fbba72ec7866b966e083e5dcfc28c9cc811acec1b3dd15a1913c2d64762c",
+      "receipt_path": "accepted/t24-back-two-b04.json",
+      "seeds": [
+        1800000429,
+        1800000430
+      ],
+      "task_id": "t24-back-two-b04",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t24-back-two-b05/config.json",
+      "config_sha256": "b342b683ffabbf9653780672da3cd26ffd6e15b92e069150d832b07d7b1c86aa",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b05/run.mac",
+      "macro_sha256": "b76b55cef8f4f418e55330d948cc616826b2ac1e61449d0b021368f31ada131d",
+      "receipt_path": "accepted/t24-back-two-b05.json",
+      "seeds": [
+        1800000431,
+        1800000432
+      ],
+      "task_id": "t24-back-two-b05",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t24-back-two-b06/config.json",
+      "config_sha256": "a5ad2887a0e2dbacc69739e20874ff50797d8b42b411e1c35737fe10f4eb9c43",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b06/run.mac",
+      "macro_sha256": "c0265e0500d9a888c75845f63ecbf5864f2952b799f1eb444f5bc7511cd68a4b",
+      "receipt_path": "accepted/t24-back-two-b06.json",
+      "seeds": [
+        1800000433,
+        1800000434
+      ],
+      "task_id": "t24-back-two-b06",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t24-back-two-b07/config.json",
+      "config_sha256": "cd4ae1f15666fef4c68b549f8c2df34f7fba104854ca561cb6fd09c97b4d50bc",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b07/run.mac",
+      "macro_sha256": "f69dc151a5d16e4584d7ff5ae38bf74cbbfbda893cd181289d048890f2941b8a",
+      "receipt_path": "accepted/t24-back-two-b07.json",
+      "seeds": [
+        1800000435,
+        1800000436
+      ],
+      "task_id": "t24-back-two-b07",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t24-back-two-b08/config.json",
+      "config_sha256": "b3d8d7a9443ae78f8f47d884504e99e8f95bce46e62f5245e85210dab92d9699",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b08/run.mac",
+      "macro_sha256": "dea21277dd5a9a5f6c87204d5a889267aa773a1c7d24d6356f06eb1f038789e8",
+      "receipt_path": "accepted/t24-back-two-b08.json",
+      "seeds": [
+        1800000437,
+        1800000438
+      ],
+      "task_id": "t24-back-two-b08",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t24-back-two-b09/config.json",
+      "config_sha256": "0a0e4f456554db8282433252fd92e5c7eaed4810649ce95eaeaab877a4446c38",
+      "events": 100,
+      "layout": "back-two",
+      "macro_path": "inputs/t24-back-two-b09/run.mac",
+      "macro_sha256": "487f9fe3f3c83846eeb030b80073c37915f22ec1bb8b8e81027ce1d22864e60f",
+      "receipt_path": "accepted/t24-back-two-b09.json",
+      "seeds": [
+        1800000439,
+        1800000440
+      ],
+      "task_id": "t24-back-two-b09",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t24-back-center-b00/config.json",
+      "config_sha256": "c669005383a22a7dceca93dafcd4b25870750d03f180adfa82fdfa014010cd17",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b00/run.mac",
+      "macro_sha256": "4ade4c67520cefa7f387d216cc69f78faa9d50cbc1c1abd263cd9dd6b6677fee",
+      "receipt_path": "accepted/t24-back-center-b00.json",
+      "seeds": [
+        1800000441,
+        1800000442
+      ],
+      "task_id": "t24-back-center-b00",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t24-back-center-b01/config.json",
+      "config_sha256": "322e4906690cd89044bce75f5ee45b2b077ab68cb278c7abf2d0ae6763b6310c",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b01/run.mac",
+      "macro_sha256": "a83e28db68eba5b8b3af1cf76d89ab454245af2813f4dcc6389ebfe17d2c51d9",
+      "receipt_path": "accepted/t24-back-center-b01.json",
+      "seeds": [
+        1800000443,
+        1800000444
+      ],
+      "task_id": "t24-back-center-b01",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t24-back-center-b02/config.json",
+      "config_sha256": "7ef8ac8f3a7a6b2438a6888388911dcfc83d7341e071235338caff8ef6e58c26",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b02/run.mac",
+      "macro_sha256": "556aae4473bfe3db9c42fc781d99cd9b94b569d31ef196f726e6b78e126085ce",
+      "receipt_path": "accepted/t24-back-center-b02.json",
+      "seeds": [
+        1800000445,
+        1800000446
+      ],
+      "task_id": "t24-back-center-b02",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t24-back-center-b03/config.json",
+      "config_sha256": "f269f06c55442e471599000ccb665f01f71562929a3fb3c9eeaab96583c725ad",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b03/run.mac",
+      "macro_sha256": "141b1cda2032f2a375ccc30b5ed5ad636cce6f8d74f04ad15c0db34f526ae487",
+      "receipt_path": "accepted/t24-back-center-b03.json",
+      "seeds": [
+        1800000447,
+        1800000448
+      ],
+      "task_id": "t24-back-center-b03",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t24-back-center-b04/config.json",
+      "config_sha256": "24574599fa84274c262af6698a75b60564c168878b004bf8e34cdfb8d1c362fa",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b04/run.mac",
+      "macro_sha256": "95f8b6a71dd313b154bf1f47368365c42c9bbb38e4ae11bd1e06139c8dc6d48d",
+      "receipt_path": "accepted/t24-back-center-b04.json",
+      "seeds": [
+        1800000449,
+        1800000450
+      ],
+      "task_id": "t24-back-center-b04",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t24-back-center-b05/config.json",
+      "config_sha256": "96567cfb0b40ecccc7fa2668acb880aef44bf811982f6578208c56379726ebbc",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b05/run.mac",
+      "macro_sha256": "106181d58bcc666c23e96063ad0f09d8fa06a04853a342d8dbc4eb279766ffee",
+      "receipt_path": "accepted/t24-back-center-b05.json",
+      "seeds": [
+        1800000451,
+        1800000452
+      ],
+      "task_id": "t24-back-center-b05",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t24-back-center-b06/config.json",
+      "config_sha256": "90aa05c98fcc61ef84e49b15a5ee634488f7c0e50e357993b8e5914d43b1b43a",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b06/run.mac",
+      "macro_sha256": "1460355bf0c343108324e976c2082073119e9e96a2b58200ba70fb3716032d9e",
+      "receipt_path": "accepted/t24-back-center-b06.json",
+      "seeds": [
+        1800000453,
+        1800000454
+      ],
+      "task_id": "t24-back-center-b06",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t24-back-center-b07/config.json",
+      "config_sha256": "b2ee487ebf5258ef83b5714c6ba2f97cd1949d9c5ec2fffcbda9b56088783c27",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b07/run.mac",
+      "macro_sha256": "546f2703dcdaa839bf3dc1098ee9c2b90c8904bb0d4a53430930f6b368e2d1b7",
+      "receipt_path": "accepted/t24-back-center-b07.json",
+      "seeds": [
+        1800000455,
+        1800000456
+      ],
+      "task_id": "t24-back-center-b07",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t24-back-center-b08/config.json",
+      "config_sha256": "9fd04c359cfed90b0fe77f3fdec02d78de8ee83c2b78f9861818abe87a120255",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b08/run.mac",
+      "macro_sha256": "693a17578da0bc6ba3526f1c17a656eefb3760bdef08a85768185b89809fdab6",
+      "receipt_path": "accepted/t24-back-center-b08.json",
+      "seeds": [
+        1800000457,
+        1800000458
+      ],
+      "task_id": "t24-back-center-b08",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t24-back-center-b09/config.json",
+      "config_sha256": "1003ab9d522f90da9d613d4760cd249d35c2b6a45f07d6d81933a44cfbafb3a0",
+      "events": 100,
+      "layout": "back-center",
+      "macro_path": "inputs/t24-back-center-b09/run.mac",
+      "macro_sha256": "3be9b91b1c842e8e95f2b56eb99629351459cc56123f5ec65eb62362110bbdc4",
+      "receipt_path": "accepted/t24-back-center-b09.json",
+      "seeds": [
+        1800000459,
+        1800000460
+      ],
+      "task_id": "t24-back-center-b09",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 0,
+      "config_path": "inputs/t24-edge-two-b00/config.json",
+      "config_sha256": "fdbb66f53ba6490c516b701a84fd856fa523cb2a1244d3954fe6c9f4b2a7d010",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b00/run.mac",
+      "macro_sha256": "461ddce799ad3088620e103f96fa499cc0c2222ea38ade50c17df861d88d3f45",
+      "receipt_path": "accepted/t24-edge-two-b00.json",
+      "seeds": [
+        1800000461,
+        1800000462
+      ],
+      "task_id": "t24-edge-two-b00",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 1,
+      "config_path": "inputs/t24-edge-two-b01/config.json",
+      "config_sha256": "3372fbf43b21894bbfede1092afafc972bb9553708dcfa1430253e28d047f257",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b01/run.mac",
+      "macro_sha256": "cc387ebf0bf57df1362bdbd2e9c1c6b127926cd731fdf04588ba112ab856393f",
+      "receipt_path": "accepted/t24-edge-two-b01.json",
+      "seeds": [
+        1800000463,
+        1800000464
+      ],
+      "task_id": "t24-edge-two-b01",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 2,
+      "config_path": "inputs/t24-edge-two-b02/config.json",
+      "config_sha256": "4a1343d35724e932de1b8864a13a7df55329db5f2ab2a960dd5b6d2b0c9e2a26",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b02/run.mac",
+      "macro_sha256": "943ab9e29757e7fb2ac640b1fa375df222385e378861bd9823fa4689ddbda2ce",
+      "receipt_path": "accepted/t24-edge-two-b02.json",
+      "seeds": [
+        1800000465,
+        1800000466
+      ],
+      "task_id": "t24-edge-two-b02",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 3,
+      "config_path": "inputs/t24-edge-two-b03/config.json",
+      "config_sha256": "4b107e7d3a508e8116ca12f9df559829375399b3d00f19c8433098073195c153",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b03/run.mac",
+      "macro_sha256": "c97cc0146be769055e86e64ee41221087927cb83c73ccfc2af00d4071da30478",
+      "receipt_path": "accepted/t24-edge-two-b03.json",
+      "seeds": [
+        1800000467,
+        1800000468
+      ],
+      "task_id": "t24-edge-two-b03",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 4,
+      "config_path": "inputs/t24-edge-two-b04/config.json",
+      "config_sha256": "3914ba2f9065c6db96feafed53d3b42b850a6045475b45a8f7c84b058ffd07b2",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b04/run.mac",
+      "macro_sha256": "e859c5cacb4b539f1e756d3f446dbccd2beb56b650ea2518fcef37b95c6781d4",
+      "receipt_path": "accepted/t24-edge-two-b04.json",
+      "seeds": [
+        1800000469,
+        1800000470
+      ],
+      "task_id": "t24-edge-two-b04",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 5,
+      "config_path": "inputs/t24-edge-two-b05/config.json",
+      "config_sha256": "c5dc987e1a75f88723bb85922f6c9744c55a8a4c296725900eb69fdc43bcc1f4",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b05/run.mac",
+      "macro_sha256": "77be31309c424777f1bc686673905604e992218211e7946de7a406fa3c789b5d",
+      "receipt_path": "accepted/t24-edge-two-b05.json",
+      "seeds": [
+        1800000471,
+        1800000472
+      ],
+      "task_id": "t24-edge-two-b05",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 6,
+      "config_path": "inputs/t24-edge-two-b06/config.json",
+      "config_sha256": "9a59329e19540b593c3da23c3d4de6c198eaa811235d7b4dbde1c1c27bd9b712",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b06/run.mac",
+      "macro_sha256": "9de5c72e74bf2888a0bc0107660d6b21baa4c7ddaa3d07c0d9c476f8f795265b",
+      "receipt_path": "accepted/t24-edge-two-b06.json",
+      "seeds": [
+        1800000473,
+        1800000474
+      ],
+      "task_id": "t24-edge-two-b06",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 7,
+      "config_path": "inputs/t24-edge-two-b07/config.json",
+      "config_sha256": "ee7954b80a71129a4e7db768cc3068f7e49ee6062fa05b1559aab80f1d603670",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b07/run.mac",
+      "macro_sha256": "fde2e16bb5fa5478aa69f7f6095b83ccaad3e136093108456f3facfb7951d6f7",
+      "receipt_path": "accepted/t24-edge-two-b07.json",
+      "seeds": [
+        1800000475,
+        1800000476
+      ],
+      "task_id": "t24-edge-two-b07",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 8,
+      "config_path": "inputs/t24-edge-two-b08/config.json",
+      "config_sha256": "016d5a9103af2a984e65a7b05dc971c4f40c644a6b0a514c219f27d125bb7fd3",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b08/run.mac",
+      "macro_sha256": "42293203288c6711b113bf31b93987406a245fb834ec338ad89f9fd6f177713c",
+      "receipt_path": "accepted/t24-edge-two-b08.json",
+      "seeds": [
+        1800000477,
+        1800000478
+      ],
+      "task_id": "t24-edge-two-b08",
+      "tile_thickness_mm": 24
+    },
+    {
+      "block_id": 9,
+      "config_path": "inputs/t24-edge-two-b09/config.json",
+      "config_sha256": "bfb37d3b54cad6fc0694fb1370e9809f7c55254d53d762974af6362932223d29",
+      "events": 100,
+      "layout": "edge-two",
+      "macro_path": "inputs/t24-edge-two-b09/run.mac",
+      "macro_sha256": "8c7d9ea7d4501938f68013957a638e45ac02387fc890e76c51408d1f49187c33",
+      "receipt_path": "accepted/t24-edge-two-b09.json",
+      "seeds": [
+        1800000479,
+        1800000480
+      ],
+      "task_id": "t24-edge-two-b09",
+      "tile_thickness_mm": 24
+    }
+  ]
+}

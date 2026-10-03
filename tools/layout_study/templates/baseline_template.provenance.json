@@ -1,0 +1,19 @@
+{
+  "git_commit": "a2d05dfe1a6c76df2acd072d7fab8cff366a02f6",
+  "git_tree": "527682ca31f4ce0e1170d963b54e938a7b42687f",
+  "physics_entrypoint_sha256": "9782f4c78c50a2c3e55d8cdfbb1bd817b7662c9c9a8737842fc59327e53199e4",
+  "source_files_sha256": {
+    "test/OpNovice2/ej200_sipm_gps_test.mac": "8d308bcc8d6cf07262b3f304cca55b3ddb152350b19fe68bb4f27822e1140da3",
+    "test/OpNovice2/generate_scan_macro.py": "1df91fb82f6ad72e89a9933920aa0ac244571644abdfad4a36d8973d061d7c9c",
+    "test/OpNovice2/optical_data/ej510_reflectivity_empirical.csv": "64d6f49915dc8207af5365a60423bd94ceab798669cf39e0574a43e64c625b60",
+    "test/OpNovice2/optical_data/ej550_transmission_empirical.csv": "e4a0b31bf85b6894461aec04f3067cb0c7c38adce0dab54f417952d3f060ee06",
+    "test/OpNovice2/run_sipm_cavity_scan.sh": "e3b2745f2516471c93a67d66bdb98ac22a615f2bdb904a61d2b3f25c2aa6ed09"
+  },
+  "template_events": 1,
+  "template_generation": "frozen stack-v1 runner dry-run; output basename normalized",
+  "template_seeds": [
+    71004,
+    72004
+  ],
+  "template_sha256": "4a323d8dd501eec584e94354515905756dc9ecec4f5780ecbace3f40aeb7607d"
+}

@@ -1,0 +1,133 @@
+{
+  "baseline_template_sha256": "4a323d8dd501eec584e94354515905756dc9ecec4f5780ecbace3f40aeb7607d",
+  "cases": [
+    {
+      "layout": "back-four",
+      "macro_sha256": "7aa68ea3dd45c10257c423a585cbe82ac8806967caaae8fddbc078ae60ec8737",
+      "tile_thickness_mm": 4
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "65af8796c2d7ee9affced8373225b939309b0bc83c844aff16bfc643da724ba0",
+      "tile_thickness_mm": 4
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "a9dd3c302461269842666fb070834835cf280cea648cd6cfc0e4834e4c5563de",
+      "tile_thickness_mm": 4
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "ae7bc530efca987c1597dbcc0e4b891cfa6dac2376b42b083afefb9363478767",
+      "tile_thickness_mm": 4
+    },
+    {
+      "layout": "back-four",
+      "macro_sha256": "556e3436629c7a4026f8a457f077cde1a597c12fdf6a548cd0f0f1b67405e82c",
+      "tile_thickness_mm": 8
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "c4ebdbdcb911dc330a213c0bce52e01bf05e0bba84f7566f26d203ea418ad143",
+      "tile_thickness_mm": 8
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "be853d45dc1685956c89d76125b1e63d57eb9d64815b11943f20a5e799e0e36b",
+      "tile_thickness_mm": 8
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "8ff81d04e715091ce6390e31444d2ae0782e96d373cae07476e9f3548ce74c7c",
+      "tile_thickness_mm": 8
+    },
+    {
+      "layout": "back-four",
+      "macro_sha256": "01230eb7fb95c553425eb6128d95de6d74ff2af41df6b623064b6258d9ce9aae",
+      "tile_thickness_mm": 12
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "3fac883d79418aa3902fa76c40c0441b5d651d807b2829df9299228377eb66d9",
+      "tile_thickness_mm": 12
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "405054c8e43a6c6e0b7bc1c90da6990fe92240c9c3fd0f4dee5d975dd75b38a1",
+      "tile_thickness_mm": 12
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "f9aecbe60f2ee883fbe24ed003ead526f26a2774c84363ef68451d718b2f8b51",
+      "tile_thickness_mm": 12
+    },
+    {
+      "layout": "back-four",
+      "macro_sha256": "dc9ff03268efeeec164ee901e46531c9e3367a3f11415883f06ba8a77e55c8f0",
+      "tile_thickness_mm": 16
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "e7a5e194a395e8a7a35b7806c1b06094b7861f52bdadcbe4e399d1d0a4b7a847",
+      "tile_thickness_mm": 16
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "d974def91f39a99a2de2fc46d74e5282bc6c05fbb5a5f8103d926bee6e190c9b",
+      "tile_thickness_mm": 16
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "e61ef2da56c8fe4245888ff29b1bba2d3b7149cf440464e3219d6043ab303b2d",
+      "tile_thickness_mm": 16
+    },
+    {
+      "layout": "back-four",
+      "macro_sha256": "df06a341ce2006a2e7c1065bf31c39c4ddfa7e0e4330ca814635074cebed358c",
+      "tile_thickness_mm": 20
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "bdbd905dad2847b295a9fac6840a97fc67369d6016ccad3b7103ef18b93fde98",
+      "tile_thickness_mm": 20
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "1068820d8a26310f4c3f0ee7b2215b465191784cd0cd8f8f08665c4bf8de6035",
+      "tile_thickness_mm": 20
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "f8cc890132e7ad1163df04015c12c91b3bb52d727feca69c403810d3b9d81601",
+      "tile_thickness_mm": 20
+    },
+    {
+      "layout": "back-four",
+      "macro_sha256": "c5c56d0af23eede788ed488e78ce263ccd185676cbda63d1430699ce562b6f9f",
+      "tile_thickness_mm": 24
+    },
+    {
+      "layout": "back-two",
+      "macro_sha256": "a0a82439067e4f3b4d3525931ea0fa72712fcbbefbbf0a4690dc56c3f79164d0",
+      "tile_thickness_mm": 24
+    },
+    {
+      "layout": "back-center",
+      "macro_sha256": "e36df591b03349576ad16a6e9c9ceb53e1390baec111896784608f81e6bac69c",
+      "tile_thickness_mm": 24
+    },
+    {
+      "layout": "edge-two",
+      "macro_sha256": "a90c2f7c2f89d6725e5d12b85863e641b7da361f8adfe47be891564a32e0f85d",
+      "tile_thickness_mm": 24
+    }
+  ],
+  "events": 2,
+  "generator_sha256": "c9d1391a133451f0123ffb2f601e6dd6980118de3ace54d3d49245a71c00fd77",
+  "reference_source_commit": "404a11bcff4a2c3a4b7a83de8357cab3e37d1cb5",
+  "schema_version": "steel-layout-macro-reference-v1",
+  "seeds": [
+    20261002,
+    20261003
+  ]
+}

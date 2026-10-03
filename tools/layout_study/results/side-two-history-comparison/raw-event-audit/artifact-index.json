@@ -1,0 +1,67 @@
+{
+  "files": {
+    ".gitattributes": {
+      "bytes": 136,
+      "sha256": "772c9867d579417b7513342100983ed53bbcb528829e83ce5c12c8f4497aea54"
+    },
+    "README.md": {
+      "bytes": 9538,
+      "sha256": "8d381ac8408b851330f6c470f339f238b77cf77dcd9b3b38298d11f3e9632b56"
+    },
+    "block-diagnostics.csv": {
+      "bytes": 21983,
+      "sha256": "aabab106d0fbf81a29f09fc99c4006358e178f423c6d24c45ba26de245ae33f1"
+    },
+    "historical-thickness-summary.csv": {
+      "bytes": 2737,
+      "sha256": "c3cc180d3e6eb307ee81face100e2633a16ae489aaac7d4beb160e3e90a5d961"
+    },
+    "july-original-figure.png": {
+      "bytes": 170048,
+      "sha256": "9431ff6ff7cc6eb7068d7c2923638fd45f4c14532e619e4d3d92c51dcabf9ee6"
+    },
+    "old-event-diagnostics.csv": {
+      "bytes": 501421,
+      "sha256": "03f88ddb3b3522c3bc898fff443091723c10ada221096c4ea436acb9f784a961"
+    },
+    "reconstructed-seed-plan.json": {
+      "bytes": 12594,
+      "sha256": "9d520a7b94a5ffa4946d66b48be8fb2942aed1a8a7b49af4b6ed3e8a34d922eb"
+    },
+    "recovery-index.json": {
+      "bytes": 290788,
+      "sha256": "717dbfac6aee3d1d1e140f3b03426ad149ce0400fd25c43cce58cb8986cbe661"
+    },
+    "recovery-proof.json": {
+      "bytes": 13269,
+      "sha256": "c503b24ac49d42e3313827246f52ec79f85fd1fd760fe1ee0ce27830f3da2df7"
+    },
+    "recovery-receipt.json": {
+      "bytes": 444,
+      "sha256": "c2f06c4b12fa97e6e431a95f3fed33feb86b55337a719fc05993d363541f568f"
+    },
+    "retrospective-bootstrap.npz": {
+      "bytes": 1492572,
+      "sha256": "481a4407e457081bda9015a25bd314f46d8921d0f710e2e656a2e5ad481ce4f4"
+    },
+    "retrospective-result.json": {
+      "bytes": 405465,
+      "sha256": "0485b98fc98683eb744b6910c2501ebd2582bf12a35ace54dd159a69432a5269"
+    },
+    "retrospective-validation.json": {
+      "bytes": 819,
+      "sha256": "5529a5b574007ee287f40c62ab9a21372a4c4ab00ba8c9f1e4aa3f99398d3728"
+    },
+    "retrospective.py": {
+      "bytes": 18293,
+      "sha256": "f99911da9c7d82f341c9f2fe9e82fd9e122357e067b9e58cf01809d0ae6bd9ac"
+    },
+    "source-identities.json": {
+      "bytes": 1957,
+      "sha256": "b1704c19a7e927689c889c9409a0a062748c6020355d2cd622654d24153ca4ac"
+    }
+  },
+  "new_simulation_events": 0,
+  "original_results_modified": false,
+  "schema_version": "july-root-retrospective-publication-v1"
+}

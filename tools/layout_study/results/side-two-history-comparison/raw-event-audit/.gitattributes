@@ -1,0 +1,2 @@
+# Preserve the archived CSV byte-for-byte, including its CRLF line endings.
+historical-thickness-summary.csv -text whitespace=cr-at-eol
